@@ -107,6 +107,7 @@ agent = create_pandas_dataframe_agent(
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
 )
+## run query on agg_data
 output = agent.run(query)
 """
 output:
