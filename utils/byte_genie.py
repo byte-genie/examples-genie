@@ -318,6 +318,37 @@ class ByteGenie:
         )
         return resp
 
+    def create_dataset(
+            self,
+            data: list,
+            attrs: list,
+            cols_to_use: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Create a new dataset with desired features from input data
+        :param data: input data
+        :param attrs: attributes/columns to have in the new data
+        :param cols_to_use: columns to consider in create the new dataset
+        :param timeout: timeout value for the api call
+        :return:
+        """
+        func = 'create_dataset'
+        args = {
+            'data': data,
+            'attrs': attrs,
+            'cols_to_use': cols_to_use,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 
