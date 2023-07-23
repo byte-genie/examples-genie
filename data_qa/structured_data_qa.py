@@ -19,7 +19,6 @@ from utils.byte_genie import ByteGenie
 bg = ByteGenie(
     api_url='https://api.esgnie.com/execute',
     secrets_file='secrets.json',
-    api_key_name='API_KEY',
     task_mode='sync',
     calc_mode='async',
     verbose=1,

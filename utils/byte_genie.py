@@ -20,7 +20,6 @@ class ByteGenie:
             self,
             api_url: str = 'https://api.esgnie.com/execute',
             secrets_file: str = 'secrets.json',
-            api_key_name: str = 'API_KEY',
             task_mode: str = 'sync',
             calc_mode: str = 'async',
             return_data: int = 1,
@@ -30,17 +29,16 @@ class ByteGenie:
         """
         :param api_url: byte-genie api url
         :param secrets_file: json file path containing secrets, including byte-genie api key
-        :param api_key_name: key name of byte-genie api in secrets_file
+        :param BYTE_GENIE_KEY_name: key name of byte-genie api in secrets_file
         :param task_mode: task mode ('sync', 'async')
         :param calc_mode: calculation mode ('sync', 'async', 'parallel')
-        :param api_key: api key for byte-genie API
+        :param BYTE_GENIE_KEY: api key for byte-genie API
         :param return_data: whether to return output data, or just the output file path containing the data
         :param overwrite: whether to overwrite the output, if it already exists
         :param verbose: whether to write logs from the task or not
         """
         self.api_url = api_url
         self.secrets_file = secrets_file
-        self.api_key_name = api_key_name
         self.task_mode = task_mode
         self.calc_mode = calc_mode
         self.return_data = return_data
@@ -53,7 +51,7 @@ class ByteGenie:
         try:
             with open(filename, mode='r') as f:
                 secrets = json.loads(f.read())
-                api_key = secrets[self.api_key_name]
+                api_key = secrets['BYTE_GENIE_KEY']
         except FileNotFoundError:
             api_key = ''
         return api_key
