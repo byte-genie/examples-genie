@@ -109,8 +109,17 @@ agent = create_pandas_dataframe_agent(
 ## run query on agg_data
 output = agent.run(query)
 """
-output:
+Output:
 'The difference in the number of male and female survivors by class is as follows:\n\n- For the "First" class, there were 91 female survivors and 15 male survivors, resulting in a difference of -76.\n- For the "Second" class, there were 70 female survivors and 12 male survivors, resulting in a difference of -58.\n- For the "Third" class, there were 72 female survivors and 47 male survivors, resulting in a difference of -25.'
+"""
+"""
+Observation:
+We can see that after a few processing steps that filter the data over relevant columns, 
+and aggregate it in a way suitable for the query, the same langchain agent is able to find answer the query,
+for which it previously provided an incorrect answer, when used directly on the raw data.
+
+The data processing steps taken in this example are quite generic, and could be used with any structured data, 
+to improve question-answering accuracy. 
 """
 ## generate multiple variants of input query
 resp = bg.create_query_variants(
