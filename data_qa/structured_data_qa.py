@@ -98,7 +98,7 @@ resp = bg.aggregate_data(
     data=data[relevant_cols].to_dict('records'),
     query=query,
 )
-agg_data = resp['response']['task_1']['data']
+agg_data = resp['response']['task_1']['data'] ## [{'class': 'First', 'difference': '-76', 'female_survivors': '91', 'male_survivors': '15'}, {'class': 'Second', 'difference': '-58', 'female_survivors': '70', 'male_survivors': '12'}, {'class': 'Third', 'difference': '-25', 'female_survivors': '72', 'male_survivors': '47'}]
 ## create aggent on agg_data
 agent = create_pandas_dataframe_agent(
     ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
