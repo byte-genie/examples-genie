@@ -2,6 +2,7 @@
 Source company documents
 """
 
+import pandas as pd
 from utils.byte_genie import ByteGenie
 
 ## init byte-genie in async mode (tasks will run in the background)
@@ -28,18 +29,29 @@ company_names = [
 ## set documnet keywords to search documents for
 doc_keywords = ['sustainability report']
 
-"""
-We can search for the relevant documents in two wasy:
-1) by using /download_documents endpoint, which first finds the company's homepage and then searches documents from it
-2) by using /find_homepage endpoint to first find the company homepage, and then use /donwload_documents endpoing with 
-"""
 ## trigger document download
-resp = bg.download_documents(
+resp = bg_async.download_documents(
     entity_names=company_names,
     doc_keywords=doc_keywords,
 )
 ## check resp
 status = resp['response']['task_1']['status'] ## scheduled
-output_file = resp['response']['task_1']['task']['output_file'] ## file where output will be written (gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2fc2c2a3c9/data_type=structured/format=pickle/variable_desc=download_documents/source=api-genie/593a5370f106bf174d115e2fc2c2a3c9.pickle)
+## file where output will be written (gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2fc2c2a3c9/data_type=structured/format=pickle/variable_desc=download_documents/source=api-genie/593a5370f106bf174d115e2fc2c2a3c9.pickle)
+output_file = resp['response']['task_1']['task']['output_file']
+## check output_file status (exists or not)
 resp = bg_sync.check_file_exists(output_file)
-output_file_exists = resp['response']['task_1']['data'] ## False if file does not yet exist; True when file exists
+## False if file does not yet exist; True when file exists
+output_file_exists = resp['response']['task_1']['data']
+## read output
+resp = bg_sync.read_file(output_file)
+df_reports = resp['response']['task_1']['data']['data']
+df_reports = pd.DataFrame(df_reports)
+## check df columns
+df_reports.columns ## ['entity_name', 'href', 'href_text', 'keyphrase', 'page_summary', 'result_html', 'result_text']
+## check the document urls found
+df_reports['href'].unique()
+"""
+The documents in df_reports have already been download.
+We can now move on to processing the ones we would like to.
+See company_research/document_processing.py to see how to process documents.
+"""

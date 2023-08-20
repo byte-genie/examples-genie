@@ -134,6 +134,31 @@ class ByteGenie:
         )
         return resp
 
+    def read_file(
+            self,
+            file: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Read a file
+        :param file: file to read
+        :param timeout:
+        :return:
+        """
+        func = 'read_file'
+        args = {
+            'file': file,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def download_documents(
             self,
             entity_names: list,
