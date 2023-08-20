@@ -10,8 +10,8 @@ import inspect
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
 import utils.common
 
-## read secrets
-SECRETS = utils.common.read_secrets()
+# ## read secrets
+# SECRETS = utils.common.read_secrets()
 
 
 class ByteGenie:
@@ -108,6 +108,59 @@ class ByteGenie:
         except Exception as e:
             json_resp = {'payload': payload, 'error': e}
         return json_resp
+
+    def check_file_exists(
+            self,
+            file: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Check if a file exists
+        :param file: file to check
+        :param timeout:
+        :return:
+        """
+        func = 'check_file_exists'
+        args = {
+            'file': file,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def download_documents(
+            self,
+            entity_names: list,
+            doc_keywords: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Search and download documents matching given keywords from an entity's homepage
+        :param entity_names: list of entities for which to find documents
+        :param doc_keywords: list of keywords for which to search documents
+        :param timeout:
+        :return:
+        """
+        func = 'download_documents'
+        args = {
+            'entity_names': entity_names,
+            'doc_keywords': doc_keywords,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
 
     def generate_metadata(
             self,
