@@ -249,6 +249,31 @@ class ByteGenie:
         )
         return resp
 
+    def extract_doc_year(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract document year
+        :param doc_name: document name for which to extract info
+        :param timeout:
+        :return:
+        """
+        func = 'extract_doc_year'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def extract_doc_info(
             self,
             doc_name: str,
