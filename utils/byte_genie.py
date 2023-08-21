@@ -5,13 +5,10 @@ Utility functions for byte-genie API
 import os
 import json
 import time
-import requests
 import inspect
+import requests
+import numpy as np
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
-import utils.common
-
-# ## read secrets
-# SECRETS = utils.common.read_secrets()
 
 
 class ByteGenie:
@@ -108,6 +105,46 @@ class ByteGenie:
         except Exception as e:
             json_resp = {'payload': payload, 'error': e}
         return json_resp
+
+    def get_response_data(
+            self,
+            resp: dict
+    ):
+        if not isinstance(resp, dict):
+            raise ValueError('resp must be a dictionary')
+        if 'response' in resp.keys():
+            resp = resp['response']
+        if isinstance(resp, dict):
+            if 'task_1' in resp.keys():
+                resp = resp['task_1']
+        for i in np.arange(0, 2, 1):
+            if isinstance(resp, dict):
+                if 'data' in resp.keys():
+                    resp = resp['data']
+        return resp
+
+    def get_response_output_file(
+            self,
+            resp: dict
+    ):
+        output_file = ''
+        if not isinstance(resp, dict):
+            raise ValueError('resp must be a dictionary')
+        if 'response' in resp.keys():
+            resp = resp['response']
+        if isinstance(resp, dict):
+            if 'task_1' in resp.keys():
+                resp = resp['task_1']
+        if isinstance(resp, dict):
+            if 'task' in resp:
+                resp = resp['task']
+        if isinstance(resp, dict):
+            if 'output_file' in resp:
+                output_file = resp['output_file']
+        if output_file == '':
+            raise ValueError('No output_file found in response')
+        else:
+            return output_file
 
     def slugify(
             self,
