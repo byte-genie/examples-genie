@@ -109,6 +109,31 @@ class ByteGenie:
             json_resp = {'payload': payload, 'error': e}
         return json_resp
 
+    def slugify(
+            self,
+            text: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Slugify text
+        :param text: text to slugify
+        :param timeout:
+        :return:
+        """
+        func = 'slugify'
+        args = {
+            'text': text,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def check_file_exists(
             self,
             file: str,
@@ -176,6 +201,34 @@ class ByteGenie:
         args = {
             'entity_names': entity_names,
             'doc_keywords': doc_keywords,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def extract_doc_info(
+            self,
+            doc_name: str,
+            doc_type_choices: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract document information, including document year, author, organisation, type, number of pages, etc.
+        :param doc_name: document name for which to extract info
+        :param doc_type_choices: possible document types in which to classify the document
+        :param timeout:
+        :return:
+        """
+        func = 'extract_doc_info'
+        args = {
+            'doc_name': doc_name,
+            'doc_type_choices': doc_type_choices,
         }
         payload = self.create_api_payload(
             func=func,
