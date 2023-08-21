@@ -515,6 +515,60 @@ class ByteGenie:
         )
         return resp
 
+    def parse_numeric_string(
+            self,
+            text: str,
+            method: str = '',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Parse numeric string to get numeric value
+        :param text: text to parse into numeric value
+        :param method: method to use for parsing ('llm-first', or '')
+        :param timeout:
+        :return:
+        """
+        func = 'parse_numeric_string'
+        args = {
+            'text': text,
+            'method': method,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def structure_quants_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger quant-structuring pipeline, which extracts text and quant metrics, and structures all quant metrics
+        from passages and tables
+        :param doc_name: document name for which to trigger quant extraction
+        :param timeout:
+        :return:
+        """
+        func = 'structure_quants_pipeline'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 
