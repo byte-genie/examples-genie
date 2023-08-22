@@ -594,6 +594,39 @@ class ByteGenie:
         )
         return resp
 
+    def write_ranked_data(
+            self,
+            doc_name: str,
+            attr: str,
+            attr_type: str = None,
+            frac_rows_to_keep: float = 0.1,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Rank document data by relevance to an attribute
+        :param doc_name:
+        :param attr:
+        :param attr_type:
+        :param timeout:
+        :return:
+        """
+        func = 'write_ranked_data'
+        args = {
+            'doc_name': doc_name,
+            'attr': attr,
+            'attr_type': attr_type,
+            'frac_rows_to_keep': frac_rows_to_keep,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 

@@ -44,10 +44,6 @@ for doc_num, doc_name in enumerate(doc_names):
 ## wait for output to be ready
 time.sleep(15 * 60)
 ## get output files for doc_info
-# doc_info_files = [
-#     resp[doc_name]['response']['task_1']['task']['output_file']
-#     for doc_name in resp.keys()
-# ]
 doc_info_files = [
     bg_sync.get_response_output_file(resp[doc_name])
     for doc_name in resp.keys()
