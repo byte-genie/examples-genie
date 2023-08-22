@@ -91,6 +91,13 @@ for resp_num, resp in enumerate(responses):
         ## save file to files_not_exist
         files_not_exist = files_not_exist + [output_file]
 
+# ### check files that do not yet exist
+files_not_exist
+"""
+files_not_exist
+[]
+"""
+
 # ### check df_ranked
 logger.info(f"df_ranked columns: {list(df_ranked.columns)}")
 """
@@ -110,7 +117,8 @@ list(df_ranked['query'].unique().tolist())
 ['emissions by scope', 'energy consumption', 'water consumption', nan]
 """
 
-logger.info(f"df_ranked data sample: {df_ranked[['company name', 'category', 'variable description', 'variable', 'value', 'unit', 'date', 'doc_name']].tail().to_dict('records')}")
+logger.info(
+    f"df_ranked data sample: {df_ranked[['company name', 'category', 'variable description', 'variable', 'value', 'unit', 'date', 'doc_name']].tail().to_dict('records')}")
 """
 df_ranked[['company name', 'category', 'variable description', 'variable', 'value', 'unit', 'date', 'doc_name']].tail().to_dict('records')
 [{'company name': 'Vedanta', 'category': 'Governance Body Diversity', 'variable description': 'Female representation in Total (Governance Body)', 'variable': 'Total', 'value': '204', 'unit': '', 'date': 'May 2022', 'doc_name': 'httpswwwvedantalimitedcomimghomepagesustainability20report2022pdf'}, 
@@ -134,20 +142,68 @@ df_emissions = df_emissions.fillna('')
 # ### set custom attributes to extract for emissions
 emission_attrs = [
     'description of emissions',
-    'scope of emissions',
-    'unit of emissions',
     'amount of emissions',
+    'scope of emissions',
+    'unit of measurement',
     'source of emissions',
     'date of emissions',
     'company name'
 ]
+
 # ### create a customised dataset for emissions
 resp = bg_sync.create_dataset(
-    data=df_emissions[:10].to_dict('records'),
+    data=df_emissions.to_dict('records'),
     attrs=emission_attrs,
     cols_to_use=['category', 'company name', 'doc_org', 'date', 'unit', 'value', 'variable', 'variable description']
 )
-df_ = pd.DataFrame(bg_sync.get_response_data(resp))
-df_.values
-df_[['row_num', 'value', 'variable']].values
-custom_emissions_output_file = bg_sync.get_response_output_file(resp)
+
+# ### get output data
+df_emissions_custom = pd.DataFrame(bg_sync.get_response_data(resp))
+
+# ### pivot data
+df_emissions_custom = df_emissions_custom.pivot(
+    index=['context', 'row_num'],
+    columns='variable',
+    values='value',
+).reset_index()
+
+# ### check columns
+logger.info(f"df_emissions_custom.columns: {df_emissions_custom.columns}")
+"""
+list(df_emissions_custom.columns)
+['context', 'row_num', 'amount of emissions', 'company name', 'date of emissions', 'description of emissions', 'relevant quote', 'scope of emissions', 'source of emissions', 'unit of measurement']
+"""
+
+# ### check data sample
+logger.info(f"df_emissions_custom sample: "
+            f"{df_emissions_custom.drop(columns=['context', 'row_num']).head().to_dict('records')}")
+"""
+df_emissions_custom.drop(columns=['context', 'row_num']).head().to_dict('records')
+[{'amount of emissions': '-18%', 'company name': 'BR PETROBRAS', 'date of emissions': '2015.0', 'description of emissions': 'Total operating emissions (Scope 1 and 2) from our O&G activities', 'relevant quote': 'Total operating emissions (Scope 1 and 2) from our O&G activities have shown a continuous downward trend over the last few years', 'scope of emissions': 'Scope 1 and 2', 'source of emissions': 'BR PETROBRAS', 'unit of measurement': 'tCO2e'}, 
+{'amount of emissions': '61.8', 'company name': 'BR PETROBRAS', 'date of emissions': '2019.0', 'description of emissions': 'Indirect emissions related to the use of sold products', 'relevant quote': 'Indirect emissions related to the use of sold products reported for the value chain', 'scope of emissions': 'Scope 3', 'source of emissions': 'BR PETROBRAS', 'unit of measurement': 'n/a'}, 
+{'amount of emissions': '400.2', 'company name': 'BR PETROBRAS', 'date of emissions': '2017.0', 'description of emissions': 'Indirect emissions related to the use of sold products', 'relevant quote': 'Indirect emissions related to the use of sold products reported for the value chain', 'scope of emissions': 'Scope 3', 'source of emissions': 'BR PETROBRAS', 'unit of measurement': 'n/a'}, 
+{'amount of emissions': '436 million', 'company name': 'BR PETROBRAS', 'date of emissions': '2021.0', 'description of emissions': 'Combined emissions from categories 10 and 11', 'relevant quote': 'Combined emissions from categories 10 and 11', 'scope of emissions': 'Scope 3', 'source of emissions': 'BR PETROBRAS', 'unit of measurement': 'tCO2e'}, 
+{'amount of emissions': 'n/a', 'company name': 'BR PETROBRAS', 'date of emissions': '2022.0', 'description of emissions': 'Scope 2 emissions have low materiality', 'relevant quote': 'Scope 2 emissions have low materiality', 'scope of emissions': 'Scope 2', 'source of emissions': 'BR PETROBRAS', 'unit of measurement': 'n/a'}]
+"""
+
+# ### check original context for each row of data
+logger.info(f"df_emissions_custom original context: "
+            f"{df_emissions_custom['context'].unique().tolist()}")
+"""
+df_emissions_custom['context'].unique().tolist()
+['
+    [
+        ["category", "company name", "doc_org", "date", "unit", "value", "variable", "variable description"], 
+        ["Operating Emissions", "BR PETROBRAS", "BR PETROBRAS", 2015.0, "", "-18%", "Scope 1 and 2", "Total operating emissions (Scope 1 and 2) from our O&G activities have shown a continuous downward trend over the last few years"], 
+        ["Scope 3", "BR PETROBRAS", "BR PETROBRAS", 2019.0, "", "61.8", "Emissions-Category 11", "Indirect emissions related to the use of sold products reported for the value chain"], 
+        ["Scope 3", "BR PETROBRAS", "BR PETROBRAS", 2017.0, "", "400.2", "Emissions-Category 11", "Indirect emissions related to the use of sold products reported for the value chain"], 
+        ["Scope 3", "BR PETROBRAS", "BR PETROBRAS", 2021.0, "tCO2e", "436 million", "Emissions", "Combined emissions from categories 10 and 11"], 
+        ["Emissions", "BR PETROBRAS", "BR PETROBRAS", 2022.0, "", "Low materiality", "Scope 2", "Scope 2 emissions have low materiality"], 
+        ["Emissions", "BR PETROBRAS", "BR PETROBRAS", 2021.0, "", "99%", "Scope 1", "Scope 1 emissions represented 99% of operational emissions in 2021"], 
+        ["Scope 3", "BR PETROBRAS", "BR PETROBRAS", 2015.0, "", "459.9", "Emissions-Category 11", "Indirect emissions related to the use of sold products reported for the value chain"], 
+        ["Operational Emissions (Scope 1 and 2)", "BR PETROBRAS", "BR PETROBRAS", 2015.0, "", "18%", "Reduction in absolute emissions", "Reduction in operational emissions without thermoelectricity by 18% since 2015"], 
+        ["Scope 3", "BR PETROBRAS", "BR PETROBRAS", 2016.0, "", "437.2", "Emissions-Category 10", "Indirect emissions from processing sold products reported for the value chain"], 
+        ["GHG Emissions", "BR PETROBRAS", "BR PETROBRAS", 2030.0, "kgCO2e/boe", "15.0", "Intensity (2030)", "Likely GHG emissions intensity target for an unspecified company in 2030"]
+    ]', 
+]
+"""
