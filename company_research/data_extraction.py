@@ -1,7 +1,6 @@
-"""
-Extract relevant data from process documents
-"""
+# # Extract relevant data from processed documents
 
+# ## import necessary libraries
 import time
 import uuid
 import numpy as np
@@ -9,32 +8,45 @@ import pandas as pd
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
+# ## init byte-genie
 
-## init byte-genie in async mode (tasks will run in the background)
+# ### init byte-genie in async mode (tasks will run in the background)
 bg_async = ByteGenie(
     secrets_file='secrets.json',
     task_mode='async',
     verbose=1,
 )
-## init byte-genie in sync mode (tasks will run in the foreground)
+
+# ### init byte-genie in sync mode (tasks will run in the foreground)
 bg_sync = ByteGenie(
     secrets_file='secrets.json',
     task_mode='sync',
     verbose=1,
 )
-## read reports from saved file
+
+# ## read processed documents (input data)
+
+# ### read reports from saved file
 df_reports = pd.read_csv(f"/tmp/reports_data_2023-08-21.csv")
-## filter documents from 2021 onward
+
+# ### filter documents from 2021 onward
 df_reports = df_reports[df_reports['doc_year'].map(float) > 2021].reset_index(drop=True)
-## trigger processing for a couple of documents
+
+# ### select first 5 documents
 doc_names = df_reports['doc_name'].tolist()[:5]
-## define a set of relevant keyphrases to search in extracted quants from documents
+
+# ## Define inputs
+
+# ### define a set of relevant keyphrases to search in extracted quants from documents
 keyphrases = ['emissions by scope', 'energy consumption', 'water consumption']
-## set type of data to rank (quantitative or qualitative)
+# ### set type of data to rank (quantitative or qualitative)
 attr_type = 'quantitative'
-## set the fraction of rows to keep in ranked data
+# ### set the fraction of rows to keep in ranked data
 frac_rows_to_keep = 0.1
-## from each document, rank quants by relevance to set of keyphrases
+
+# ## Search/rank data
+
+# ### from each document, rank quants by relevance to set of keyphrases
 responses = []
 for doc_num, doc_name in enumerate(doc_names):
     for keyphrase_num, keyphrase in enumerate(keyphrases):
@@ -44,10 +56,11 @@ for doc_num, doc_name in enumerate(doc_names):
             doc_name=doc_name,
             attr=keyphrase,
             attr_type=attr_type,
-            # frac_rows_to_keep=frac_rows_to_keep,
+            frac_rows_to_keep=frac_rows_to_keep,
         )
         responses = responses + [resp]
-## check status of output files
+
+# ### read ranked data output
 df_ranked = pd.DataFrame()
 files_not_exist = []
 for resp_num, resp in enumerate(responses):
@@ -74,22 +87,26 @@ for resp_num, resp in enumerate(responses):
     else:
         ## save file to files_not_exist
         files_not_exist = files_not_exist + [output_file]
-## check df_ranked
+
+# ### check df_ranked
 logger.info(f"df_ranked columns: {list(df_ranked.columns)}")
 """
 list(df_ranked.columns)
 ['category', 'company name', 'context', 'date', 'doc_name', 'doc_org', 'doc_type', 'doc_year', 'pagenum', 'query', 'row_id', 'score', 'unit', 'value', 'variable', 'variable description', 'payload', 'error']
 """
+
 logger.info(f"df_ranked documents: {list(df_ranked['doc_name'].unique().tolist())}")
 """
 list(df_ranked['doc_name'].unique().tolist())
 ['httpspetrobrascombrdatafilese897b4615e56f7105fc7bcd7e9e99ea811_pet_clima_ingles_2022_fzpdf', nan, 'httpspetrobrascombrdatafiles3755fb5bb3438810819c6568b8e99ea8cdhcc_2022_engpdf', 'httpswwwvedantalimitedcomimghomepagesustainability20report2022pdf']
 """
+
 logger.info(f"df_ranked input queries: {list(df_ranked['query'].unique().tolist())}")
 """
 list(df_ranked['query'].unique().tolist())
 ['emissions by scope', 'energy consumption', 'water consumption', nan]
 """
+
 logger.info(f"df_ranked data sample: {df_ranked[['company name', 'category', 'variable description', 'variable', 'value', 'unit', 'date', 'doc_name']].tail().to_dict('records')}")
 """
 df_ranked[['company name', 'category', 'variable description', 'variable', 'value', 'unit', 'date', 'doc_name']].tail().to_dict('records')
@@ -99,13 +116,19 @@ df_ranked[['company name', 'category', 'variable description', 'variable', 'valu
 {'company name': 'Vedanta', 'category': 'Crude Oil Production', 'variable description': "Operates c.25% of India's crude oil production", 'variable': 'Average Daily Gross', 'value': '161 kboepd', 'unit': '', 'date': '2022', 'doc_name': 'httpswwwvedantalimitedcomimghomepagesustainability20report2022pdf'}, 
 {'company name': 'Thermal', 'category': 'Avoid', 'variable description': 'Acquire up to 20% of biomass-based plants', 'variable': 'Biomass-based plants', 'value': 'Up to 20%', 'unit': '', 'date': '2022', 'doc_name': 'httpswwwvedantalimitedcomimghomepagesustainability20report2022pdf'}]
 """
-## filter data over 'emissions by scope'
+
+# ## Create emissions dataset
+
+# ### filter data over 'emissions by scope'
 df_emissions = df_ranked[df_ranked['query'] == 'emissions by scope'].reset_index(drop=True)
-## remove rows with empty values
+
+# ### remove rows with empty values
 df_emissions = df_emissions[~df_emissions['value'].isin(['', np.nan, None, 'nan', 'n/a'])]
-## fill na values
+
+# ### fill na values
 df_emissions = df_emissions.fillna('')
-## set custom attributes to extract for emissions
+
+# ### set custom attributes to extract for emissions
 emission_attrs = [
     'description of emissions',
     'scope of emissions',
@@ -115,7 +138,7 @@ emission_attrs = [
     'date of emissions',
     'company name'
 ]
-## create a customised dataset for emissions
+# ### create a customised dataset for emissions
 resp = bg_sync.create_dataset(
     data=df_emissions[:10].to_dict('records'),
     attrs=emission_attrs,
