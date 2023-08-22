@@ -43,6 +43,8 @@ doc_names = [
 df_reports['doc_name'] = doc_names
 
 # ## extract document info
+
+# ### trigger document info extraction
 resp = {}
 for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"{doc_num}/{len(doc_names)}: {doc_name}")
@@ -53,36 +55,33 @@ for doc_num, doc_name in enumerate(doc_names):
 # ### wait for output to be ready
 time.sleep(15 * 60)
 
-# ### get output files for doc_info
-doc_info_files = [
-    bg_sync.get_response_output_file(resp[doc_name])
-    for doc_name in resp.keys()
-]
-
-# ### loop over all doc_info_files and read the ones that exist
-missing_doc_info_files = []
+# ### read extracted document info
 df_doc_info = pd.DataFrame()
-for file_num, doc_file in enumerate(doc_info_files):
-    logger.info(f"{file_num}/{len(doc_info_files)}: {doc_file}")
-    ## check if file exists
-    doc_file_exists = bg_sync.get_response_data(
-        bg_sync.check_file_exists(doc_file)
+missing_doc_info = []
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"{doc_num}/{len(doc_names)}: {doc_name}")
+    ## read doc_info in sync mode
+    df_doc_info_ = bg_sync.get_response_data(
+        bg_async.extract_doc_info(
+            doc_name=doc_name,
+        )
     )
-    ## if file exists
-    if doc_file_exists:
-        ## get doc_info data
-        df_doc_info_ = \
-            bg_sync.get_response_data(
-                bg_sync.read_file(doc_file)
-            )
-        ## convert to df
+    ## if missing_doc_info is not None
+    if df_doc_info_ is not None:
+        ## convert ot df
         df_doc_info_ = pd.DataFrame(df_doc_info_)
         ## append to df_doc_info
         df_doc_info = pd.concat([df_doc_info, df_doc_info_])
-    ## if the doc_file does not yet exist
+    ## if doc_info output data is not available
     else:
-        ## add it to missing_doc_info_files
-        missing_doc_info_files = missing_doc_info_files + [doc_file]
+        missing_doc_info = missing_doc_info + [doc_name]
+
+# ### check documents with missing info
+logger.info(f"documents with missing info: {missing_doc_info}")
+"""
+missing_doc_info
+[]
+"""
 
 # ### check df_doc_info
 list(df_doc_info.columns)
@@ -92,7 +91,7 @@ list(df_doc_info.columns)
 ['doc_name', 'doc_org', 'doc_type', 'doc_year', 'num_pages']
 """
 
-df_doc_info.tail().to_dict('records')
+df_doc_info.head().to_dict('records')
 """
 df_doc_info.tail().to_dict('records')
 [{'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfbiodiversity-assesssment-mapping-with-cdsbpdf', 'doc_org': 'Climate Disclosure Standards Board (CDSB)', 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 8.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsalternatives_in_action-ultratech_sustainability_reportpdf', 'doc_org': 'Sustainability Report 2010', 'doc_type': "['sustainability report']", 'doc_year': 2011.0, 'num_pages': 48.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsinvestor-updateslb-report-june-2023pdf', 'doc_org': nan, 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 10.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsannual-reportsannual-report-single-viewpdf', 'doc_org': 'Mr. Aditya Vikram Birla', 'doc_type': "['annual report']", 'doc_year': 2022.0, 'num_pages': 362.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsucl_sr2010-12_gricontentindexpdf', 'doc_org': 'the document was published by ultratech cement', 'doc_type': "['annual report']", 'doc_year': 2012.0, 'num_pages': 8.0}]
@@ -127,17 +126,6 @@ df_reports = pd.merge(
 # ## Save data with document info
 
 # ### save df_reports
-reports_file = f'gs://db-genie/entity_type=file/entity=reports_file/reports.pickle'
-resp = \
-    bg_sync.call_api(
-        bg_sync.create_api_payload(
-            func='write_to_file',
-            args={
-                'content': df_reports.fillna(''),
-                'file': reports_file
-            }
-        )
-    )
 df_reports.to_csv(f"/tmp/reports_data_2023-08-21.csv", index=False)
 
 # ### read reports from saved file

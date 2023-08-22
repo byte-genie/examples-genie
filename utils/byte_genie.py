@@ -21,6 +21,7 @@ class ByteGenie:
             calc_mode: str = 'async',
             return_data: int = 1,
             overwrite: int = 0,
+            overwrite_base_output: int = 0,
             verbose: int = 1,
     ):
         """
@@ -31,7 +32,8 @@ class ByteGenie:
         :param calc_mode: calculation mode ('sync', 'async', 'parallel')
         :param BYTE_GENIE_KEY: api key for byte-genie API
         :param return_data: whether to return output data, or just the output file path containing the data
-        :param overwrite: whether to overwrite the output, if it already exists
+        :param overwrite: whether to overwrite the immediate task output, if it already exists
+        :param overwrite_base_output: whether to overwrite the base task output, if it already exists
         :param verbose: whether to write logs from the task or not
         """
         self.api_url = api_url
@@ -40,6 +42,7 @@ class ByteGenie:
         self.calc_mode = calc_mode
         self.return_data = return_data
         self.overwrite = overwrite
+        self.overwrite_base_output = overwrite_base_output
         self.verbose = verbose
         self.api_key = self.read_api_key()
 
@@ -71,6 +74,7 @@ class ByteGenie:
                     'func': func,
                     'args': args,
                     'overwrite': self.overwrite,
+                    'overwrite_base_output': self.overwrite_base_output,
                     'return_data': self.return_data,
                     'verbose': self.verbose,
                     'task_mode': self.task_mode,
@@ -110,18 +114,26 @@ class ByteGenie:
             self,
             resp: dict
     ):
+        """
+        Get output data from byte-genie API response. Returns None if no data is found (e.g. if the task is scheduled)
+        :param resp:
+        :return:
+        """
         if not isinstance(resp, dict):
             raise ValueError('resp must be a dictionary')
         if 'response' in resp.keys():
             resp = resp['response']
-        if isinstance(resp, dict):
-            if 'task_1' in resp.keys():
-                resp = resp['task_1']
-        for i in np.arange(0, 2, 1):
             if isinstance(resp, dict):
-                if 'data' in resp.keys():
-                    resp = resp['data']
-        return resp
+                if 'task_1' in resp.keys():
+                    resp = resp['task_1']
+                    if isinstance(resp, dict):
+                        if 'data' in resp.keys():
+                            resp = resp['data']
+                            for i in np.arange(0, 2, 1):
+                                if isinstance(resp, dict):
+                                    if 'data' in resp.keys():
+                                        resp = resp['data']
+                            return resp
 
     def get_response_output_file(
             self,

@@ -60,11 +60,14 @@ for doc_num, doc_name in enumerate(doc_names):
         )
         responses = responses + [resp]
 
+# ### wait for output to be ready
+time.sleep(15 * 60)
+
 # ### read ranked data output
 df_ranked = pd.DataFrame()
 files_not_exist = []
 for resp_num, resp in enumerate(responses):
-    logger.info(f"reading response number {resp_num}")
+    logger.info(f"reading response number {resp_num}/{len(responses)}")
     ## get output file
     output_file = bg_sync.get_response_output_file(resp)
     ## check if the file exists
