@@ -139,10 +139,23 @@ df_emissions = df_emissions[~df_emissions['value'].isin(['', np.nan, None, 'nan'
 # ### fill na values
 df_emissions = df_emissions.fillna('')
 
+# ## Save data
+
+# ### save data locally
+df_emissions.to_csv('/tmp/emissions_sample.csv', index=False)
+
+# ## Create custom emissions dataset
+
+# ## read locally saved data
+df_emissions = pd.read_csv('/tmp/emissions_sample.csv')
+
+# ## fill na values
+df_emissions = df_emissions.fillna('')
+
 # ### set custom attributes to extract for emissions
 emission_attrs = [
+    'amount or value of emissions',
     'description of emissions',
-    'amount of emissions',
     'scope of emissions',
     'unit of measurement',
     'source of emissions',
@@ -154,7 +167,8 @@ emission_attrs = [
 resp = bg_sync.create_dataset(
     data=df_emissions.to_dict('records'),
     attrs=emission_attrs,
-    cols_to_use=['category', 'company name', 'doc_org', 'date', 'unit', 'value', 'variable', 'variable description']
+    cols_to_use=['category', 'company name', 'doc_org', 'date', 'unit', 'value', 'variable', 'variable description'],
+    groupby_cols=['doc_name'],
 )
 
 # ### get output data
@@ -168,7 +182,7 @@ df_emissions_custom = df_emissions_custom.pivot(
 ).reset_index()
 
 # ### check columns
-logger.info(f"df_emissions_custom.columns: {df_emissions_custom.columns}")
+logger.info(f"df_emissions_custom.columns: {list(df_emissions_custom.columns)}")
 """
 list(df_emissions_custom.columns)
 ['context', 'row_num', 'amount of emissions', 'company name', 'date of emissions', 'description of emissions', 'relevant quote', 'scope of emissions', 'source of emissions', 'unit of measurement']
@@ -207,3 +221,6 @@ df_emissions_custom['context'].unique().tolist()
     ]', 
 ]
 """
+
+# ## Save custom emissions data
+df_emissions_custom.to_csv('/tmp/custom_emissions_data.csv', index=False)

@@ -526,6 +526,7 @@ class ByteGenie:
             data: list,
             attrs: list,
             cols_to_use: list = None,
+            groupby_cols: list = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -533,6 +534,7 @@ class ByteGenie:
         :param data: input data
         :param attrs: attributes/columns to have in the new data
         :param cols_to_use: columns to consider in create the new dataset
+        :param groupby_cols: columns to group data by
         :param timeout: timeout value for the api call
         :return:
         """
@@ -541,6 +543,7 @@ class ByteGenie:
             'data': data,
             'attrs': attrs,
             'cols_to_use': cols_to_use,
+            'groupby_cols': groupby_cols,
         }
         payload = self.create_api_payload(
             func=func,
