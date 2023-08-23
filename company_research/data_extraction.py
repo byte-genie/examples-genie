@@ -269,7 +269,57 @@ In this instance, scope 2 and 3 have been changed to indirect emissions, and sco
 The exact outcome of standardisation will change with data. For example, adding more rows to the data might change how each value is standardised.
 """
 
-# ### We cal also standardise the whole data in one go, though the results may be less reliable, and harder to control
+# ### merge standardised company name back into custom emissions dataset
+df_emissions_custom = pd.merge(
+    left=df_emissions_custom,
+    right=comp_names_std.drop(columns=['context']).rename(
+        columns={
+            'orig_name': 'company name',
+            'std_name': 'company name_std'
+        }
+    ),
+    on=['company name'],
+    how='left'
+)
+
+# ### fill missing company name_std column with company name
+mask = df_emissions_custom['company name_std'].isnull()
+df_emissions_custom.loc[mask, 'company name_std'] = df_emissions_custom.loc[mask, 'company name']
+
+
+# ### check standardised company name column
+df_emissions_custom[['company name', 'company name_std']].drop_duplicates().values.tolist()
+"""
+df_emissions_custom[['company name', 'company name_std']].drop_duplicates().values.tolist()
+[['BR PETROBRAS', 'Petrobras'], ['Vedanta Limited', 'Vedanta'], ['Vedanta Ltd', 'Vedanta'], ['Vedanta', 'Vedanta'], ['Petrobras', 'Petrobras'], ['Projeto Albatroz', 'Projeto Albatroz']]
+"""
+
+# ### merge standardised scope back into custom emissions dataset
+df_emissions_custom = pd.merge(
+    left=df_emissions_custom,
+    right=emission_scope_std.drop(columns=['context']).rename(
+        columns={
+            'orig_name': 'scope of emissions',
+            'std_name': 'scope of emissions_std'
+        }
+    ),
+    on=['scope of emissions'],
+    how='left'
+)
+
+# ### fill missing company name_std column with company name
+mask = df_emissions_custom['scope of emissions_std'].isnull()
+df_emissions_custom.loc[mask, 'scope of emissions_std'] = df_emissions_custom.loc[mask, 'scope of emissions']
+
+# ### check standardised scope of emissions column
+df_emissions_custom[['scope of emissions', 'scope of emissions_std']].drop_duplicates().values.tolist()
+"""
+df_emissions_custom[['scope of emissions', 'scope of emissions_std']].drop_duplicates().values.tolist()
+[['Operating Emissions', 'GHG Emissions'], ['Scope 3', 'Indirect Emissions'], ['Emissions', 'GHG Emissions'], ['Operational Emissions', 'GHG Emissions'], ['GHG Emissions', 'GHG Emissions'], ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], ['GHG Emissions Intensity', 'GHG Emissions Intensity'], ['Restricted use', 'n/a'], ['n/a', 'n/a'], ['', '']]
+"""
+
+
+# ### We can also standardise the whole data in one go, though the results may be less reliable, and harder to control
 resp = bg_sync.standardise_data(
     data=df_emissions_custom.fillna('').to_dict('records'),
     cols_to_std=[
