@@ -168,7 +168,7 @@ df_search = pd.read_csv('/tmp/venda_ltd_search_results.csv')
 # ## Download files
 
 # ### select files to download
-urls_to_download = df_search['href'].unique().tolist()[:5]
+urls_to_download = df_search['href'].unique().tolist()[:6]
 
 # ### trigger download
 resp = bg_async.download_file(
@@ -184,14 +184,21 @@ output_file_exists = bg_sync.get_response_data(bg_sync.check_file_exists(output_
 # ### read output file
 if output_file_exists:
     downloaded_urls = bg_sync.get_response_data(bg_sync.read_file(output_file))
+else:
+    logger.warning('output for downloaded URLs does not yet exist')
 
 # ## Check data for downloaded URLs
 logger.info(f"downloaded URLs: {downloaded_urls}")
 """
 downloaded_urls
-['gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf.pdf', 
-'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf.pdf', 
-'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf.pdf']
+[
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomvedanta2021sustainability-esghtml/data_type=unstructured/format=html/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomvedanta2021sustainability-esghtml.html', 
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomvedantafy22business-responsibility-and-sustainability-reporthtml/data_type=unstructured/format=html/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomvedantafy22business-responsibility-and-sustainability-reporthtml.html', 
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf/data_type=unstructured/format=pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf.pdf', 
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf/data_type=unstructured/format=pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf.pdf', 
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf/data_type=unstructured/format=pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf.pdf', 
+    'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworksocial-investment-managementpdf/data_type=unstructured/format=pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworksocial-investment-managementpdf.pdf'
+]
 """
 
 # ## Next Steps
