@@ -233,6 +233,62 @@ class ByteGenie:
         )
         return resp
 
+    def find_homepage(
+            self,
+            entity_names: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Find homepages for a set of entity names
+        :param entity_names: list of entity names for which to find homepages
+        :param timeout:
+        :return:
+        """
+        func = 'find_homepage'
+        args = {
+            'entity_names': entity_names,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def search_web(
+            self,
+            keyphrases: list,
+            site: str = '',
+            max_pagenum: int = 2,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Search web for a given list of keyphrases from a given website
+        :param keyphrases: list of keyphrases to search
+        :param site: site to search (optional)
+        :param max_pagenum: maximum number of pages to keep in search results
+        :param timeout:
+        :return:
+        """
+        func = 'search_web'
+        args = {
+            'keyphrases': keyphrases,
+            'site': site,
+            'max_pagenum': max_pagenum
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def download_documents(
             self,
             entity_names: list,
