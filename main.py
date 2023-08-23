@@ -1,5 +1,5 @@
 """
-API usage
+API usage examples
 """
 
 import pandas as pd
