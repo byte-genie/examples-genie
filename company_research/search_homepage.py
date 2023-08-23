@@ -158,3 +158,42 @@ df_search[['href', 'result_text']].to_dict('records')
     {'href': 'https://www.vedantalimited.com/uploads/esg/esg-sustainability-framework/Elements-of-a-Sustainable-Future.pdf', 'result_text': 'elements of a - sustainable futures ustainable\nvedantalimited.com\nhttps://www.vedantalimited.com › uploads › esg\nPDF\nJun 16, 2017 — This materiality matrix is reviewed and ratified by both the Executive Committee (EXCO) and the Sustainability Committee.\n107 pages'}
 ]
 """
+
+# ### save search results
+df_search.to_csv('/tmp/venda_ltd_search_results.csv', index=False)
+
+# ### read saved results
+df_search = pd.read_csv('/tmp/venda_ltd_search_results.csv')
+
+# ## Download files
+
+# ### select files to download
+urls_to_download = df_search['href'].unique().tolist()[:5]
+
+# ### trigger download
+resp = bg_async.download_file(
+    urls=urls_to_download
+)
+
+# ### get output file
+output_file = bg_sync.get_response_output_file(resp)
+
+# ### check if output file exists
+output_file_exists = bg_sync.get_response_data(bg_sync.check_file_exists(output_file))
+
+# ### read output file
+if output_file_exists:
+    downloaded_urls = bg_sync.get_response_data(bg_sync.read_file(output_file))
+
+# ## Check data for downloaded URLs
+logger.info(f"downloaded URLs: {downloaded_urls}")
+"""
+downloaded_urls
+['gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomvedantafy23pdfbusiness_responsibility_and_sustainability_report_compressedpdf.pdf', 
+'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsesgesg-sustainability-frameworkresponsible-operations-for-sustainable-futurepdf.pdf', 
+'gs://db-genie/entity_type=url/entity=httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf/data_type=unstructured/format=.pdf/variable_desc=document/source=vedantalimited.com/httpswwwvedantalimitedcomuploadsinvestor-overviewannual-reportexecutive-summary-sr-fy23pdf.pdf']
+"""
+
+# ## Next Steps
+# ### Once we have donwloadedthe relevant pages/documents from an organisation's homepage, we can move on to processing these documents
+# ### See document processing examples, e.g. company_research/document_processing.py, to get started with document processing

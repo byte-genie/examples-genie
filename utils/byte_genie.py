@@ -183,6 +183,34 @@ class ByteGenie:
         )
         return resp
 
+    def list_doc_files(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        List document files matching a file pattern
+        :param doc_name: document name for which to list files
+        :param file_pattern: file pattern to match when listing files
+        :param timeout:
+        :return:
+        """
+        func = 'list_doc_files'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def check_file_exists(
             self,
             file: str,
@@ -278,6 +306,31 @@ class ByteGenie:
             'keyphrases': keyphrases,
             'site': site,
             'max_pagenum': max_pagenum
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def download_file(
+            self,
+            urls: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Download URL content as file
+        :param urls: list of URLs to download
+        :param timeout:
+        :return:
+        """
+        func = 'download_file'
+        args = {
+            'urls': urls,
         }
         payload = self.create_api_payload(
             func=func,
