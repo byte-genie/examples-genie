@@ -25,6 +25,7 @@ The code repo includes examples for:
 * Generating meta-data for a given data set;
 * Filtering out relevant data based on an input natural laguage query;
 * Answering questions based on the extracted tabular data with or without LangChain. 
+
 Stay tuned for many more examples to come!
 
 **Last updated: 2023-08-23**

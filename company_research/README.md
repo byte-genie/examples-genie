@@ -7,6 +7,7 @@ This folder contains examples related to public company research, including:
 * Ranking structured data extracted from documents by relevance to input keyphrases;
 * Creating custom datasets out of ranked data;
 * Standardising data.
+
 Stay tuned for many more examples to come!
 
 **Last updated: 2023-08-23**
