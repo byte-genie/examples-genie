@@ -19,6 +19,14 @@ bg_sync = ByteGenie(
     verbose=1,
 )
 
+
+"""
+'async' mode is suitable for long-running tasks, so that api calls can be run in the background, 
+while the rest of the code can continue doing other things.
+
+'sync' mode is suitable for short-lived tasks, where we need some output, before we can move on to anything else.
+"""
+
 # ## Define inputs
 
 # ### set company names to download documents for

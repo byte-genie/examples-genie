@@ -8,7 +8,7 @@ logging.basicConfig(
 )
 
 # Create a logger for the current module
-logger = logging.getLogger("flask-genie")
+logger = logging.getLogger("examples-genie")
 
 # Configure logging to console with module name
 logging.basicConfig(
