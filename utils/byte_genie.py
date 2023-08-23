@@ -751,6 +751,34 @@ class ByteGenie:
         )
         return resp
 
+    def generate_training_data(
+            self,
+            doc_name: str,
+            data_format: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Generate training data in a given format
+        :param doc_name: document from which to generate training data
+        :param data_format: training data format ('masked-structured-data', 'masked-original-tables', 'generative-question-answering')
+        :param timeout:
+        :return:
+        """
+        func = 'generate_training_data'
+        args = {
+            'doc_name': doc_name,
+            'data_format': data_format,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 
