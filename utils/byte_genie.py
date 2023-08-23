@@ -619,10 +619,10 @@ class ByteGenie:
     ):
         """
         Rank document data by relevance to an attribute
-        :param doc_name:
-        :param attr:
-        :param attr_type:
-        :param timeout:
+        :param doc_name: document from which to rank data
+        :param attr: keyphrase by which to rank data
+        :param attr_type: type of attribute/data to rank (quantitative or qualitative)
+        :param timeout: how long to wait before timing out the api call
         :return:
         """
         func = 'write_ranked_data'
@@ -641,6 +641,8 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+
 
 
 

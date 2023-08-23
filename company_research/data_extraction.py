@@ -224,3 +224,59 @@ df_emissions_custom['context'].unique().tolist()
 
 # ## Save custom emissions data
 df_emissions_custom.to_csv('/tmp/custom_emissions_data.csv', index=False)
+
+# ## Standardise data
+
+# ### Standardise data column by column
+
+"""
+list(df_emissions_custom.columns)
+['context', 'row_num', 'amount or value of emissions', 'company name',
+'date of emissions', 'description of emissions', 'relevant quote',
+'scope of emissions', 'source of emissions', 'unit of measurement']
+"""
+
+
+# ### We can standardise individual columns, e.g. company name
+resp = bg_sync.standardise_names(
+    data=df_emissions_custom.fillna('').to_dict('records'),
+    text_col='company name'
+)
+
+# ### get response data
+comp_names_std = pd.DataFrame(bg_sync.get_response_data(resp))
+comp_names_std[['orig_name', 'std_name']].values.tolist()
+"""
+comp_names_std[['orig_name', 'std_name']].values.tolist()
+[['BR PETROBRAS', 'Petrobras'], ['Vedanta Limited', 'Vedanta'], ['Vedanta Ltd', 'Vedanta'], ['Projeto Albatroz', 'Projeto Albatroz']]
+('Vedanta Limited', 'Vedanta Ltd') have been standardised to 'Vedanta'
+"""
+
+# ### standardise scope of emissions
+resp = bg_sync.standardise_names(
+    data=df_emissions_custom.fillna('').to_dict('records'),
+    text_col='scope of emissions'
+)
+
+# ### get response data
+emission_scope_std = pd.DataFrame(bg_sync.get_response_data(resp))
+emission_scope_std[['orig_name', 'std_name']].values.tolist()
+
+"""
+emission_scope_std[['orig_name', 'std_name']].values.tolist()
+[['Operating Emissions', 'GHG Emissions'], ['Scope 3', 'Indirect Emissions'], ['Emissions', 'GHG Emissions'], ['Operational Emissions', 'GHG Emissions'], ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], ['GHG Emissions Intensity', 'GHG Emissions Intensity'], ['Restricted use', 'n/a'], ['n/a', 'n/a']]
+In this instance, scope 2 and 3 have been changed to indirect emissions, and scope 1 to direct emissions. 
+The exact outcome of standardisation will change with data. For example, adding more rows to the data might change how each value is standardised.
+"""
+
+# ### We cal also standardise the whole data in one go, though the results may be less reliable, and harder to control
+resp = bg_sync.standardise_data(
+    data=df_emissions_custom.fillna('').to_dict('records'),
+    cols_to_std=[
+        'company name', 'amount or value of emissions', 'date of emissions',
+        'scope of emissions', 'source of emissions', 'unit of measurement',
+    ]
+)
+
+# ### get standardised data
+df_emissions_std = pd.DataFrame(bg_sync.get_response_data(resp))
