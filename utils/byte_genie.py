@@ -699,7 +699,7 @@ class ByteGenie:
         :param timeout: timeout value for api call
         :return:
         """
-        func = 'standardise_names'
+        func = 'create_query_variants'
         args = {
             'metadata': metadata,
             'query': query,
