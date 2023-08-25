@@ -8,6 +8,7 @@ import time
 import inspect
 import requests
 import numpy as np
+from utils.logging import logger
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
 
 
@@ -39,8 +40,8 @@ class ByteGenieResponse:
 
     def get_output_file(
             self,
-            resp: dict
     ):
+        resp = self.response
         if 'response' in resp.keys():
             resp = resp['response']
             if isinstance(resp, dict):
@@ -53,6 +54,28 @@ class ByteGenieResponse:
                                 if 'output_file' in resp:
                                     output_file = resp['output_file']
                                     return output_file
+
+    def check_output_file_exists(self):
+        bg = ByteGenie(
+            task_mode='sync',
+        )
+        output_file = self.get_output_file()
+        if output_file is not None:
+            file_exists = bg.check_file_exists(output_file)
+        else:
+            file_exists = False
+        return file_exists
+
+    def read_output_data(self):
+        bg = ByteGenie(
+            task_mode='sync',
+        )
+        if self.check_output_file_exists():
+            resp = bg.read_file(self.get_output_file())
+            resp_data = resp.get_data()
+            return resp_data
+        else:
+            logger.warning(f"output does not yet exist: wait some more")
 
 
 class ByteGenie:
@@ -154,6 +177,8 @@ class ByteGenie:
             bg_resp = ByteGenieResponse(json_resp)
         except Exception as e:
             json_resp = {'payload': payload, 'error': e}
+            ## convert to byte-genie resp
+            bg_resp = ByteGenieResponse(json_resp)
         return bg_resp
 
     def get_response_data(
