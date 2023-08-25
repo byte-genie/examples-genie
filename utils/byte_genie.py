@@ -23,6 +23,13 @@ class ByteGenieResponse:
         self.response = response
 
     def get_status(self):
+        """
+        Get the status of the task.
+        Note that this is the status of the task at the time API call was made.
+        In case a task was scheduled initially, even when the task is complete, the output of this method will not change.
+        For such tasks, use check_output_file_exists() to check whether a task has finished generating its output.
+        :return:
+        """
         status = 'scheduled'
         resp = self.response
         if 'response' in resp.keys():
@@ -36,6 +43,13 @@ class ByteGenieResponse:
         return status
 
     def get_data(self):
+        """
+        Get data returned in ByteGenie response.
+        Note that this method only gets data that was returned from the api call,
+        and in case a task is scheduled, even when the task output is ready, output of this method will not change.
+        Use read_output_data() to read the current output of such scheduled tasks.
+        :return:
+        """
         resp = self.response
         if 'response' in resp.keys():
             resp = resp['response']
@@ -54,6 +68,10 @@ class ByteGenieResponse:
     def get_output_file(
             self,
     ):
+        """
+        Get the output file of a task
+        :return:
+        """
         resp = self.response
         if 'response' in resp.keys():
             resp = resp['response']
@@ -69,6 +87,11 @@ class ByteGenieResponse:
                                     return output_file
 
     def check_output_file_exists(self):
+        """
+        Check if the output file exists.
+        This is the recommended method to check if the output of a task is complete.
+        :return:
+        """
         bg = ByteGenie(
             task_mode='sync',
         )
@@ -81,6 +104,11 @@ class ByteGenieResponse:
         return file_exists
 
     def read_output_data(self):
+        """
+        Read output data from the task output file.
+        This is the recommended method to read output for tasks that were previously scheduled.
+        :return:
+        """
         bg = ByteGenie(
             task_mode='sync',
         )
