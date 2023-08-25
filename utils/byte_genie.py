@@ -11,6 +11,50 @@ import numpy as np
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
 
 
+class ByteGenieResponse:
+
+    def __init__(
+            self,
+            response: dict
+    ):
+        if not isinstance(response, dict):
+            raise ValueError('response must be a dictionary')
+        self.response = response
+
+    def get_data(self):
+        resp = self.response
+        if 'response' in resp.keys():
+            resp = resp['response']
+            if isinstance(resp, dict):
+                if 'task_1' in resp.keys():
+                    resp = resp['task_1']
+                    if isinstance(resp, dict):
+                        if 'data' in resp.keys():
+                            resp = resp['data']
+                            for i in np.arange(0, 2, 1):
+                                if isinstance(resp, dict):
+                                    if 'data' in resp.keys():
+                                        resp = resp['data']
+                            return resp
+
+    def get_output_file(
+            self,
+            resp: dict
+    ):
+        if 'response' in resp.keys():
+            resp = resp['response']
+            if isinstance(resp, dict):
+                if 'task_1' in resp.keys():
+                    resp = resp['task_1']
+                    if isinstance(resp, dict):
+                        if 'task' in resp:
+                            resp = resp['task']
+                            if isinstance(resp, dict):
+                                if 'output_file' in resp:
+                                    output_file = resp['output_file']
+                                    return output_file
+
+
 class ByteGenie:
 
     def __init__(
@@ -106,9 +150,11 @@ class ByteGenie:
         )
         try:
             json_resp = response.json()
+            ## convert to byte-genie resp
+            bg_resp = ByteGenieResponse(json_resp)
         except Exception as e:
             json_resp = {'payload': payload, 'error': e}
-        return json_resp
+        return bg_resp
 
     def get_response_data(
             self,
