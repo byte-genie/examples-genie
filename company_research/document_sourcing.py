@@ -1,7 +1,7 @@
 # # Source company documents
 
 import pandas as pd
-from utils.byte_genie import ByteGenie
+from utils.byte_genie import ByteGenie, ByteGenieResponse
 
 # ## init byte-genie
 
@@ -49,9 +49,8 @@ resp = bg_async.download_documents(
     entity_names=company_names,
     doc_keywords=doc_keywords,
 )
-
 # ### check resp status
-status = resp['response']['task_1']['status']
+status = resp.get_status()
 """
 status
 scheduled # if the task is scheduled, and the output is not yet available
@@ -59,14 +58,14 @@ successful # if the task is already completed successfully, and output is availa
 """
 
 # ### file where output will be written
-output_file = resp['response']['task_1']['task']['output_file']
+output_file = resp.get_output_file()
 """
 output_file
 gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2fc2c2a3c9/data_type=structured/format=pickle/variable_desc=download_documents/source=api-genie/593a5370f106bf174d115e2fc2c2a3c9.pickle
 """
 
 # ### check whether output_file exists or not
-output_file_exists = bg_sync.get_response_data(bg_sync.check_file_exists(output_file))
+output_file_exists = resp.check_output_file_exists()
 """
 output_file_exists
 True # if the output file exists
@@ -76,8 +75,8 @@ False # if the output file does not exist
 # ## Read sourced data
 
 # ### read output file
-resp = bg_sync.read_file(output_file)
-df_reports = bg_sync.get_response_data(resp)
+# resp = bg_sync.read_file(output_file)
+df_reports = resp.read_output_data()
 df_reports = pd.DataFrame(df_reports)
 
 # ### check df columns

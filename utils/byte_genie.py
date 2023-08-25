@@ -22,6 +22,19 @@ class ByteGenieResponse:
             raise ValueError('response must be a dictionary')
         self.response = response
 
+    def get_status(self):
+        status = 'scheduled'
+        resp = self.response
+        if 'response' in resp.keys():
+            resp = resp['response']
+            if isinstance(resp, dict):
+                if 'task_1' in resp.keys():
+                    resp = resp['task_1']
+                    if isinstance(resp, dict):
+                        if 'status' in resp.keys():
+                            status = resp['status']
+        return status
+
     def get_data(self):
         resp = self.response
         if 'response' in resp.keys():
@@ -61,7 +74,8 @@ class ByteGenieResponse:
         )
         output_file = self.get_output_file()
         if output_file is not None:
-            file_exists = bg.check_file_exists(output_file)
+            resp = bg.check_file_exists(output_file)
+            file_exists = resp.get_data()
         else:
             file_exists = False
         return file_exists
@@ -84,7 +98,7 @@ class ByteGenie:
             self,
             api_url: str = 'https://api.esgnie.com/execute',
             secrets_file: str = 'secrets.json',
-            task_mode: str = 'sync',
+            task_mode: str = 'async',
             calc_mode: str = 'async',
             return_data: int = 1,
             overwrite: int = 0,
