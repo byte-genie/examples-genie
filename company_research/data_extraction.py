@@ -76,19 +76,15 @@ files_not_exist = []
 for resp_num, resp in enumerate(responses):
     logger.info(f"reading response number {resp_num}/{len(responses)}")
     ## get output file
-    output_file = bg_sync.get_response_output_file(resp)
+    output_file = resp.get_output_file()
     ## check if the file exists
-    output_file_exists = bg_sync.get_response_data(
-        bg_sync.check_file_exists(
-            output_file
-        )
-    )
+    output_file_exists = resp.check_output_file_exists()
     ## if the file exists
     if output_file_exists:
         ## get ranked data file
-        ranked_data_file = bg_sync.get_response_data(bg_sync.read_file(output_file))
+        ranked_data_file = resp.get_data()
         ## read ranked data file
-        df_ = bg_sync.get_response_data(bg_sync.read_file(ranked_data_file))
+        df_ = bg_sync.read_file(ranked_data_file).get_data()
         ## convert to dataframe
         df_ = pd.DataFrame(df_)
         ## add data to df_ranked
@@ -99,7 +95,7 @@ for resp_num, resp in enumerate(responses):
         files_not_exist = files_not_exist + [output_file]
 
 # ### check files that do not yet exist
-files_not_exist
+logger.info(f"missing output files: {files_not_exist}")
 """
 files_not_exist
 []
@@ -179,7 +175,7 @@ resp = bg_sync.create_dataset(
 )
 
 # ### get output data
-df_emissions_custom = pd.DataFrame(bg_sync.get_response_data(resp))
+df_emissions_custom = pd.DataFrame(resp.get_data())
 
 # ### pivot data
 df_emissions_custom = df_emissions_custom.pivot(
@@ -251,7 +247,7 @@ resp = bg_sync.standardise_names(
 )
 
 # ### get response data
-comp_names_std = pd.DataFrame(bg_sync.get_response_data(resp))
+comp_names_std = pd.DataFrame(resp.get_data())
 comp_names_std[['orig_name', 'std_name']].values.tolist()
 """
 comp_names_std[['orig_name', 'std_name']].values.tolist()
@@ -266,7 +262,7 @@ resp = bg_sync.standardise_names(
 )
 
 # ### get response data
-emission_scope_std = pd.DataFrame(bg_sync.get_response_data(resp))
+emission_scope_std = pd.DataFrame(resp.get_data())
 emission_scope_std[['orig_name', 'std_name']].values.tolist()
 
 """
@@ -336,4 +332,4 @@ resp = bg_sync.standardise_data(
 )
 
 # ### get standardised data
-df_emissions_std = pd.DataFrame(bg_sync.get_response_data(resp))
+df_emissions_std = pd.DataFrame(resp.get_data())

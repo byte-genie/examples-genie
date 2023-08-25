@@ -30,12 +30,12 @@ docs_file = 'gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2f
 
 # ## read sourced documents
 resp = bg_sync.read_file(docs_file)
-df_reports = bg_sync.get_response_data(resp)
+df_reports = resp.get_data() #  bg_sync.get_response_data(resp)
 df_reports = pd.DataFrame(df_reports)
 
 # ### get doc names (slugified urls)
 doc_names = [
-    bg_sync.get_response_data(bg_sync.slugify(href))
+    bg_sync.slugify(href).get_data()
     for href in df_reports['href'].unique().tolist()
 ]
 
@@ -61,11 +61,7 @@ missing_doc_info = []
 for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"{doc_num}/{len(doc_names)}: {doc_name}")
     ## read doc_info in sync mode
-    df_doc_info_ = bg_sync.get_response_data(
-        bg_async.extract_doc_info(
-            doc_name=doc_name,
-        )
-    )
+    df_doc_info_ = resp[doc_name].get_data()
     ## if missing_doc_info is not None
     if df_doc_info_ is not None:
         ## convert ot df
@@ -101,11 +97,10 @@ df_doc_info.tail().to_dict('records')
 
 # ### convert doc_year to int
 df_doc_info['doc_year'] = [
-    bg_sync.get_response_data(
-        bg_sync.parse_numeric_string(
-            text=text,
-        )
-    ) if str(text) != 'nan' else text
+    bg_sync.parse_numeric_string(
+        text=text,
+    ).get_data()
+    if str(text) != 'nan' else text
     for text in df_doc_info['doc_year']
 ]
 

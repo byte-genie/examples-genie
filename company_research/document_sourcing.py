@@ -1,7 +1,7 @@
 # # Source company documents
 
 import pandas as pd
-from utils.byte_genie import ByteGenie, ByteGenieResponse
+from utils.byte_genie import ByteGenie
 
 # ## init byte-genie
 
