@@ -743,6 +743,37 @@ class ByteGenie:
         )
         return resp
 
+    def rank_answers_to_query(
+            self,
+            data: list,
+            query: str,
+            answers: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Rank candidate answers to a given query, in the context of an input data
+        :param data: data to use as context to rank answers
+        :param query: input query to answer
+        :param answers: candidate answers to rank
+        :param timeout:
+        :return:
+        """
+        func = 'rank_answers_to_query'
+        args = {
+            'data': data,
+            'query': query,
+            'answers': answers,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def create_dataset(
             self,
             data: list,
@@ -891,6 +922,8 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+
 
 
 
