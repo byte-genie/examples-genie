@@ -923,6 +923,39 @@ class ByteGenie:
         )
         return resp
 
+    def train_llm(
+            self,
+            username: str,
+            model_name: str,
+            doc_names: list,
+            training_formats: list = None,
+            timeout: int = 5 * 60,
+    ):
+        """
+        Train an LLM on selected documents
+        :param username: user name
+        :param model_name: model name to use for the trained model
+        :param doc_names: list of documents to train model on
+        :param training_formats: training data formats, e.g. masked-modelling, generative QA, etc
+        :return:
+        """
+        func = 'train_llm'
+        args = {
+            'username': username,
+            'model_name': model_name,
+            'doc_names': doc_names,
+            'training_formats': training_formats,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 
