@@ -28,16 +28,24 @@ while the rest of the code can continue doing other things.
 'sync' mode is suitable for short-lived tasks, where we need some output, before we can move on to anything else.
 """
 
-# ## Set documents to train an LLM on
+# ## set inputs
+
+# ### Set documents to train an LLM on
 doc_names = [
     'httpspetrobrascombrdatafilese897b4615e56f7105fc7bcd7e9e99ea811_pet_clima_ingles_2022_fzpdf',
     'httpswwwvedantalimitedcomimghomepagesustainability20report2022pdf',
 ]
 
+# ### set username
+usernme = 'demo-genie'
+
+# ### set model name
+model_name = 'model-101'
+
 # ## run model training
 resp = bg_async.train_llm(
-    username='demo-genie',
-    model_name='model-101',
+    username=usernme,
+    model_name=model_name,
     doc_names=doc_names,
     training_formats=['masked-table-cells', 'generative-qa'],
 )
