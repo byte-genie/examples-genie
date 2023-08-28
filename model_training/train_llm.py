@@ -42,6 +42,10 @@ usernme = 'demo-genie'
 # ### set model name
 model_name = 'model-101'
 
+"""
+username and model_name inputs are used to set the unique model_id for the trained model 
+"""
+
 # ## run model training
 resp = bg_async.train_llm(
     username=usernme,
