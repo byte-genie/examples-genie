@@ -60,6 +60,12 @@ for doc_num, doc_name in enumerate(doc_names):
         data_format='masked-structured-data'
     )
     responses = responses + [resp]
+    ## training data for masked ranked data
+    resp = bg_async.generate_training_data(
+        doc_name=doc_name,
+        data_format='masked-ranked-data'
+    )
+    responses = responses + [resp]
 
 # ### wait for the task to finish
 time.sleep(15 * 60)
