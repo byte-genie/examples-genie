@@ -30,7 +30,7 @@ docs_file = 'gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2f
 
 # ## read sourced documents
 resp = bg_sync.read_file(docs_file)
-df_reports = resp.get_data() #  bg_sync.get_response_data(resp)
+df_reports = resp.get_data()
 df_reports = pd.DataFrame(df_reports)
 
 # ### get doc names (slugified urls)
