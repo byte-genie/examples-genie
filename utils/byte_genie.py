@@ -165,6 +165,16 @@ class ByteGenie:
             api_key = ''
         return api_key
 
+    def read_username(self):
+        filename = os.path.join(self.secrets_file)
+        try:
+            with open(filename, mode='r') as f:
+                secrets = json.loads(f.read())
+                api_key = secrets['USERNAME']
+        except FileNotFoundError:
+            api_key = ''
+        return api_key
+
     def create_api_payload(
             self,
             func: str,
@@ -285,6 +295,37 @@ class ByteGenie:
         func = 'slugify'
         args = {
             'text': text,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def upload_data(
+            self,
+            contents: list,
+            filenames: list,
+            username: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Upload files
+        :param contents: file contents to upload
+        :param filenames: names for uploaded file contents
+        :param username: user name
+        :param timeout:
+        :return:
+        """
+        func = 'upload_data'
+        args = {
+            'contents': contents,
+            'filenames': filenames,
+            'username': username,
         }
         payload = self.create_api_payload(
             func=func,
@@ -945,6 +986,30 @@ class ByteGenie:
             'model_name': model_name,
             'doc_names': doc_names,
             'training_formats': training_formats,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def show_uploads(
+            self,
+            username: str,
+            timeout: int = 5 * 60,
+    ):
+        """
+        List uploaded files
+        :param username: user name
+        :return:
+        """
+        func = 'show_uploads'
+        args = {
+            'username': username,
         }
         payload = self.create_api_payload(
             func=func,
