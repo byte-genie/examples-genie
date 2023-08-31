@@ -73,3 +73,17 @@ for doc_num, doc_name in enumerate(doc_names):
         doc_name=doc_name
     )
     responses = responses + [resp_]
+
+# ### get doc_info data
+missing_files = []
+df_doc_info = pd.DataFrame()
+for resp_num, resp in enumerate(responses):
+    logger.info(f"Reading document info for ({resp_num}/{len(responses)})")
+    if resp.check_output_file_exists():
+        df_doc_info_ = pd.DataFrame(resp.read_output_data())
+        df_doc_info = pd.concat([df_doc_info, df_doc_info_])
+    else:
+        missing_files = missing_files + resp.get_output_file()
+
+
+
