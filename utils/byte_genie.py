@@ -374,6 +374,37 @@ class ByteGenie:
         )
         return resp
 
+    def upload_data(
+            self,
+            username: str,
+            contents: list,
+            filenames: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Upload contents to files
+        :param username: user name
+        :param contents: contents to upload
+        :param filenames: filenames to use for uploaded contents
+        :param timeout:
+        :return:
+        """
+        func = 'write_to_file'
+        args = {
+            'username': username,
+            'contents': contents,
+            'filenames': filenames,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def find_homepage(
             self,
             entity_names: list,
@@ -525,6 +556,34 @@ class ByteGenie:
         args = {
             'doc_name': doc_name,
             'doc_type_choices': doc_type_choices,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def extract_text_years(
+            self,
+            text: str,
+            output_format: str = 'cleaned',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract years from text
+        :param text: text from which to extract years
+        :param output_format: if output_format is 'cleaned', the years will be returned in a clean YYYY format
+        :param timeout:
+        :return:
+        """
+        func = 'extract_text_years'
+        args = {
+            'text': text,
+            'output_format': output_format,
         }
         payload = self.create_api_payload(
             func=func,

@@ -85,5 +85,37 @@ for resp_num, resp in enumerate(responses):
     else:
         missing_files = missing_files + resp.get_output_file()
 
+# ### check df_doc_info
+logger.info(f"{len(df_doc_info)} rows found in df_doc_info")
+logger.info(f"{len(missing_files)} files with missing document info")
+
+# ## save document info
+bg_sync.upload_data(
+    username=bg_sync.read,
+    contents=[df_doc_info],
+    filenames=['downloaded-docs_cement-companies.csv']
+)
+
+# ## Filter documents
+
+# ### get unique doc_year
+doc_years = df_doc_info['doc_year'].unique().tolist()
+
+# ### convert years to numeric
+num_years = []
+for yr in doc_years:
+    logger.info(f"convrting {yr} to numeric")
+    if isinstance(yr, float) or isinstance(yr, int):
+        yr_num = yr
+    else:
+        yr_num = bg_sync.extract_text_years(str(yr)).get_data()
+    num_years = num_years + [yr_num]
 
 
+# ### add numeric years to df_doc_info
+df_doc_info['doc_year_num'] = num_years
+
+# ### filter over recent years
+df_doc_info = df_doc_info[df_doc_info['doc_year_num'] > 2021]
+
+# ## trigger processing
