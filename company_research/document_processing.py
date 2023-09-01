@@ -30,7 +30,7 @@ docs_file = 'gs://db-genie/entity_type=api-tasks/entity=593a5370f106bf174d115e2f
 
 # ## read sourced documents
 resp = bg_sync.read_file(docs_file)
-df_reports = resp.get_data() #  bg_sync.get_response_data(resp)
+df_reports = resp.get_data()
 df_reports = pd.DataFrame(df_reports)
 
 # ### get doc names (slugified urls)
@@ -90,7 +90,13 @@ list(df_doc_info.columns)
 df_doc_info.head().to_dict('records')
 """
 df_doc_info.tail().to_dict('records')
-[{'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfbiodiversity-assesssment-mapping-with-cdsbpdf', 'doc_org': 'Climate Disclosure Standards Board (CDSB)', 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 8.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsalternatives_in_action-ultratech_sustainability_reportpdf', 'doc_org': 'Sustainability Report 2010', 'doc_type': "['sustainability report']", 'doc_year': 2011.0, 'num_pages': 48.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsinvestor-updateslb-report-june-2023pdf', 'doc_org': nan, 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 10.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsannual-reportsannual-report-single-viewpdf', 'doc_org': 'Mr. Aditya Vikram Birla', 'doc_type': "['annual report']", 'doc_year': 2022.0, 'num_pages': 362.0}, {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsucl_sr2010-12_gricontentindexpdf', 'doc_org': 'the document was published by ultratech cement', 'doc_type': "['annual report']", 'doc_year': 2012.0, 'num_pages': 8.0}]
+[
+    {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfbiodiversity-assesssment-mapping-with-cdsbpdf', 'doc_org': 'Climate Disclosure Standards Board (CDSB)', 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 8.0}, 
+    {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsalternatives_in_action-ultratech_sustainability_reportpdf', 'doc_org': 'Sustainability Report 2010', 'doc_type': "['sustainability report']", 'doc_year': 2011.0, 'num_pages': 48.0}, 
+    {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsinvestor-updateslb-report-june-2023pdf', 'doc_org': nan, 'doc_type': "['sustainability report']", 'doc_year': 2023.0, 'num_pages': 10.0}, 
+    {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdffinancialsannual-reportsannual-report-single-viewpdf', 'doc_org': 'Mr. Aditya Vikram Birla', 'doc_type': "['annual report']", 'doc_year': 2022.0, 'num_pages': 362.0}, 
+    {'doc_name': 'httpswwwultratechcementcomcontentdamultratechcementwebsitepdfsustainability-reportsucl_sr2010-12_gricontentindexpdf', 'doc_org': 'the document was published by ultratech cement', 'doc_type': "['annual report']", 'doc_year': 2012.0, 'num_pages': 8.0}
+]
 """
 
 # ## Post-process document info
