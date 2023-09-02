@@ -192,7 +192,7 @@ doc_names = df_doc_details['doc_name'].unique().tolist()
 # ### trigger processing for documents, in batches of 15 documents, to avoid exceeding rate limit
 for doc_num, doc_name in enumerate(doc_names[:25]):
     logger.info(f"triggering processing for ({doc_num}/{len(doc_names)}): {doc_name}")
-    bg_async.structure_quants_pipeline(
+    resp_ = bg_async.structure_quants_pipeline(
         doc_name=doc_name,
     )
     if (doc_num > 0) and (doc_num % 15 == 0):
@@ -209,3 +209,12 @@ for doc_num, doc_name in enumerate(doc_names):
     if quant_files_ is not None:
         logger.info(f"found {len(quant_files_)} quant files for {doc_name}")
         quant_files[doc_name] = quant_files_
+
+# ### Handle missing output
+"""
+Note that sometimes document processing may fail to complete successfully due to some random errors, like API call time, rate limit errors, etc.without finishing. 
+In  this case, the document processing pipeline can be triggered again. By default API calls check for previously existing output first, 
+and generate new output if the output does not already exists. Hence, re-triggering a document processing pipeline will 
+just fill up any missing output, while leaving the existing output intact. 
+"""
+
