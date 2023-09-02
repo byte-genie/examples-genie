@@ -190,12 +190,22 @@ df_doc_details.to_dict('records')
 doc_names = df_doc_details['doc_name'].unique().tolist()
 
 # ### trigger processing for documents, in batches of 15 documents, to avoid exceeding rate limit
-for doc_num, doc_name in enumerate(doc_names):
+for doc_num, doc_name in enumerate(doc_names[:25]):
     logger.info(f"triggering processing for ({doc_num}/{len(doc_names)}): {doc_name}")
     bg_async.structure_quants_pipeline(
         doc_name=doc_name,
     )
     if (doc_num > 0) and (doc_num % 15 == 0):
-        time.sleep(90 * 60)
+        time.sleep(1 * 60 * 60)
 
-
+# ### check if synthesized-quants data exists
+quant_files = {}
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"checking quants data for ({doc_num}/{len(doc_names)}): {doc_name}")
+    quant_files_ = bg_sync.list_doc_files(
+        doc_name=doc_name,
+        file_pattern='variable_desc=synthesized-quants/**.csv',
+    ).get_data()
+    if quant_files_ is not None:
+        logger.info(f"found {len(quant_files_)} quant files for {doc_name}")
+        quant_files[doc_name] = quant_files_
