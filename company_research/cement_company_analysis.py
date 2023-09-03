@@ -226,5 +226,57 @@ and generate new output if the output does not already exists. Hence, re-trigger
 just fill up any missing output, while leaving the existing output intact. 
 """
 
+# ## rank data by relevance to most relevant topics
+
+# ### define a set of relevant keyphrases to search in extracted data from documents
+keyphrases = {
+    'quantitative': ['cement production', 'revenue', 'emissions by scope', 'emission intensity', 'energy consumption'],
+    'qualitative': ['emission reduction measures', 'revenue growth projection', 'business risk',
+                    'cement industry trends', 'decarbonisation plans', 'climate risks', 'climate resilience']
+}
+# ### set the fraction of rows to keep in ranked data
+frac_rows_to_keep = 0.1
+
+# ### from each document, rank quantitative and qualitative data by relevance to set of keyphrases
+responses = []
+for doc_num, doc_name in enumerate(doc_names):
+    for type_num, keyphase_type in enumerate(keyphrases.keys()):
+        for keyphrase_num, keyphrase in enumerate(keyphrases):
+            logger.info(f"{doc_name} ({doc_num}/{len(doc_names)}); "
+                        f"{keyphase_type} ({keyphrase_num}/{len(keyphrases.keys())})"
+                        f"{keyphrase} ({keyphrase_num}/{len(keyphrases)})")
+            resp = bg_async.write_ranked_data(
+                doc_name=doc_name,
+                attr=keyphrase,
+                attr_type=keyphase_type,
+                frac_rows_to_keep=frac_rows_to_keep,
+            )
+            responses = responses + [resp]
+
+
+# ## generate masked training data
+
+# ### generate training data for masked-modeling
+responses = []
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"generating training data for ({doc_num}/{len(doc_names)}): {doc_name}")
+    ## training data for masked original tables
+    resp = bg_async.generate_training_data(
+        doc_name=doc_name,
+        data_format='masked-original-tables'
+    )
+    responses = responses + [resp]
+    ## training data for masked structured data
+    resp = bg_async.generate_training_data(
+        doc_name=doc_name,
+        data_format='masked-structured-data'
+    )
+    responses = responses + [resp]
+    ## training data for masked ranked data
+    resp = bg_async.generate_training_data(
+        doc_name=doc_name,
+        data_format='masked-ranked-data'
+    )
+    responses = responses + [resp]
 
 
