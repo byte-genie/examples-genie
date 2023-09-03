@@ -190,7 +190,7 @@ df_doc_details.to_dict('records')
 doc_names = df_doc_details['doc_name'].unique().tolist()
 
 # ### trigger processing for documents, in batches of 15 documents, to avoid exceeding rate limit
-for doc_num, doc_name in enumerate(doc_names[:25]):
+for doc_num, doc_name in enumerate(doc_names[25:]):
     logger.info(f"triggering processing for ({doc_num}/{len(doc_names)}): {doc_name}")
     resp_ = bg_async.structure_quants_pipeline(
         doc_name=doc_name,
@@ -210,6 +210,14 @@ for doc_num, doc_name in enumerate(doc_names):
         logger.info(f"found {len(quant_files_)} quant files for {doc_name}")
         quant_files[doc_name] = quant_files_
 
+# ### check quant_files
+"""
+len(quant_files)
+49
+len(quant_files) == len(doc_names)
+True
+"""
+
 # ### Handle missing output
 """
 Note that sometimes document processing may fail to complete successfully due to some random errors, like API call time, rate limit errors, etc.without finishing. 
@@ -217,4 +225,6 @@ In  this case, the document processing pipeline can be triggered again. By defau
 and generate new output if the output does not already exists. Hence, re-triggering a document processing pipeline will 
 just fill up any missing output, while leaving the existing output intact. 
 """
+
+
 
