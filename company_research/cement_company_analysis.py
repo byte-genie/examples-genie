@@ -71,23 +71,33 @@ df_document_urls.to_csv(f"/tmp/document-urls_cement-companies.csv", index=False)
 
 # ### make api calls
 responses = []
+df_doc_info = pd.DataFrame()
+missing_files = []
 for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"Extracting document info for ({doc_num}/{len(doc_names)}): {doc_name}")
     resp_ = bg_async.extract_doc_info(
         doc_name=doc_name
     )
+    ## if output data is already available
+    if resp_.get_data() is not None:
+        df_doc_info_ = pd.DataFrame(resp_.get_data())
+        df_doc_info = pd.concat([df_doc_info, df_doc_info_])
+    ## if output is not yet availble
+    else:
+        ## add output file to missing files
+        missing_files + resp.get_output_file()
     responses = responses + [resp_]
 
-# ### get doc_info data
-missing_files = []
-df_doc_info = pd.DataFrame()
-for resp_num, resp in enumerate(responses):
-    logger.info(f"Reading document info for ({resp_num}/{len(responses)})")
+# ### read missing files
+missing_files_updated = []
+for file_num, file in enumerate(missing_files):
+    logger.info(f"Reading missing file ({file_num}/{len(missing_files)}): {file}")
     if resp.check_output_file_exists():
         df_doc_info_ = pd.DataFrame(resp.read_output_data())
         df_doc_info = pd.concat([df_doc_info, df_doc_info_])
     else:
-        missing_files = missing_files + resp.get_output_file()
+        missing_files_updated = missing_files_updated + [file]
+missing_files = missing_files_updated
 
 # ### check df_doc_info
 logger.info(f"{len(df_doc_info)} rows found in df_doc_info")
