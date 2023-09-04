@@ -177,7 +177,7 @@ df_doc_details = df_doc_details[
     (df_doc_details['doc_year_num'] > 2021) &
     (df_doc_details['doc_type'].str.contains('annual report|sustainability report')) &
     (df_doc_details['num_pages'] >= 20)
-]
+    ]
 
 # ### check df_doc_info
 """
@@ -190,7 +190,7 @@ df_doc_details.to_dict('records')
 doc_names = df_doc_details['doc_name'].unique().tolist()
 
 # ### trigger processing for documents, in batches of 15 documents, to avoid exceeding rate limit
-for doc_num, doc_name in enumerate(doc_names[25:]):
+for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"triggering processing for ({doc_num}/{len(doc_names)}): {doc_name}")
     resp_ = bg_async.structure_quants_pipeline(
         doc_name=doc_name,
@@ -253,30 +253,24 @@ for doc_num, doc_name in enumerate(doc_names):
             )
             responses = responses + [resp]
 
-
 # ## generate masked training data
+
+# ### set training formats
+training_formats = [
+    'masked-original-tables',
+    'masked-structured-data',
+    'masked-ranked-data'
+]
 
 # ### generate training data for masked-modeling
 responses = []
 for doc_num, doc_name in enumerate(doc_names):
-    logger.info(f"generating training data for ({doc_num}/{len(doc_names)}): {doc_name}")
-    ## training data for masked original tables
-    resp = bg_async.generate_training_data(
-        doc_name=doc_name,
-        data_format='masked-original-tables'
-    )
-    responses = responses + [resp]
-    ## training data for masked structured data
-    resp = bg_async.generate_training_data(
-        doc_name=doc_name,
-        data_format='masked-structured-data'
-    )
-    responses = responses + [resp]
-    ## training data for masked ranked data
-    resp = bg_async.generate_training_data(
-        doc_name=doc_name,
-        data_format='masked-ranked-data'
-    )
-    responses = responses + [resp]
-
-
+    for format_num, training_format in enumerate(training_formats):
+        logger.info(f"generating training data for ({doc_num}/{len(doc_names)}; {format_num}/{len(training_format)}): "
+                    f"{doc_name}; {training_format}")
+        ## training data for masked original tables
+        resp = bg_async.generate_training_data(
+            doc_name=doc_name,
+            data_format=training_format
+        )
+        responses = responses + [resp]
