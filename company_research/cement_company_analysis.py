@@ -255,10 +255,10 @@ output_files = []
 missing_files = []
 for doc_num, doc_name in enumerate(doc_names):
     for type_num, keyphase_type in enumerate(keyphrases.keys()):
-        for keyphrase_num, keyphrase in enumerate(keyphrases):
+        for keyphrase_num, keyphrase in enumerate(keyphrases[keyphase_type]):
             logger.info(f"{doc_name} ({doc_num}/{len(doc_names)}); "
-                        f"{keyphase_type} ({keyphrase_num}/{len(keyphrases.keys())})"
-                        f"{keyphrase} ({keyphrase_num}/{len(keyphrases)})")
+                        f"{keyphase_type} ({type_num}/{len(keyphrases.keys())}); "
+                        f"{keyphrase} ({keyphrase_num}/{len(keyphrases)});")
             resp = bg_async.write_ranked_data(
                 doc_name=doc_name,
                 attr=keyphrase,
@@ -274,6 +274,11 @@ for doc_num, doc_name in enumerate(doc_names):
                 ## add output file to missing_files
                 missing_files = missing_files + [resp.get_output_file()]
 
+# ### check available output files
+logger.info(f"{len(output_files)} available output files for ranked data")
+
+# ### check missing files
+logger.info(f"{len(missing_files)} missing output files for ranked data")
 
 # ## generate masked training data
 
