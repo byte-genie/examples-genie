@@ -88,6 +88,12 @@ for doc_num, doc_name in enumerate(doc_names):
         missing_files + resp.get_output_file()
     responses = responses + [resp_]
 
+# ### check available output
+logger.info(f"{len(df_doc_info)} rows found in doc_info df")
+
+# ### check missing files
+logger.info(f"{len(missing_files)} files with missing doc_info output")
+
 # ### read missing files
 missing_files_updated = []
 for file_num, file in enumerate(missing_files):
@@ -189,10 +195,6 @@ df_doc_details = df_doc_details[
     (df_doc_details['num_pages'] >= 20)
     ]
 
-# ### check df_doc_info
-"""
-df_doc_details.to_dict('records')
-"""
 
 # ## trigger processing for selected documents
 
@@ -249,6 +251,8 @@ frac_rows_to_keep = 0.1
 
 # ### from each document, rank quantitative and qualitative data by relevance to set of keyphrases
 responses = []
+output_files = []
+missing_files = []
 for doc_num, doc_name in enumerate(doc_names):
     for type_num, keyphase_type in enumerate(keyphrases.keys()):
         for keyphrase_num, keyphrase in enumerate(keyphrases):
@@ -262,6 +266,14 @@ for doc_num, doc_name in enumerate(doc_names):
                 frac_rows_to_keep=frac_rows_to_keep,
             )
             responses = responses + [resp]
+            ## if output file exists
+            if resp.check_output_file_exists():
+                ## add output file to output_files
+                output_files = output_files + [resp.get_output_file()]
+            else:
+                ## add output file to missing_files
+                missing_files = missing_files + [resp.get_output_file()]
+
 
 # ## generate masked training data
 
