@@ -415,26 +415,26 @@ class ByteGenie:
         )
         return resp
 
-    def upload_data(
+    def read_synthesized_data(
             self,
-            username: str,
-            contents: list,
-            filenames: list,
+            doc_name: str,
+            data_type: str = 'quants',
+            drop_embedding: bool = True,
             timeout: int = 15 * 60,
     ):
         """
-        Upload contents to files
-        :param username: user name
-        :param contents: contents to upload
-        :param filenames: filenames to use for uploaded contents
-        :param timeout:
+        Read synthesized data, which synthesizes document-level info, with specific info extracted from the document
+        :param doc_name: document name
+        :param data_type: data type to read ('quants' for quantitative data, or 'text' for text data)
+        :param drop_embedding: whether to drop embedding column or not when returning the data; embedding column contains embeddings for extracted text (useful for semantic search)
+        :param timeout: time out for the api call
         :return:
         """
-        func = 'write_to_file'
+        func = 'read_synthesized_data'
         args = {
-            'username': username,
-            'contents': contents,
-            'filenames': filenames,
+            'doc_name': doc_name,
+            'data_type': data_type,
+            'drop_embedding': drop_embedding,
         }
         payload = self.create_api_payload(
             func=func,

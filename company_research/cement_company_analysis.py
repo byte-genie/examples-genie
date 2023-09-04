@@ -258,7 +258,7 @@ for doc_num, doc_name in enumerate(doc_names):
         for keyphrase_num, keyphrase in enumerate(keyphrases[keyphase_type]):
             logger.info(f"{doc_name} ({doc_num}/{len(doc_names)}); "
                         f"{keyphase_type} ({type_num}/{len(keyphrases.keys())}); "
-                        f"{keyphrase} ({keyphrase_num}/{len(keyphrases)});")
+                        f"{keyphrase} ({keyphrase_num}/{len(keyphrases[keyphase_type])});")
             resp = bg_async.write_ranked_data(
                 doc_name=doc_name,
                 attr=keyphrase,
@@ -270,6 +270,7 @@ for doc_num, doc_name in enumerate(doc_names):
             if resp.check_output_file_exists():
                 ## add output file to output_files
                 output_files = output_files + [resp.get_output_file()]
+            ## if output file does not exist
             else:
                 ## add output file to missing_files
                 missing_files = missing_files + [resp.get_output_file()]
