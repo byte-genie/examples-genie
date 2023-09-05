@@ -275,10 +275,10 @@ for doc_num, doc_name in enumerate(doc_names):
                 ## add output file to missing_files
                 missing_files = missing_files + [resp.get_output_file()]
 
-# ### check available output files
+# ### check available output files for ranked data
 logger.info(f"{len(output_files)} available output files for ranked data")
 
-# ### check missing files
+# ### check missing files for ranked data
 logger.info(f"{len(missing_files)} missing output files for ranked data")
 
 # ## generate masked training data
@@ -292,6 +292,8 @@ training_formats = [
 
 # ### generate training data for masked-modeling
 responses = []
+output_files = []
+missing_files = []
 for doc_num, doc_name in enumerate(doc_names):
     for format_num, training_format in enumerate(training_formats):
         logger.info(f"generating training data for ({doc_num}/{len(doc_names)}; {format_num}/{len(training_format)}): "
@@ -302,3 +304,17 @@ for doc_num, doc_name in enumerate(doc_names):
             data_format=training_format
         )
         responses = responses + [resp]
+        ## if output file exists
+        if resp.check_output_file_exists():
+            ## add output file to output_files
+            output_files = output_files + [resp.get_output_file()]
+        ## if output file does not exist
+        else:
+            ## add output file to missing_files
+            missing_files = missing_files + [resp.get_output_file()]
+
+# ### check available output files for ranked data
+logger.info(f"{len(output_files)} available output files for masked data")
+
+# ### check missing files for ranked data
+logger.info(f"{len(missing_files)} missing output files for masked data")
