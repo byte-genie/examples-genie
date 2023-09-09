@@ -116,3 +116,64 @@ tables_dict[list(tables_dict.keys())[31]]
 [{'Amount ($)': '1,324.58', 'SUMMARY OF CHARGES 21 Oct 2015 to 19 Nov 2015': 'Balance B/F from Previous Bill'}, {'Amount ($)': '-1,324.58', 'SUMMARY OF CHARGES 21 Oct 2015 to 19 Nov 2015': 'Payment on 06-11-2015- Thank You'}, {'Amount ($)': '0.00', 'SUMMARY OF CHARGES 21 Oct 2015 to 19 Nov 2015': 'Outstanding Balance'}, {'Amount ($)': '8,399.53', 'SUMMARY OF CHARGES 21 Oct 2015 to 19 Nov 2015': 'Total Current Charges due on 15 Dec 2015 (Tue)'}, {'Amount ($)': '$8,399.53', 'SUMMARY OF CHARGES 21 Oct 2015 to 19 Nov 2015': 'Total Amount Payable'}]
 """
 
+# ## Re-structure data into desired form
+
+# ### init empty dict to store restructured datasets
+datasets_dict = {}
+
+# ### restructure table 0
+table_key = list(tables_dict.keys())[0]
+resp = bg_async.create_dataset(
+    data=tables_dict[table_key],
+    attrs=['date', 'bank_number', 'cheque_number', 'account_number', 'voucher_number']
+)
+if resp.check_output_file_exists():
+    datasets_dict[table_key] = pd.DataFrame(resp.read_output_data())
+    ## pivot data
+    datasets_dict[table_key] = \
+        pd.pivot(
+            data=datasets_dict[table_key],
+            index=['context', 'row_num'],
+            columns='variable',
+            values='value'
+        ).reset_index()
+    ## check datasets_dict[table_key]
+    """
+    list(datasets_dict[table_key].columns)
+    ['context', 'row_num', 'account_number', 'bank_number', 'cheque_number', 'date', 'relevant quote', 'voucher_number']
+    'context' column contains the the original context from which the data is extracted
+    'relevant quote' column contains any specific relevant quote in the context relevant to extracted data
+    datasets_dict[table_key].drop(columns=['context', 'relevant quote', 'row_num']).to_dict('records')
+    [{'account_number': '04060352312', 'bank_number': '7302', 'cheque_number': '4509', 'date': '09/12/2015', 'voucher_number': '2015/16966'}]
+    """
+else:
+    logger.warning(f"output file {resp.get_output_file()} does not yet exist: try again later")
+
+
+# ### restructure table 17
+table_key = list(tables_dict.keys())[17]
+resp = bg_async.create_dataset(
+    data=tables_dict[table_key],
+    attrs=['product_purchased', 'payment_amount', 'payment_currency', 'sales_tax', 'transaction_description', 'any_additional_details']
+)
+if resp.check_output_file_exists():
+    datasets_dict[table_key] = pd.DataFrame(resp.read_output_data())
+    ## pivot data
+    datasets_dict[table_key] = \
+        pd.pivot(
+            data=datasets_dict[table_key],
+            index=['context', 'row_num'],
+            columns='variable',
+            values='value'
+        ).reset_index()
+    ## check datasets_dict[table_key]
+    """
+    list(datasets_dict[table_key].columns)
+    ['context', 'row_num', 'any_additional_details', 'payment_amount', 'payment_currency', 'product_purchased', 'relevant quote', 'sales_tax', 'transaction_description']
+    'context' column contains the the original context from which the data is extracted
+    'relevant quote' column contains any specific relevant quote in the context relevant to extracted data
+    datasets_dict[table_key].drop(columns=['context', 'relevant quote', 'row_num']).to_dict('records')
+    [{'account_number': '04060352312', 'bank_number': '7302', 'cheque_number': '4509', 'date': '09/12/2015', 'voucher_number': '2015/16966'}]
+    """
+else:
+    logger.warning(f"output file {resp.get_output_file()} does not yet exist: try again later")
