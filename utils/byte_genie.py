@@ -936,6 +936,31 @@ class ByteGenie:
         )
         return resp
 
+    def translate_text_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger text translation pipeline, which extracts text and tables, and translates them
+        :param doc_name: document name for which to trigger translation pipeline
+        :param timeout:
+        :return:
+        """
+        func = 'translate_text_pipeline'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def structure_quants_pipeline(
             self,
             doc_name: str,

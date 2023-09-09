@@ -7,6 +7,8 @@ import os
 import json
 import base64
 
+import pandas as pd
+
 
 def read_secrets(secrets_file: str = 'secrets.json') -> dict:
     filename = os.path.join(secrets_file)
@@ -65,4 +67,23 @@ def convert_list_cols_to_str(df, cols: list, sep: str = '; ', verbose: int = 1):
         except Exception as e:
             if verbose:
                 print(f"Error in convert_list_cols_to_str() for {col}: {e}")
+    return df
+
+
+def read_file_contents(directory: str):
+    contents = []
+    file_paths = []
+    file_names = os.listdir(directory)
+    for file_name in file_names:
+        file_path = os.path.join(directory, file_name)
+        with open(file_path, 'rb') as file:
+            content = file.read()
+            data = base64.b64encode(content)
+            data_with_prefix = "data:;base64," + data.decode('utf-8')
+            contents.append(data_with_prefix)
+            file_paths.append(file_path)
+    df = pd.DataFrame()
+    df['file'] = file_paths
+    df['filename'] = [file.split('/')[-1] for file in file_paths]
+    df['content'] = contents
     return df
