@@ -26,7 +26,7 @@ bg_sync = ByteGenie(
 # ## read local files to process
 
 # ### Specify the directory containing files to process
-directory = f"/Users/majid/Dropbox/startup/ESGenie/PoCs/Temus/short_pdf_processing"
+directory = f"/path/to/files"
 
 # ### read file contents in a directory
 df_contents = utils.common.read_file_contents(directory)
