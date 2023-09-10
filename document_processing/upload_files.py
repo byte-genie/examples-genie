@@ -25,8 +25,8 @@ bg_sync = ByteGenie(
 
 # ## read local files to process
 
-# ### Specify the directory containing files to process
-directory = f"/path/to/files"
+# ### Specify the directory containing files to upload
+directory = f"/tmp/sample-files"
 
 # ### read file contents in a directory
 df_contents = utils.common.read_file_contents(directory)
