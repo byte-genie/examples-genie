@@ -29,6 +29,10 @@ This folder contains examples for
 * Ranking structured data extracted from documents by relevance to input keyphrases;
 * Creating custom datasets out of ranked data;
 * Standardising data.
+## data_management
+This folder contains examples related to data management, including:
+* Uploading local files;
+* Accessing data extracted from processed documents.
 ## data_qa
 This folder contains examples for
 * Generating meta-data for a given data set;
