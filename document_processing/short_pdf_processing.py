@@ -2,7 +2,6 @@
 
 
 import pandas as pd
-import utils.common
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
@@ -32,6 +31,9 @@ doc_names = [
     'userid_demo-genie_uploadfilename_utility-billspdf',
     'userid_demo-genie_uploadfilename_purchase-of-material-geocom-engineeringpdf'
 ]
+"""
+See document_processing/upload_files.py (.ipynb) or data_management/upload_files.py (.ipynb) to see how to upload documents 
+"""
 
 
 # ## process documents
