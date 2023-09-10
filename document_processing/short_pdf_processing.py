@@ -157,3 +157,9 @@ if resp.check_output_file_exists():
     """
 else:
     logger.warning(f"output file {resp.get_output_file()} does not yet exist: try again later")
+
+# ## Next steps
+"""
+This example covers the short-form document processing, such as invoices, utility bills, etc.
+For long-form document processing examples, see company_research/document_processing.py (.ipynb) file
+"""
