@@ -1,8 +1,6 @@
-# # Short-form PDF processing (e.g. invoices, bills)
+# # Short-form PDF processing
 
-import os
-import time
-import base64
+
 import pandas as pd
 import utils.common
 from utils.logging import logger
@@ -25,38 +23,18 @@ bg_sync = ByteGenie(
     verbose=1,
 )
 
-# ## read local files to process
 
-# ### Specify the directory containing files to process
-directory = f"/Users/majid/Dropbox/startup/ESGenie/PoCs/Temus/short_pdf_processing"
-
-# ### read file contents in a directory
-df_contents = utils.common.read_file_contents(directory)
-
-# ### upload files
-resp = bg_sync.upload_data(
-    contents=df_contents['content'].tolist(),
-    filenames=df_contents['filename'].tolist(),
-    username=bg_sync.read_username()
-)
-
-# ### get uploaded data
-df_uploads = pd.DataFrame(resp.get_data())
-
-# ### check uploaded document names
-logger.info(f"uploaded document names: {df_uploads['doc_name'].unique().tolist()}")
-"""
-df_uploads['doc_name'].unique().tolist()
-['userid_demo-genie_uploadfilename_renewal-of-hydrant-hosespdf', 'userid_demo-genie_uploadfilename_aircon-servicingpdf', 'userid_demo-genie_uploadfilename_repair-of-vehiclespdf', 'userid_demo-genie_uploadfilename_utility-billspdf', 'userid_demo-genie_uploadfilename_purchase-of-material-geocom-engineeringpdf']
-Notice that all the uploaded documents will have the username attached to them. 
-Hence, two users from the same organisation cannot overwrite each other's uploads, unless they are using the same account.
-"""
+# ## select documents to process
+doc_names = [
+    'userid_demo-genie_uploadfilename_renewal-of-hydrant-hosespdf',
+    'userid_demo-genie_uploadfilename_aircon-servicingpdf',
+    'userid_demo-genie_uploadfilename_repair-of-vehiclespdf',
+    'userid_demo-genie_uploadfilename_utility-billspdf',
+    'userid_demo-genie_uploadfilename_purchase-of-material-geocom-engineeringpdf'
+]
 
 
 # ## process documents
-
-# ### get document names
-doc_names = df_uploads['doc_name'].unique().tolist()
 
 # ### trigger text and table extraction from documents
 responses = []
@@ -173,7 +151,7 @@ if resp.check_output_file_exists():
     'context' column contains the the original context from which the data is extracted
     'relevant quote' column contains any specific relevant quote in the context relevant to extracted data
     datasets_dict[table_key].drop(columns=['context', 'relevant quote', 'row_num']).to_dict('records')
-    [{'account_number': '04060352312', 'bank_number': '7302', 'cheque_number': '4509', 'date': '09/12/2015', 'voucher_number': '2015/16966'}]
+    [{'any_additional_details': '', 'payment_amount': 'SGD 405', 'payment_currency': 'SGD', 'product_purchased': 'SD5 12V COMPRESSOR 6321', 'sales_tax': '7% SR', 'transaction_description': ''}, {'any_additional_details': '', 'payment_amount': 'n/a', 'payment_currency': 'SGD', 'product_purchased': 'RECEIVER DRIER', 'sales_tax': '7% SR', 'transaction_description': ''}, {'any_additional_details': '', 'payment_amount': 'n/a', 'payment_currency': 'SGD', 'product_purchased': 'TOP UP COMPRESSOR OIL', 'sales_tax': '7% SR', 'transaction_description': ''}, {'any_additional_details': '', 'payment_amount': 'n/a', 'payment_currency': 'SGD', 'product_purchased': 'CHARGING GAS', 'sales_tax': '7% SR', 'transaction_description': ''}, {'any_additional_details': '', 'payment_amount': 'n/a', 'payment_currency': 'n/a', 'product_purchased': 'LABOUR CHARGES', 'sales_tax': 'n/a', 'transaction_description': ''}]
     """
 else:
     logger.warning(f"output file {resp.get_output_file()} does not yet exist: try again later")
