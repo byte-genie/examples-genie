@@ -7,7 +7,6 @@ from PIL import Image
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
-
 # ## init byte-genie
 
 # ### init byte-genie in async mode (tasks will run in the background)
