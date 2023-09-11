@@ -29,6 +29,10 @@ This folder contains examples for
 * Ranking structured data extracted from documents by relevance to input keyphrases;
 * Creating custom datasets out of ranked data;
 * Standardising data.
+# document_processing
+This folder contains examples related to PDF document processing, including:
+* short-form document, such as invoices, utility bills, processing;
+* Long-form document, such as company annual and sustainability reports, processing.
 ## data_management
 This folder contains examples related to data management, including:
 * Uploading local files;
@@ -41,4 +45,4 @@ This folder contains examples for
 
 Stay tuned for many more examples to come!
 
-**Last updated: 2023-08-24**
+**Last updated: 2023-09-11**
