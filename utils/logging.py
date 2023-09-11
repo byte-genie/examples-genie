@@ -17,7 +17,8 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'  # Define the date format if needed
 )
 
-EXT_LIB = ['urllib', 'urllib3', 'asyncio', 'tzlocal', 'openai']
+EXT_LIB = ['urllib', 'urllib3', 'asyncio', 'tzlocal', 'openai',
+           'PIL.PngImagePlugin']
 for lib in EXT_LIB:
     _logger = logging.getLogger(lib)
     _logger.setLevel(logging.WARNING)

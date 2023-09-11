@@ -1,7 +1,9 @@
 # # Short-form PDF processing
 
-
+import io
+import base64
 import pandas as pd
+from PIL import Image
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
@@ -49,6 +51,35 @@ for doc_num, doc_name in enumerate(doc_names):
     responses = responses + [resp]
 
 # ### wait for the output to be ready
+
+# ## View page images
+
+# ### list image files
+img_files = []
+missing_doc_names = []
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"processing document ({doc_num}/{len(doc_names)}): {doc_name}")
+    ## list page image files
+    img_files_ = bg_sync.list_doc_files(
+        doc_name=doc_name,
+        file_pattern=f"*.png"
+    ).get_data()
+    if img_files_:
+        img_files = img_files + img_files_
+    else:
+        missing_doc_names = missing_doc_names + [doc_name]
+
+
+# ### select an image file
+img_file = img_files[1]
+
+# ### read selected image
+img_str = bg_sync.read_file(img_file).get_data()
+img = base64.b64decode(img_str)
+img = Image.open(io.BytesIO(img))
+
+# ### show selected image
+img.show()
 
 # ## Read output
 
