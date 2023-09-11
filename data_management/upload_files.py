@@ -84,3 +84,9 @@ df_uploads.to_dict('records')
     {'doc_name': 'userid_demo-genie_uploadfilename_capitaland-recent-documents', 'file_type': '.csv', 'filename': 'capitaland-recent-documents', 'username': 'demo-genie'}
 ]
 """
+
+# ## Next steps
+"""
+* Now that the files are uploaded, we can move on to processing these documents;
+* See document_processing/short_pdf_processing.py (.ipynb) and company_research/document_processing.py (.ipynb) for examples of document processing.
+"""

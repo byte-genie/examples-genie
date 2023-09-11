@@ -94,6 +94,8 @@ df_reports['href'].unique().tolist()
 """
 
 # ## Next Steps
-# ### The documents in df_reports have already been downloaded.
-# ### We can now move on to processing the ones we would like to.
-# ### See company_research/document_processing.py to see how to process documents.
+"""
+* The documents in df_reports have already been downloaded.
+* We can now move on to processing the ones we would like to.
+* See company_research/document_processing.py to see how to process documents.
+"""

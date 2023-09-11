@@ -113,6 +113,8 @@ for resp_num, resp in enumerate(responses):
         missing_files = missing_files + [output_file]
 
 # ### check search data
+logger.info(f"search data columns: {list(df_search.columns)}")
+logger.info(f"searched URLs: {df_search[['href', 'result_text']].to_dict('records')}")
 """
 list(df_search.columns)
 ['href', 'href_type', 'keyphrase', 'result_html', 'result_text']
@@ -202,5 +204,7 @@ downloaded_urls
 """
 
 # ## Next Steps
-# ### Once we have donwloadedthe relevant pages/documents from an organisation's homepage, we can move on to processing these documents
-# ### See document processing examples, e.g. company_research/document_processing.py, to get started with document processing
+"""
+* Once we have donwloadedthe relevant pages/documents from an organisation's homepage, we can move on to processing these documents
+* See document processing examples, e.g. company_research/document_processing.py, to get started with document processing
+"""

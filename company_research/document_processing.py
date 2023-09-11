@@ -150,7 +150,9 @@ for doc_num, doc_name in enumerate(doc_names):
     )
 
 # ## Next Steps
-# ### The document processing for doc_names has been triggered now.
-# ### We can wait for the output to be ready.
-# ### Once the output is ready, we can move on to extract relevant quantiative/qualitative data.
-# ### See company_research/data_extraction.py for an example of data extraction.
+"""
+* The document processing for doc_names has been triggered now.
+* We can wait for the output to be ready.
+* Once the output is ready, we can move on to extract relevant quantiative/qualitative data.
+* See company_research/data_extraction.py for an example of data extraction.
+"""

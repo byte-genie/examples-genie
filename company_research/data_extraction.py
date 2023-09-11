@@ -263,11 +263,20 @@ resp = bg_sync.standardise_names(
 
 # ### get response data
 emission_scope_std = pd.DataFrame(resp.get_data())
-emission_scope_std[['orig_name', 'std_name']].values.tolist()
-
+logger.info(f"standardised data: {emission_scope_std[['orig_name', 'std_name']].values.tolist()}")
 """
 emission_scope_std[['orig_name', 'std_name']].values.tolist()
-[['Operating Emissions', 'GHG Emissions'], ['Scope 3', 'Indirect Emissions'], ['Emissions', 'GHG Emissions'], ['Operational Emissions', 'GHG Emissions'], ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], ['GHG Emissions Intensity', 'GHG Emissions Intensity'], ['Restricted use', 'n/a'], ['n/a', 'n/a']]
+[
+    ['Operating Emissions', 'GHG Emissions'], 
+    ['Scope 3', 'Indirect Emissions'], 
+    ['Emissions', 'GHG Emissions'], 
+    ['Operational Emissions', 'GHG Emissions'], 
+    ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], 
+    ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], 
+    ['GHG Emissions Intensity', 'GHG Emissions Intensity'], 
+    ['Restricted use', 'n/a'], 
+    ['n/a', 'n/a']
+]
 In this instance, scope 2 and 3 have been changed to indirect emissions, and scope 1 to direct emissions. 
 The exact outcome of standardisation will change with data. For example, adding more rows to the data might change how each value is standardised.
 """
@@ -291,10 +300,17 @@ df_emissions_custom.loc[mask, 'company name_std'] = df_emissions_custom.loc[mask
 
 
 # ### check standardised company name column
-df_emissions_custom[['company name', 'company name_std']].drop_duplicates().values.tolist()
+logger.info(f"standardised company names: {df_emissions_custom[['company name', 'company name_std']].drop_duplicates().values.tolist()}")
 """
 df_emissions_custom[['company name', 'company name_std']].drop_duplicates().values.tolist()
-[['BR PETROBRAS', 'Petrobras'], ['Vedanta Limited', 'Vedanta'], ['Vedanta Ltd', 'Vedanta'], ['Vedanta', 'Vedanta'], ['Petrobras', 'Petrobras'], ['Projeto Albatroz', 'Projeto Albatroz']]
+[
+    ['BR PETROBRAS', 'Petrobras'], 
+    ['Vedanta Limited', 'Vedanta'], 
+    ['Vedanta Ltd', 'Vedanta'], 
+    ['Vedanta', 'Vedanta'], 
+    ['Petrobras', 'Petrobras'], 
+    ['Projeto Albatroz', 'Projeto Albatroz']
+]
 """
 
 # ### merge standardised scope back into custom emissions dataset
@@ -315,10 +331,22 @@ mask = df_emissions_custom['scope of emissions_std'].isnull()
 df_emissions_custom.loc[mask, 'scope of emissions_std'] = df_emissions_custom.loc[mask, 'scope of emissions']
 
 # ### check standardised scope of emissions column
-df_emissions_custom[['scope of emissions', 'scope of emissions_std']].drop_duplicates().values.tolist()
+logger.info(f"standardised scope of emissions: {df_emissions_custom[['scope of emissions', 'scope of emissions_std']].drop_duplicates().values.tolist()}")
 """
 df_emissions_custom[['scope of emissions', 'scope of emissions_std']].drop_duplicates().values.tolist()
-[['Operating Emissions', 'GHG Emissions'], ['Scope 3', 'Indirect Emissions'], ['Emissions', 'GHG Emissions'], ['Operational Emissions', 'GHG Emissions'], ['GHG Emissions', 'GHG Emissions'], ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], ['GHG Emissions Intensity', 'GHG Emissions Intensity'], ['Restricted use', 'n/a'], ['n/a', 'n/a'], ['', '']]
+[
+    ['Operating Emissions', 'GHG Emissions'], 
+    ['Scope 3', 'Indirect Emissions'],
+    ['Emissions', 'GHG Emissions'], 
+    ['Operational Emissions', 'GHG Emissions'], 
+    ['GHG Emissions', 'GHG Emissions'], 
+    ['Scope 1 Emissions (BU-wise)', 'Direct Emissions'], 
+    ['GHG Emissions (Scope1 Scope2)', 'Total GHG Emissions'], 
+    ['GHG Emissions Intensity', 'GHG Emissions Intensity'], 
+    ['Restricted use', 'n/a'], 
+    ['n/a', 'n/a'], 
+    ['', '']
+]
 """
 
 
