@@ -936,6 +936,34 @@ class ByteGenie:
         )
         return resp
 
+    def write_pdf_img(
+            self,
+            doc_name: str,
+            dpi: int = 500,
+            timeout: int = 5 * 60,
+    ):
+        """
+        Take page images from a PDF file
+        :param doc_name: document name for which to write mages
+        :param dpi: dots per inch
+        :param timeout:
+        :return:
+        """
+        func = 'write_pdf_img'
+        args = {
+            'doc_name': doc_name,
+            'dpi': dpi,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def translate_text_pipeline(
             self,
             doc_name: str,
