@@ -9,6 +9,7 @@ import inspect
 import requests
 import numpy as np
 from utils.logging import logger
+from utils.async_utils import to_async
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
 
 
@@ -16,11 +17,13 @@ class ByteGenieResponse:
 
     def __init__(
             self,
-            response: dict
+            response: dict,
+            verbose: int = 1,
     ):
         if not isinstance(response, dict):
             raise ValueError('response must be a dictionary')
-        self.response = response
+        self.response = response.get('response')
+        self.verbose = verbose
 
     def get_status(self):
         """
@@ -118,6 +121,15 @@ class ByteGenieResponse:
             return resp_data
         else:
             logger.warning(f"output does not yet exist: wait some more")
+
+    @to_async
+    def async_read_output_data(self):
+        try:
+            resp = self.read_output_data()
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.warning(f"Error in read_output_data(): {e}")
 
 
 class ByteGenie:
@@ -336,6 +348,26 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_upload_data(
+            self,
+            contents: list,
+            filenames: list,
+            username: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.upload_data(
+                contents=contents,
+                filenames=filenames,
+                username=username,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.info(f"Error in upload_data(): {e}")
 
     def list_doc_files(
             self,
