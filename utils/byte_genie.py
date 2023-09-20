@@ -996,6 +996,21 @@ class ByteGenie:
         )
         return resp
 
+    @to_async
+    def async_write_pdf_img(
+            self,
+            doc_name: str,
+            dpi: int = 500,
+            timeout: int = 5 * 60,
+    ):
+        try:
+            resp = self.write_pdf_img(
+                doc_name=doc_name,
+            )
+        except Exception as e:
+            if self.verbose:
+                logger.info(f"Error in ")
+
     def translate_text_pipeline(
             self,
             doc_name: str,
