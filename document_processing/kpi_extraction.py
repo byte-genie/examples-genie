@@ -38,19 +38,6 @@ pdf_folder = f"/Users/majid/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/PDF"
 df_contents = utils.common.read_file_contents(directory=pdf_folder)
 
 # ### upload files
-# upload_responses = []
-# for i in range(0, len(df_contents), 1):
-#     logger.info(f"Uploading file: {i}/{len(df_contents)}")
-#     try:
-#         upload_resp_ = bg_async.upload_data(
-#             contents=[df_contents['content'].tolist()[i]],
-#             filenames=[df_contents['filename'].tolist()[i]],
-#             username=bg_sync.read_username(),
-#             timeout=30 * 60,
-#         )
-#         upload_responses = upload_responses + [upload_resp_]
-#     except Exception as e:
-#         logger.warning(f"Error in uploading {df_contents['filename'].tolist()[i]}")
 start_time = time.time()
 tasks = [
     bg_async.async_upload_data(
@@ -62,8 +49,10 @@ tasks = [
 ]
 upload_responses = utils.async_utils.run_async_tasks(tasks)
 end_time = time.time()
-logger.info(f"Time taken to upload {len(upload_responses)} documents: "
-            f"{(end_time - start_time) / 60} min")
+logger.info(
+    f"Time taken to upload {len(upload_responses)} documents: "
+    f"{(end_time - start_time) / 60} min"
+)
 # ### Check uploaded documents
 # missing_files = []
 # for resp_num, resp in enumerate(upload_responses):
@@ -80,6 +69,7 @@ logger.info(f"Time taken to upload {len(upload_responses)} documents: "
 tasks = [
     resp.async_read_output_data()
     for resp_num, resp in enumerate(upload_responses)
+    if resp is not None
 ]
 # ### run tasks
 df_uploads = utils.async_utils.run_async_tasks(tasks)

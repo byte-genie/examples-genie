@@ -22,7 +22,7 @@ class ByteGenieResponse:
     ):
         if not isinstance(response, dict):
             raise ValueError('response must be a dictionary')
-        self.response = response.get('response')
+        self.response = response
         self.verbose = verbose
 
     def get_status(self):
