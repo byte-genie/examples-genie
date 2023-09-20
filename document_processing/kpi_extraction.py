@@ -56,6 +56,9 @@ logger.info(
 """
 Time taken to upload 55 documents: 8.278589681784313 min
 """
+
+# ## check uploaded data
+
 # ### define async tasks to read output data
 start_time = time.time()
 tasks = [
@@ -63,10 +66,13 @@ tasks = [
     for resp_num, resp in enumerate(upload_responses)
     if resp is not None
 ]
+
 # ### run tasks
 df_uploads = utils.async_utils.run_async_tasks(tasks)
+
 # ### convert output to dataframes
 df_uploads = [pd.DataFrame(df) for df in df_uploads]
+
 # ### concat dataframes
 df_uploads = pd.concat(df_uploads)
 # reset index
@@ -90,6 +96,8 @@ df_uploads.head().to_dict('records')
 ]
 """
 
+# ## process documents
+
 # ### get uploaded document names
 doc_names = df_uploads['doc_name'].unique().tolist()
 """
@@ -98,9 +106,22 @@ doc_names
 """
 
 # ### extract page images from documents
-write_img_responses = []
-for doc_num, doc_name in enumerate(doc_names):
-    resp_ = bg_async.write_pdf_img(
+img_extraction_start_time = time.time() # 1695212673.5361311
+tasks = [
+    bg_async.async_write_pdf_img(
         doc_name=doc_name
     )
-    write_img_responses = write_img_responses + [resp_]
+    for doc_num, doc_name in enumerate(doc_names)
+]
+write_img_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### list extracted page images
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern=f"*.png",
+        timeout=15 * 60,
+    )
+    for doc_num, doc_name in enumerate(doc_names)
+]
+img_files = utils.async_utils.run_async_tasks(tasks)

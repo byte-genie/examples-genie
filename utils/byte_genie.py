@@ -397,6 +397,24 @@ class ByteGenie:
         )
         return resp
 
+    @to_async
+    def async_list_doc_files(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.list_doc_files(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                print(f"Error in list_doc_files(): {e}")
+
     def check_file_exists(
             self,
             file: str,
@@ -1006,10 +1024,13 @@ class ByteGenie:
         try:
             resp = self.write_pdf_img(
                 doc_name=doc_name,
+                dpi=dpi,
+                timeout=timeout,
             )
+            return resp
         except Exception as e:
             if self.verbose:
-                logger.info(f"Error in ")
+                logger.info(f"Error in write_pdf_img(): {e}")
 
     def translate_text_pipeline(
             self,
