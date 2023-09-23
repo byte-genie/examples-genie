@@ -1032,6 +1032,58 @@ class ByteGenie:
             if self.verbose:
                 logger.info(f"Error in write_pdf_img(): {e}")
 
+    def extract_text(
+            self,
+            doc_name: str,
+            file_pattern: str = '*.png',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract text from images
+        :param doc_name: document name for which to extract text
+        :param file_pattern: file pattern to match for input files
+        :param timeout:
+        :return:
+        """
+        func = 'extract_text'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def async_extract_text(
+            self,
+            doc_name: str,
+            file_pattern: str = '*.png',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract text from images (asynchronous)
+        :param doc_name: document name for which to extract text
+        :param file_pattern: file pattern to match for input files
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.extract_text(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in extract_text(): {e}")
+
     def translate_text_pipeline(
             self,
             doc_name: str,
