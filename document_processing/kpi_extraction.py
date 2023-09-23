@@ -108,7 +108,7 @@ doc_names
 # ## Extract page images
 
 # ### extract page images from documents
-img_extraction_start_time = time.time() # 1695212673.5361311
+img_extraction_start_time = time.time()  # 1695212673.5361311
 tasks = [
     bg_async.async_write_pdf_img(
         doc_name=doc_name
@@ -116,6 +116,10 @@ tasks = [
     for doc_num, doc_name in enumerate(doc_names)
 ]
 write_img_responses = utils.async_utils.run_async_tasks(tasks)
+"""
+ocr_start_time
+1695410621.57586
+"""
 
 # ### list extracted page images
 tasks = [
@@ -147,16 +151,195 @@ for doc_num, doc_name in enumerate(doc_names):
     )
     responses = responses + [resp]
 
-# ### check OCR output
-ocr_output_files = []
-missing_files = []
-for resp_num, resp in enumerate(responses):
-    logger.info(f"processing OCR response: {resp_num}/{len(responses)}")
-    if resp.check_output_file_exists():
-        ocr_output_files = ocr_output_files + [resp.get_output_file()]
-    else:
-        missing_files = ocr_output_files + [resp.get_output_file()]
+# ### list OCR output files for text
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern="variable_desc=text-blocks/**.csv"
+    )
+    for doc_name in doc_names
+]
+ocr_text_files = utils.async_utils.run_async_tasks(tasks)
+ocr_text_files = [resp.get_data() for resp in ocr_text_files if resp.get_data() is not None]
 """
-ocr_start_time
-1695410621.57586
+Number of documents with OCR text files, len(ocr_text_files): 49
+Number of OCR text files for one document, len(ocr_text_files[0]): 132
+OCR text files for one document: ocr_text_files[0]
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-0_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-100_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-101_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-102_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-103_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-104_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-105_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-106_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-107_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-108_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-109_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-10_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-110_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-111_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-112_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-113_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-114_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-115_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-116_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-117_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-118_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-119_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-11_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-120_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-121_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-122_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-123_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-124_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-125_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-126_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-127_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-128_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-129_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-12_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-130_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-131_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-13_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-14_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-15_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-16_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-17_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-18_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-19_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-1_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-20_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-21_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-22_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-23_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-24_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-25_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-26_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-27_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-28_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-29_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-2_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-30_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-31_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-32_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-33_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-34_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-35_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-36_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-37_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-38_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-39_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-3_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-40_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-41_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-42_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-43_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-44_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-45_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-46_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-47_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-48_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-49_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-4_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-50_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-51_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-52_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-53_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-54_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-55_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-56_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-57_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-58_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-59_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-5_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-60_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-61_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-62_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-63_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-64_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-65_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-66_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-67_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-68_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-69_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-6_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-70_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-71_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-72_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-73_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-74_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-75_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-76_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-77_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-78_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-79_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-7_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-80_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-81_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-82_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-83_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-84_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-85_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-86_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-87_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-88_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-89_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-8_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-90_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-91_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-92_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-93_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-94_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-95_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-96_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-97_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-98_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-99_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-9_text-blocks.csv'
+]
+Extracted text files contain page number from which the text was extracted, so tables belonging to a specific page can be filtered, if needed.
+"""
+
+# ### list OCR output files for tables
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern="variable_desc=table-cells/**.csv"
+    )
+    for doc_name in doc_names
+]
+ocr_table_files = utils.async_utils.run_async_tasks(tasks)
+ocr_table_files = [resp.get_data() for resp in ocr_table_files if resp.get_data() is not None]
+"""
+Number of documents with OCR table output files, len(ocr_table_files): 48
+Number of OCR table files for one document, len(ocr_table_files[5]): 24
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-1_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-21_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-22_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-25_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-27_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-29_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-34_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-36_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-42_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-44_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-46_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-49_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-52_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-53_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-54_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-59_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-64_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-65_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-68_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-73_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-77_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-78_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-7_table-cells.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=semi-structured/format=csv/variable_desc=table-cells/source=esgnie.com/1_accor_mrpdf_pagenum-8_table-cells.csv'
+]
+Extracted table files contain page number from which a table was extracted, so tables belonging to a specific page can be filtered, if needed.
 """
