@@ -248,14 +248,3 @@ for resp_num, resp in enumerate(segment_text_responses):
         missing_segment_text_files = missing_segment_text_files + [resp.get_output_file()]
 
 
-
-# ## Convert pdf documents to latex
-"""
-PDF to latex converter uses a specialised OCR that can convert PDF files to a latex markdown format. This converts text, tables, and equations into latex code. This is particularly useful for documents that contain equations or mathematical symbols. 
-"""
-
-# ### trigger pdf to markdown conversion
-convert_to_markdown_resp = bg_async.convert_pdf_to_markdown(
-    doc_names=doc_names,
-)
-convert_to_markdown_resp.check_output_file_exists()
