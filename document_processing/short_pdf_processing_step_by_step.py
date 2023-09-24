@@ -188,11 +188,16 @@ df_table.head().to_dict('records')
 """
 
 # ### re-structure table data
-df_dataset = bg_sync.create_dataset(
+resp = bg_async.create_dataset(
     data=df_table.to_dict('records'),
-    attrs=['product category', 'product description', 'per unit amount', 'phase number', 'phase amount', 'currency']
-).get_data()
-df_dataset = pd.DataFrame(df_dataset)
+    attrs=['product category', 'complete product description', 'key material used in the product',
+           'per unit amount', 'phase 1 amount', 'phase 2 amount', 'currency']
+)
+if resp.check_output_file_exists():
+    df_dataset = resp.read_output_data()
+    df_dataset = pd.DataFrame(df_dataset)
+else:
+    logger.info(f"create_dataset() output is not yet ready: wait some more")
 
 # ### pivot df_dataset
 df_dataset_wide = df_dataset.pivot(
@@ -205,8 +210,15 @@ df_dataset_wide = df_dataset.pivot(
 logger.info(f"shape of df_dataset_wide: {df_dataset_wide.shape}")
 """
 list(df_dataset_wide.columns)
-['context', 'row_num', 'currency', 'per unit amount', 'phase', 'product category', 'product description', 'relevant quote', 'total amount']
+['context', 'row_num', 'complete product description', 'currency', 'key material used in the product', 'per unit amount', 'phase 1 amount', 'phase 2 amount', 'product category', 'relevant quote']
 df_dataset_wide.drop(columns=['context', 'row_num', 'relevant quote']).head().to_dict('records')
+[
+    {'complete product description': 'Painting; to parapet wall; in accordance to CAAS MOAS requirement', 'currency': 'n/a', 'key material used in the product': 'n/a', 'per unit amount': '$ 9.40 / m2', 'phase 1 amount': '$ 100,828.00', 'phase 2 amount': '$ 246,988.00', 'product category': 'A'}, 
+    {'complete product description': 'Vehicular grating in hot dipped galvanised mild steel; 800 X 100mm thick; including all necessary fittings', 'currency': 'n/a', 'key material used in the product': 'hot dipped galvanised mild steel', 'per unit amount': '$ 450.00 / m', 'phase 1 amount': '$ 283,500.00', 'phase 2 amount': '$ 1,705,050.00', 'product category': 'B'}, 
+    {'complete product description': 'Precast concrete plank; 650 X 75mm thick', 'currency': 'n/a', 'key material used in the product': 'n/a', 'per unit amount': '$ 40.02 / m', 'phase 1 amount': '$ 11,205.60', 'phase 2 amount': '$ 101,090.52', 'product category': 'C'}, 
+    {'complete product description': 'Precast concrete plank; 1150 X 75mm thick', 'currency': 'n/a', 'key material used in the product': 'n/a', 'per unit amount': '$ 73.88 / m', 'phase 1 amount': '$ 20,686.40', 'phase 2 amount': '$ 186,620.88', 'product category': 'D'}, 
+    {'complete product description': 'Precast concrete plank; various length X 75mm thick', 'currency': 'n/a', 'key material used in the product': 'n/a', 'per unit amount': '$ 61.60 / m2', 'phase 1 amount': '$ 648.03', 'phase 2 amount': '$ 21,827.20', 'product category': 'E'}
+]
 """
 
 # ## Format OCR text output
