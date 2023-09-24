@@ -4,7 +4,7 @@ Usage examples for byte-genie API.
 Examples are categorised by use-cases, including company research, question-answering on data, model training/fine-tuning, etc.
 
 ## Generate API Key
-To run these examples, you will need a ByteGenie API key. To generate an API key, sing up on [ESGnie](https://app.esgnie.com/home), and verify your account, by clicking on the activation URL sent via email. The activation email will contain an API key, which can be used once the account is verified.
+To run these examples, you will need a ByteGenie API key. To generate an API key, sign up on [ESGnie](https://app.esgnie.com/home), and verify your account, by clicking on the activation URL sent via email. The activation email will contain an API key, which can be used once the account is verified.
 
 In case of any issues with generating an API key, contact us at info@esgnie.org 
 
