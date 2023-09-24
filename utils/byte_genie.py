@@ -1138,18 +1138,18 @@ class ByteGenie:
 
     def convert_pdf_to_markdown(
             self,
-            doc_names: list,
+            doc_name: str,
             timeout: int = 15 * 60,
     ):
         """
         Convert pdf documents to markdown
-        :param doc_names: list of document names to be converted to latex
+        :param doc_name: document name to be converted to latex
         :param timeout:
         :return:
         """
         func = 'convert_pdf_to_markdown'
         args = {
-            'doc_names': doc_names,
+            'doc_name': doc_name,
         }
         payload = self.create_api_payload(
             func=func,
@@ -1163,18 +1163,18 @@ class ByteGenie:
 
     def async_convert_pdf_to_markdown(
             self,
-            doc_names: list,
+            doc_name: str,
             timeout: int = 15 * 60,
     ):
         """
         Convert pdf documents to markdown
-        :param doc_names: list of document names to be converted to latex
+        :param doc_name: document name to be converted to latex
         :param timeout:
         :return:
         """
         try:
             resp = self.convert_pdf_to_markdown(
-                doc_names=doc_names,
+                doc_name=doc_name,
                 timeout=timeout,
             )
             return resp
