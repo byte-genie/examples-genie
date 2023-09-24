@@ -1163,7 +1163,7 @@ class ByteGenie:
 
     def async_convert_pdf_to_markdown(
             self,
-            doc_names: str,
+            doc_names: list,
             timeout: int = 15 * 60,
     ):
         """
@@ -1181,6 +1181,34 @@ class ByteGenie:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in convert_pdf_to_markdown(): {e}")
+
+    def reconstruct_orig_tables(
+            self,
+            doc_name: str,
+            file_pattern: str = 'variable_desc=table-cells/**.csv',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Reconstructs original tables form table cells files
+        :param doc_name: document name for which to reconstruct original tables
+        :param file_pattern: file pattern to seelct input files
+        :param timeout:
+        :return:
+        """
+        func = 'reconstruct_orig_tables'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
 
     def translate_text_pipeline(
             self,
