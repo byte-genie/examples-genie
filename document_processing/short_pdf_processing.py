@@ -30,7 +30,8 @@ doc_names = [
     'userid_demo-genie_uploadfilename_aircon-servicingpdf',
     'userid_demo-genie_uploadfilename_repair-of-vehiclespdf',
     'userid_demo-genie_uploadfilename_utility-billspdf',
-    'userid_demo-genie_uploadfilename_purchase-of-material-geocom-engineeringpdf'
+    'userid_demo-genie_uploadfilename_purchase-of-material-geocom-engineeringpdf',
+    'userid_demo-genie_uploadfilename_works_costpdf',
 ]
 """
 See document_processing/upload_files.py (.ipynb) or data_management/upload_files.py (.ipynb) to see how to upload documents 

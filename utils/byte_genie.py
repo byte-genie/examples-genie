@@ -1084,6 +1084,104 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in extract_text(): {e}")
 
+    def segment_text(
+            self,
+            doc_name: str,
+            file_pattern: str = 'variable_desc=text-blocks/**.csv',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Segment extracted text using OCR
+        :param doc_name: document name for which to segment text
+        :param file_pattern: file pattern to match for input files
+        :param timeout:
+        :return:
+        """
+        func = 'segment_text'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def async_segment_text(
+            self,
+            doc_name: str,
+            file_pattern: str = 'variable_desc=text-blocks/**.csv',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Segment extracted text using OCR (asynchronous)
+        :param doc_name: document name for which to segment text
+        :param file_pattern: file pattern to match for input files
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.segment_text(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in segment_text(): {e}")
+
+    def convert_pdf_to_markdown(
+            self,
+            doc_names: list,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Convert pdf documents to markdown
+        :param doc_names: list of document names to be converted to latex
+        :param timeout:
+        :return:
+        """
+        func = 'convert_pdf_to_markdown'
+        args = {
+            'doc_names': doc_names,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def async_convert_pdf_to_markdown(
+            self,
+            doc_names: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Convert pdf documents to markdown
+        :param doc_names: list of document names to be converted to latex
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.convert_pdf_to_markdown(
+                doc_names=doc_names,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in convert_pdf_to_markdown(): {e}")
+
     def translate_text_pipeline(
             self,
             doc_name: str,
