@@ -166,6 +166,7 @@ class ByteGenie:
         self.overwrite_base_output = overwrite_base_output
         self.verbose = verbose
         self.api_key = self.read_api_key()
+        self.username = self.read_username()
 
     def read_api_key(self):
         filename = os.path.join(self.secrets_file)
@@ -191,13 +192,17 @@ class ByteGenie:
             self,
             func: str,
             args: dict,
+            cluster_args: dict = None,
     ):
         """
         Create payload for byte-genie API
         :param func: function/api-endpoint to call
         :param args: arguments for the function
+        :param cluster_args: arguments for the type of cluster used to run the code
         :return:
         """
+        if cluster_args is None:
+            cluster_args = {}
         payload = {
             "api_key": self.api_key,
             "tasks": {
@@ -210,6 +215,9 @@ class ByteGenie:
                     'verbose': self.verbose,
                     'task_mode': self.task_mode,
                     'calc_mode': self.calc_mode,
+                    'accelerators': cluster_args.get('accelerators'),
+                    'n_cpu': cluster_args.get('n_cpu'),
+                    'use_spot': cluster_args.get('use_spot'),
                 },
             }
         }
@@ -464,6 +472,29 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_read_file(
+            self,
+            file: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Read a file (asynchronous)
+        :param file: file to read
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.read_file(
+                file=file,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in read_file(): {e}")
+
 
     def read_synthesized_data(
             self,
@@ -1139,11 +1170,13 @@ class ByteGenie:
     def convert_pdf_to_markdown(
             self,
             doc_name: str,
+            cluster_args: dict = None,
             timeout: int = 15 * 60,
     ):
         """
         Convert pdf documents to markdown
         :param doc_name: document name to be converted to latex
+        :param cluster_args: cluster specifications
         :param timeout:
         :return:
         """
@@ -1154,6 +1187,7 @@ class ByteGenie:
         payload = self.create_api_payload(
             func=func,
             args=args,
+            cluster_args=cluster_args,
         )
         resp = self.call_api(
             payload=payload,
@@ -1235,6 +1269,143 @@ class ByteGenie:
         )
         return resp
 
+    def structure_passage_quants(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            text_col: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Structure quants contained in text passages extracted from documents
+        :param doc_name:
+        :param file_pattern:
+        :param base_attrs:
+        :param base_attr_names:
+        :param custom_attrs:
+        :param custom_attr_names:
+        :param text_col: column of the column containing text
+        :param timeout:
+        :return:
+        """
+        func = 'structure_passage_quants'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'base_attrs': base_attrs,
+            'base_attr_names': base_attr_names,
+            'custom_attrs': custom_attrs,
+            'custom_attr_names': custom_attr_names,
+            'text_col': text_col,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_structure_passage_quants(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            text_col: str = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.structure_passage_quants(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                base_attrs=base_attrs,
+                base_attr_names=base_attr_names,
+                custom_attrs=custom_attrs,
+                custom_attr_names=custom_attr_names,
+                text_col=text_col,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in structure_passage_quants: {e}")
+
+    def structure_tabular_quants(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Structure quants contained in tables extracted from documents
+        :param doc_name:
+        :param file_pattern:
+        :param base_attrs:
+        :param base_attr_names:
+        :param custom_attrs:
+        :param custom_attr_names:
+        :param timeout:
+        :return:
+        """
+        func = 'structure_tabular_quants'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'base_attrs': base_attrs,
+            'base_attr_names': base_attr_names,
+            'custom_attrs': custom_attrs,
+            'custom_attr_names': custom_attr_names,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_structure_tabular_quants(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.structure_tabular_quants(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                base_attrs=base_attrs,
+                base_attr_names=base_attr_names,
+                custom_attrs=custom_attrs,
+                custom_attr_names=custom_attr_names,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in structure_tabular_quants: {e}")
+
     def structure_quants_pipeline(
             self,
             doc_name: str,
@@ -1261,10 +1432,11 @@ class ByteGenie:
         )
         return resp
 
-    def write_ranked_data(
+    def rank_data(
             self,
             doc_name: str,
             attr: str,
+            file_pattern: str = None,
             attr_type: str = None,
             frac_rows_to_keep: float = 0.1,
             timeout: int = 15 * 60,
@@ -1272,14 +1444,16 @@ class ByteGenie:
         """
         Rank document data by relevance to an attribute
         :param doc_name: document from which to rank data
+        :param file_pattern: file pattern to use to select input files
         :param attr: keyphrase by which to rank data
         :param attr_type: type of attribute/data to rank (quantitative or qualitative)
         :param timeout: how long to wait before timing out the api call
         :return:
         """
-        func = 'write_ranked_data'
+        func = 'rank_data'
         args = {
             'doc_name': doc_name,
+            'file_pattern': file_pattern,
             'attr': attr,
             'attr_type': attr_type,
             'frac_rows_to_keep': frac_rows_to_keep,
