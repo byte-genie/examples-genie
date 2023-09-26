@@ -689,6 +689,24 @@ class ByteGenie:
         )
         return resp
 
+    @to_async
+    def async_extract_doc_info(
+            self,
+            doc_name: str,
+            doc_type_choices: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.extract_doc_info(
+                doc_name=doc_name,
+                doc_type_choices=doc_type_choices,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                print(f"Error in extract_doc_info(): {e}")
+
     def extract_text_years(
             self,
             text: str,

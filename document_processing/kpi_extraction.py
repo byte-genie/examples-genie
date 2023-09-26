@@ -453,6 +453,48 @@ check a **short sample of df_tabular_quants_sample**
 ]
 """
 
+# ## Extract document info
+"""
+In order to better contextualise the information extracted from within the documents, we will now use `/extract_doc_info` 
+to extract some key document-level information, e.g. document organisation, document year, document type, etc. 
+By default `/extract_doc_info' uses a pre-defined list of document types, which includes documents related to corporate disclosures, 
+e.g. annual reports, sustainability reports, press releases, etc. However, you can also pass your own list of choices for document types 
+you want to classify documents into. For this example, we will stick to the default choices. 
+"""
+
+# ### start time
+doc_info_extraction_start_time = time.time()
+"""
+doc_info_extraction_start_time
+1695727051.7271008
+"""
+
+# ### trigger doc info extraction
+tasks = [
+    bg_async.async_extract_doc_info(
+        doc_name=doc_name,
+    )
+    for doc_name in doc_names
+]
+df_doc_info = utils.async_utils.run_async_tasks(tasks)
+
+# ### read extracted doc info
+df_doc_info = [resp.read_output_data() for resp in df_doc_info]
+# convert to dataframe
+df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
+df_doc_info = pd.concat(df_doc_info)
+logger.info(f"length of df_doc_info: {len(df_doc_info)}")
+"""
+df_doc_info.head().to_dict('records')
+[
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
+]
+"""
+
 # ## Rank quants
 # ### set attributes to extract
 # ## Rank tables by relevance to KPIs
