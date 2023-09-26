@@ -347,6 +347,9 @@ By default, these attributes are set to be generic attributes needed to understa
 
 # ### quant extraction start time
 quant_extraction_start_time = time.time()
+"""
+`quant_extraction_start_time: 1695704723.746251`
+"""
 
 # ### Extract quant metrics from passages
 tasks = [
@@ -368,6 +371,87 @@ tasks = [
 ]
 tabular_quant_extraction_responses = utils.async_utils.run_async_tasks(tasks)
 
+# ### check extracted passage quant files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern=f"source=passage-quants/**.csv"
+    )
+    for doc_name in doc_names
+]
+passage_quant_files = utils.async_utils.run_async_tasks(tasks)
+passage_quant_files = [resp.get_data() for resp in passage_quant_files if resp.get_data() is not None]
+"""
+First 5 **passage_quant_files for first document**
+passage_quant_files[0][:5]
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-2_contextnum-0_passage-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_contextnum-0_passage-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-4_contextnum-0_passage-quants_structured-quant-summary.csv'
+]
+"""
+
+
+# ### check extracted tabular quant files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern=f"source=tabular-quants/**.csv"
+    )
+    for doc_name in doc_names
+]
+tabular_quant_files = utils.async_utils.run_async_tasks(tasks)
+tabular_quant_files = [resp.get_data() for resp in tabular_quant_files if resp.get_data() is not None]
+"""
+First 5 **tabular_quant_files for first document**
+tabular_quant_files[0][:5]
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-2_contextnum-0_tabular-quants_structured-quant-summary.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-5_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary.csv'
+]
+"""
+
+# ### read a passage quant file
+df_passage_quants_sample = bg_sync.read_file(
+    file=passage_quant_files[0][1]
+).get_data()
+df_passage_quants_sample = pd.DataFrame(df_passage_quants_sample)
+df_passage_quants_sample = df_passage_quants_sample[df_passage_quants_sample['value'] != '']
+"""
+df_passage_quants_sample columns: `list(df_passage_quants_sample.columns)`
+['category', 'company name', 'context', 'date', 'doc_name', 'pagenum', 'relevant quote', 'unit', 'value', 'variable', 'variable description']
+check a **short sample of df_passage_quants_sample**
+`df_passage_quants_sample[['company name', 'category', 'variable description', 'variable', 'unit', 'value', 'date', 'pagenum', 'doc_name']].head().to_dict('records')`
+[
+    {'company name': 'American Express', 'category': 'Number of women in', 'variable description': 'The number of women in first level manager roles has increased by one-third in the last five years.', 'variable': 'First level manager', 'unit': '', 'value': '32%', 'date': '', 'pagenum': 1, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'company name': 'American Express', 'category': 'Gender pay gap', 'variable description': 'There has been almost a 2 percentage point improvement year-on-year in the gender pay gap.', 'variable': 'Improvement', 'unit': '', 'value': '2 percentage', 'date': 'year-on-year', 'pagenum': 1, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'company name': 'American Express', 'category': 'Gender diversity', 'variable description': 'The number of women in senior management positions now stands at 47%.', 'variable': 'Senior management', 'unit': '', 'value': '47%', 'date': '', 'pagenum': 1, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
+]
+"""
+
+# ### read a tabular quant file
+df_tabular_quants_sample = bg_sync.read_file(
+    file=tabular_quant_files[0][1]
+).get_data()
+df_tabular_quants_sample = pd.DataFrame(df_tabular_quants_sample)
+df_tabular_quants_sample = df_tabular_quants_sample[df_tabular_quants_sample['value'] != '']
+"""
+df_tabular_quants_sample columns: `list(df_tabular_quants_sample.columns)`
+['category', 'company name', 'context', 'date', 'doc_name', 'pagenum', 'relevant quote from text', 'unit', 'value', 'variable', 'variable description']
+check a **short sample of df_tabular_quants_sample**
+`df_tabular_quants_sample[['company name', 'category', 'variable description', 'variable', 'unit', 'value', 'date', 'pagenum', 'doc_name', 'context']].head().to_dict('records')`
+[
+    {'company name': '', 'category': 'GENDER', 'variable description': '', 'variable': 'MEAN', 'unit': '', 'value': '14.7%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'company name': '', 'category': 'GENDER', 'variable description': '', 'variable': 'MEDIAN', 'unit': '', 'value': '16.7%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'company name': '', 'category': '% W/M', 'variable description': '', 'variable': 'WOMEN', 'unit': '', 'value': '55%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'company name': '', 'category': '% W/M', 'variable description': '', 'variable': 'MEN', 'unit': '', 'value': '45%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
+]
+"""
 
 # ## Rank quants
 # ### set attributes to extract
