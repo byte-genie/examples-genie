@@ -642,15 +642,29 @@ quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
 
 # ### read quants
 tasks = [
-    bg_async.async_read_qaunts(
+    bg_sync.async_read_quants(
         doc_name=doc_name,
-        file_pattern='variable_desc=structure-quant-summary/**.csv',
+        file_pattern='variable_desc=structured-quant-summary/**.csv',
     )
     for doc_name in doc_names
 ]
 df_quants = utils.async_utils.run_async_tasks(tasks)
+df_quants = [resp.get_data() for resp in df_quants]
 df_quants = [pd.DataFrame(df) for df in df_quants]
 df_quants = pd.concat(df_quants)
+df_quants = df_quants[~df_quants['value'].isin(['', 'n/a'])]
+"""
+df_quants columns: list(df_quants.columns)
+['category', 'company name', 'context', 'date', 'doc_name', 'pagenum', 'relevant quote', 'unit', 'value', 'variable', 'variable description']
+df_quants.drop(columns=['context', 'relevant quote']).head().to_dict('records')
+[
+    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '32%', 'variable': 'Women in Manager', 'variable description': 'Percentage of women in first level manager roles'}, 
+    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '1', 'variable': 'Women in Manager', 'variable description': 'Number of women in first level manager roles'}, 
+    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '5', 'variable': 'Women in Manager', 'variable description': ''}, 
+    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': 'TERR 2', 'variable': 'Women in Manager', 'variable description': ''}, 
+    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '3', 'variable': 'Women in Manager', 'variable description': ''}
+]
+"""
 
 # ### vectorise quant data
 vectorise_resp = bg_async.add_embeddings_to_data(

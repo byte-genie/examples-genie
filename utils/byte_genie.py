@@ -502,7 +502,7 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in read_file(): {e}")
 
-    def read_qaunts(
+    def read_quants(
             self,
             doc_name: str,
             file_pattern: str,
@@ -515,7 +515,7 @@ class ByteGenie:
         :param timeout: time out for the api call
         :return:
         """
-        func = 'read_qaunts'
+        func = 'read_quants'
         args = {
             'doc_name': doc_name,
             'file_pattern': file_pattern,
@@ -531,14 +531,14 @@ class ByteGenie:
         return resp
 
     @to_async
-    def async_read_qaunts(
+    def async_read_quants(
             self,
             doc_name: str,
             file_pattern: str,
             timeout: int = 15 * 60,
     ):
         try:
-            resp = self.read_qaunts(
+            resp = self.read_quants(
                 doc_name=doc_name,
                 file_pattern=file_pattern,
                 timeout=timeout,
