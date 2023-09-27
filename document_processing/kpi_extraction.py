@@ -101,7 +101,7 @@ df_uploads.head().to_dict('records')
 # ### get uploaded document names
 doc_names = df_uploads['doc_name'].unique().tolist()
 """
-doc_names
+input documents: `doc_names`
 ['userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'userid_stuartcullinan_uploadfilename_jason_09_srpdf', 'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf', 'userid_stuartcullinan_uploadfilename_anastasia_19_china_east_education_ltd_20211228164502_62371643_enpdf', 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf', 'userid_stuartcullinan_uploadfilename_28_kim_cartapdf', 'userid_stuartcullinan_uploadfilename_karishma-03-lse_rav_2020pdf', 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf', 'userid_stuartcullinan_uploadfilename_karishma-01-des-esg-2021-e-spdf', 'userid_stuartcullinan_uploadfilename_karishma-03-environmental-and-social-report-extracted-from-2020-annual-reportpdf', 'userid_stuartcullinan_uploadfilename_jeon_22_boliden_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_anastasia_5_albioma_urd_20201231_vdef_engpdf', 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf', 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'userid_stuartcullinan_uploadfilename_jaime_allianz-group_sustainability-reportpdf', 'userid_stuartcullinan_uploadfilename_jason_14_srpdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-annual-financial-resultspdf', 'userid_stuartcullinan_uploadfilename_jeon_27_ecolab_corporate-responsibility-report_2021pdf', 'userid_stuartcullinan_uploadfilename_16_samsung_sdspdf', 'userid_stuartcullinan_uploadfilename_jeon_26_bayer_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_al_9_webuild_ethics_code_1pdf', 'userid_stuartcullinan_uploadfilename_anastasia_4_-2020-aggreko-annual-reportpdf', 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf', 'userid_stuartcullinan_uploadfilename_al_6_kier-2021-ara-finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf', 'userid_stuartcullinan_uploadfilename_4_kim_cartapdfpdf', 'userid_stuartcullinan_uploadfilename_3_cgcpdf', 'userid_stuartcullinan_uploadfilename_jeon_23_lenzing_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_1_adesso_sepdfpdf', 'userid_stuartcullinan_uploadfilename_jason_08_srpdf', 'userid_stuartcullinan_uploadfilename_jeon_24_mondi_integrated-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf', 'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf', 'userid_stuartcullinan_uploadfilename_13_capita_mrpdf', 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf', 'userid_stuartcullinan_uploadfilename_5_compass-group_mrpdf', 'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_uk-pay-gap-reportpdf', 'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf', 'userid_stuartcullinan_uploadfilename_al_9_relazione-governance-2021-final_eng-con-tabellepdf', 'userid_stuartcullinan_uploadfilename_jeon_07_a2-milk-company_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jason_14_gpgpdf', 'userid_stuartcullinan_uploadfilename_karishma-04-savills-plc-ar21pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-greenhouse-gas-inventory-report_finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-new-zealand-sustainability-report-2020pdf']
 """
 
@@ -228,7 +228,6 @@ for doc_num, doc_name in enumerate(doc_names):
     )
     responses = responses + [resp]
 
-
 # ## Convert pdf documents to latex
 """
 PDF to latex converter uses a specialised OCR that can convert PDF files to a latex markdown format. 
@@ -267,7 +266,6 @@ markdown files for first two documents, markdown_files[0] + markdown_files[1]
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=mmd/variable_desc=markdown/source=app.esgnie.org/jeon_20_billerudkorsnas_annual-report_2021pdf.mmd'
 ]
 """
-
 
 # ## Segment OCR extracted text
 """
@@ -382,7 +380,8 @@ tasks = [
 passage_quant_files = utils.async_utils.run_async_tasks(tasks)
 passage_quant_files = [resp.get_data() for resp in passage_quant_files if resp.get_data() is not None]
 """
-First 5 **passage_quant_files for first document**
+Documents with passage quant files: `len(passage_quant_files)`: 49
+First 5 **passage_quant_files for the first document**
 passage_quant_files[0][:5]
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary.csv', 
@@ -392,7 +391,6 @@ passage_quant_files[0][:5]
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-4_contextnum-0_passage-quants_structured-quant-summary.csv'
 ]
 """
-
 
 # ### check extracted tabular quant files
 tasks = [
@@ -405,7 +403,8 @@ tasks = [
 tabular_quant_files = utils.async_utils.run_async_tasks(tasks)
 tabular_quant_files = [resp.get_data() for resp in tabular_quant_files if resp.get_data() is not None]
 """
-First 5 **tabular_quant_files for first document**
+Number of documents with tabular quant files, `len(tabular_quant_files)`: 48
+First 5 **tabular_quant_files for the first document**
 tabular_quant_files[0][:5]
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary.csv', 
@@ -453,6 +452,125 @@ check a **short sample of df_tabular_quants_sample**
 ]
 """
 
+# ## Verify extracted quants info
+"""
+After the quant extraction, we can run a data verification layer to remove any values that may be incorrectly extracted.
+"""
+
+# ### start time for quant value verification
+verify_value_start_time = time.time()
+"""
+verify_value_start_time
+1695790862.0567858
+"""
+
+# ### verify extracted quant values
+tasks = [
+    bg_async.async_verify_data(
+        doc_name=doc_name,
+        file_pattern='variable_desc=structured-quant-summary/**.csv',
+    )
+    for doc_name in doc_names
+]
+verify_value_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### list verified quant value files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='variable_desc=verified-quants/**.csv',
+    )
+    for doc_name in doc_names
+]
+verify_value_files = utils.async_utils.run_async_tasks(tasks)
+verify_value_files = [resp.get_data() for resp in verify_value_files if resp.get_data() is not None]
+"""
+Number of documents with verified quant value files: `len(verify_value_files)`: 48
+**verified value files** for the first document: `verify_value_files[0]` 
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-2_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv'
+]
+"""
+
+# ### start time for verifying company names
+verify_company_start_time = time.time()
+"""
+verify_company_start_time
+1695795411.6313999
+"""
+
+# ### verify extracted company names
+tasks = [
+    bg_async.async_verify_quants_company_info(
+        doc_name=doc_name,
+        file_pattern='variable_desc=verified-quants/**.csv',
+    )
+    for doc_name in doc_names
+]
+verify_company_responses = utils.async_utils.run_async_tasks(tasks)
+
+
+# ### list verified company name and quant value files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='variable_desc=verified-company-quants/**.csv',
+    )
+    for doc_name in doc_names
+]
+verify_company_quant_files = utils.async_utils.run_async_tasks(tasks)
+verify_company_quant_files = [resp.get_data() for resp in verify_company_quant_files if resp.get_data() is not None]
+"""
+Number of documents with verified company and quant files, `len(verify_company_quant_files)`: 46
+First 5 verified company name and quant value files for the first document: verify_company_quant_files[0][:5]
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified_verified-company-names.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv'
+]
+"""
+
+# ## Find missing files
+"""
+At any step of the processing, we can check for any documents that are missing in the current output. 
+To do so, we can get document names for the available output files, and compare them with our initial list of document names. 
+"""
+
+# ### flatten verify_value_files
+verify_value_files = [file for doc_files in verify_value_files for file in doc_files]
+
+# ### get doc_name for verify_value_files
+verify_value_doc_names = [utils.common.get_doc_name(file) for file in verify_value_files]
+verify_value_doc_names = list(set(verify_value_doc_names))
+
+# ### find missing doc_names
+missing_doc_names_from_verify_value = [
+    doc_name for doc_name in doc_names
+    if doc_name not in verify_value_doc_names
+]
+"""
+document names missing from verified quant value files are: `missing_doc_names_from_verify_value`
+[
+    'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 
+    'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf', 
+    'userid_stuartcullinan_uploadfilename_28_kim_cartapdf', 
+    'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 
+    'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 
+    'userid_stuartcullinan_uploadfilename_jason_08_srpdf', 
+    'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf', 
+    'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf', 
+    'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf'
+]
+"""
+
 # ## Extract document info
 """
 In order to better contextualise the information extracted from within the documents, we will now use `/extract_doc_info` 
@@ -495,7 +613,92 @@ df_doc_info.head().to_dict('records')
 ]
 """
 
+# ## Synthesize quant data with document meta-data
+"""
+Now we can combine the document-level info with the specific quantitative info extracted from the document, as the document info 
+can help determine the dates or company names for quant values when not provided directly in passages or tables.
+For this, we will use `/synthesize_quant_data` endpoint, which will synthesize quant data with document meta-data, 
+and also create embeddings for each row of the data, which can later be used to run semantic searches. 
+"""
+
+# ### quant synthesis start time
+quant_synthesis_start_time = time.time()
+"""
+quant_synthesis_start_time
+
+"""
+
+# ### define asynchronous tasks for synthesizing quant data
+tasks = [
+    bg_async.async_synthesize_quant_data(
+        doc_name=doc_name,
+    )
+    for doc_name in doc_names[:1]
+]
+quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
+
+
+# ## Vectorise quant data for semantic searching
+
+# ### read quants
+tasks = [
+    bg_async.async_read_qaunts(
+        doc_name=doc_name,
+        file_pattern='variable_desc=structure-quant-summary/**.csv',
+    )
+    for doc_name in doc_names
+]
+df_quants = utils.async_utils.run_async_tasks(tasks)
+df_quants = [pd.DataFrame(df) for df in df_quants]
+df_quants = pd.concat(df_quants)
+
+# ### vectorise quant data
+vectorise_resp = bg_async.add_embeddings_to_data(
+    data=list(df_quants.to_dict('records')),
+    cols_to_use=list(df_quants.columns),
+)
+df_vectorised = vectorise_resp.read_output_data()
+
+
 # ## Rank quants
+"""
+Once we have the quant metrics extracted and structured, we can rank them by relevance to the KPIs to filter out the most relevant data.
+"""
+
 # ### set attributes to extract
-# ## Rank tables by relevance to KPIs
+
+## KPIs for which we want qualitative data
+qual_kpis = [
+    'anti-corruption policies',
+    'anti-bribery policies',
+]
+## KPIs for which we want quantitative data
+quant_kpis = [
+    '% of female representation on the board',
+    'hazardous waste',
+    'gender pay gap',
+    'GHG Scope 1 emissions',
+    'GHG Scope 2 emissions',
+    'GHG Scope 3 emissions',
+    'Non-renewable energy consumption',
+    'Emissions to water',
+    'Percentage of non-renewable energy production',
+    'anti-corruption policies',
+    'anti-bribery policies',
+]
+
+# ### Rank quant data by relevance to KPIs
+tasks = [
+    bg_async.async_rank_data(
+        doc_name=doc_name,
+        file_pattern='variable_desc=structured-quant-summary/**.csv',
+        attr=attr,
+        attr_type='quantitative',
+        frac_rows_to_keep=0.1,
+    )
+    for attr in quant_kpis[:1]
+    for doc_name in doc_names[:1]
+]
+quant_ranking_responses = utils.async_utils.run_async_tasks(tasks)
+
 # ## extract quatns from most relevant text segments and tables

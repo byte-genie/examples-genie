@@ -25,56 +25,7 @@ class ByteGenieResponse:
         self.response = response
         self.verbose = verbose
 
-    def get_status(self):
-        """
-        Get the status of the task.
-        Note that this is the status of the task at the time API call was made.
-        In case a task was scheduled initially, even when the task is complete, the output of this method will not change.
-        For such tasks, use check_output_file_exists() to check whether a task has finished generating its output.
-        :return:
-        """
-        status = 'scheduled'
-        resp = self.response
-        if 'response' in resp.keys():
-            resp = resp['response']
-            if isinstance(resp, dict):
-                if 'task_1' in resp.keys():
-                    resp = resp['task_1']
-                    if isinstance(resp, dict):
-                        if 'status' in resp.keys():
-                            status = resp['status']
-        return status
-
-    def get_data(self):
-        """
-        Get data returned in ByteGenie response.
-        Note that this method only gets data that was returned from the api call,
-        and in case a task is scheduled, even when the task output is ready, output of this method will not change.
-        Use read_output_data() to read the current output of such scheduled tasks.
-        :return:
-        """
-        resp = self.response
-        if 'response' in resp.keys():
-            resp = resp['response']
-            if isinstance(resp, dict):
-                if 'task_1' in resp.keys():
-                    resp = resp['task_1']
-                    if isinstance(resp, dict):
-                        if 'data' in resp.keys():
-                            resp = resp['data']
-                            for i in np.arange(0, 2, 1):
-                                if isinstance(resp, dict):
-                                    if 'data' in resp.keys():
-                                        resp = resp['data']
-                            return resp
-
-    def get_output_file(
-            self,
-    ):
-        """
-        Get the output file of a task
-        :return:
-        """
+    def get_task_attr(self, attr: str):
         resp = self.response
         if 'response' in resp.keys():
             resp = resp['response']
@@ -85,9 +36,65 @@ class ByteGenieResponse:
                         if 'task' in resp:
                             resp = resp['task']
                             if isinstance(resp, dict):
-                                if 'output_file' in resp:
-                                    output_file = resp['output_file']
-                                    return output_file
+                                if attr in resp:
+                                    attr_val = resp[attr]
+                                    return attr_val
+
+    def get_response_attr(self, attr: str):
+        resp = self.response
+        if 'response' in resp.keys():
+            resp = resp['response']
+            if isinstance(resp, dict):
+                if 'task_1' in resp.keys():
+                    resp = resp['task_1']
+                    if isinstance(resp, dict):
+                        if attr in resp:
+                            attr_val = resp[attr]
+                            return attr_val
+
+    def get_status(self):
+        """
+        Get the status of the task.
+        Note that this is the status of the task at the time API call was made.
+        In case a task was scheduled initially, even when the task is complete, the output of this method will not change.
+        For such tasks, use check_output_file_exists() to check whether a task has finished generating its output.
+        :return:
+        """
+        status = self.get_response_attr(attr='status')
+        return status
+
+    def get_data(self):
+        """
+        Get data returned in ByteGenie response.
+        Note that this method only gets data that was returned from the api call,
+        and in case a task is scheduled, even when the task output is ready, output of this method will not change.
+        Use read_output_data() to read the current output of such scheduled tasks.
+        :return:
+        """
+        data = self.get_response_attr(attr='data')
+        for i in np.arange(0, 2, 1):
+            if isinstance(data, dict):
+                if 'data' in data.keys():
+                    data = data['data']
+        return data
+
+    def get_output_file(
+            self,
+    ):
+        """
+        Get the output file of a task
+        :return:
+        """
+        output_file = self.get_task_attr(attr='output_file')
+        return output_file
+
+    def get_start_time(self):
+        """
+        Get start time of a task
+        :return:
+        """
+        start_time = self.get_task_attr(attr='start_time')
+        return start_time
 
     def check_output_file_exists(self):
         """
@@ -495,6 +502,51 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in read_file(): {e}")
 
+    def read_qaunts(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Read quants
+        :param doc_name: document name
+        :param file_pattern: file pattern to match when listing files
+        :param timeout: time out for the api call
+        :return:
+        """
+        func = 'read_qaunts'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_read_qaunts(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.read_qaunts(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in read_qaunts(): {e}")
 
     def read_synthesized_data(
             self,
@@ -1450,6 +1502,211 @@ class ByteGenie:
         )
         return resp
 
+    def verify_data(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            var_col: str = None,
+            val_col: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify extracted data
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param var_col: name for variable column
+        :param val_col: name for value column
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param timeout: time out for api call
+        :return:
+        """
+        func = 'verify_data'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'var_col': var_col,
+            'val_col': val_col,
+            'context_col': context_col,
+            'fuzzy_match_min': fuzzy_match_min,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_verify_data(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            var_col: str = None,
+            val_col: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify extracted data (asynchronous)
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param var_col: name for variable column
+        :param val_col: name for value column
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param timeout: time out for api call
+        :return:
+        """
+        try:
+            resp = self.verify_data(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                var_col=var_col,
+                val_col=val_col,
+                context_col=context_col,
+                fuzzy_match_min=fuzzy_match_min,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in verify_data(): {e}")
+
+    def verify_quants_company_info(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            company_col: str = None,
+            val_col: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify company names in extracted quant data
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param company_col: name for company name column
+        :param val_col: name for value column
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param timeout: time out for api call
+        :return:
+        """
+        func = 'verify_quants_company_info'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'company_col': company_col,
+            'val_col': val_col,
+            'context_col': context_col,
+            'fuzzy_match_min': fuzzy_match_min,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_verify_quants_company_info(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            company_col: str = None,
+            val_col: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify company names in extracted quant data (asynchronous)
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param company_col: name for company name column
+        :param val_col: name for value column
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param timeout: time out for api call
+        :return:
+        """
+        try:
+            resp = self.verify_quants_company_info(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                company_col=company_col,
+                val_col=val_col,
+                context_col=context_col,
+                fuzzy_match_min=fuzzy_match_min,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in verify_data(): {e}")
+
+    def synthesize_quant_data(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Synthesize document meta-data with quantitative info extracted from the document
+        :param doc_name: document name
+        :param timeout:
+        :return:
+        """
+        func = 'synthesize_quant_data'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_synthesize_quant_data(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Synthesize document meta-data with quantitative info extracted from the document (asynchronous)
+        :param doc_name: document name
+        :param timeout:
+        :return:
+        """
+        func = 'synthesize_quant_data'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def rank_data(
             self,
             doc_name: str,
@@ -1464,7 +1721,7 @@ class ByteGenie:
         :param doc_name: document from which to rank data
         :param file_pattern: file pattern to use to select input files
         :param attr: keyphrase by which to rank data
-        :param attr_type: type of attribute/data to rank (quantitative or qualitative)
+        :param attr_type: type of attribute/data to rank ('quantitative' or 'qualitative')
         :param timeout: how long to wait before timing out the api call
         :return:
         """
@@ -1485,6 +1742,30 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_rank_data(
+            self,
+            doc_name: str,
+            attr: str,
+            file_pattern: str = None,
+            attr_type: str = None,
+            frac_rows_to_keep: float = 0.1,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.rank_data(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                attr=attr,
+                attr_type=attr_type,
+                frac_rows_to_keep=frac_rows_to_keep,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in rank_data(): {e}")
 
     def generate_training_data(
             self,
@@ -1560,6 +1841,40 @@ class ByteGenie:
         func = 'show_uploads'
         args = {
             'username': username,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def add_embeddings_to_data(
+            self,
+            data: list,
+            cols_to_use: list,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Add embeddings column to data based on a pre-defined set of columns
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout:
+        :return:
+        """
+        func = 'add_embeddings_to_data'
+        args = {
+            'data': data,
+            'cols_to_use': cols_to_use,
+            'model': model,
+            'chunk_size': chunk_size,
         }
         payload = self.create_api_payload(
             func=func,

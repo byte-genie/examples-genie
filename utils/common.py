@@ -87,3 +87,11 @@ def read_file_contents(directory: str):
     df['filename'] = [file.split('/')[-1] for file in file_paths]
     df['content'] = contents
     return df
+
+
+def get_doc_name(file: str):
+    if 'entity=' not in file:
+        return None
+    else:
+        doc_name = file.split('entity=')[-1].split('/')[0]
+        return doc_name
