@@ -708,19 +708,13 @@ First 5 embedding files for the first documnet: embed_text_files[0][:5]
 
 """
 
-
-# ## Rank quants
+# ## Rank quants by relevance to keyphrases
 """
 Once we have the quant metrics extracted and structured, we can rank them by relevance to the KPIs to filter out the most relevant data.
 """
 
 # ### set attributes to extract
 
-## KPIs for which we want qualitative data
-qual_kpis = [
-    'anti-corruption policies',
-    'anti-bribery policies',
-]
 ## KPIs for which we want quantitative data
 quant_kpis = [
     '% of female representation on the board',
@@ -771,3 +765,34 @@ for doc_num, doc_name in enumerate(doc_names):
 # quant_ranking_responses = utils.async_utils.run_async_tasks(tasks)
 
 # ## extract quatns from most relevant text segments and tables
+
+# ## Rank text by relevance to keyphrases
+"""
+Once we have the text segments extracted from documents, we can rank them by relevance to the KPIs to filter out the most relevant data.
+"""
+
+# ### set attributes to extract
+
+## KPIs for which we want qualitative data
+qual_kpis = [
+    'anti-corruption policies',
+    'anti-bribery policies',
+]
+
+# ### score text data by similarity
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
+    try:
+        tasks = [
+            bg_async.async_score_doc_text_similarity(
+                doc_name=doc_name,
+                file_pattern='data_type=embeddings/**/variable_desc=text-segments/**.csv',
+                query=query,
+            )
+            for query in quant_kpis
+        ]
+        score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
+    except Exception as e:
+        logger.warning(f"Error running similarity scoring for: {doc_name}")
+    ## wait for 2 min before starting next document to avoid rate limit errors
+    time.sleep(2 * 60)
