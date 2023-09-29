@@ -2037,6 +2037,42 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in score_doc_text_similarity(): {e}")
 
+    def get_usage_summary(
+            self,
+            username: str = None,
+            start_time: str = None,
+            end_time: str = None,
+            route: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        score_doc_text_similarity
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout:
+        :return:
+        """
+        if username is None:
+            username = self.read_username()
+        func = 'get_usage_summary'
+        args = {
+            'username': username,
+            'start_time': start_time,
+            'end_time': end_time,
+            'route': route,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
 
 
 
