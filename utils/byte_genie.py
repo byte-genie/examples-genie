@@ -1886,6 +1886,157 @@ class ByteGenie:
         )
         return resp
 
+    @to_async
+    def async_add_embeddings_to_data(
+            self,
+            data: list,
+            cols_to_use: list,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Add embeddings column to data based on a pre-defined set of columns (asynchronous)
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.add_embeddings_to_data(
+                data=data,
+                cols_to_use=cols_to_use,
+                model=model,
+                chunk_size=chunk_size,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in add_embeddings_to_data(): {e}")
+
+    def embed_doc_data(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            cols_to_use: list,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Embed document data
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout:
+        :return:
+        """
+        func = 'embed_doc_data'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'cols_to_use': cols_to_use,
+            'model': model,
+            'chunk_size': chunk_size,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_embed_doc_data(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            cols_to_use: list,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.embed_doc_data(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                cols_to_use=cols_to_use,
+                model=model,
+                chunk_size=chunk_size,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in embed_doc_data(): {e}")
+
+    def score_doc_text_similarity(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            query: str,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        score_doc_text_similarity
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout:
+        :return:
+        """
+        func = 'score_doc_text_similarity'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'query': query,
+            'model': model,
+            'chunk_size': chunk_size,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_score_doc_text_similarity(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            query: str,
+            model: str = None,
+            chunk_size: int = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.score_doc_text_similarity(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                query=query,
+                model=model,
+                chunk_size=chunk_size,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in score_doc_text_similarity(): {e}")
+
 
 
 

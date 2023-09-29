@@ -5,6 +5,7 @@
 import os
 import time
 import uuid
+import numpy as np
 import pandas as pd
 import utils.common
 import utils.async_utils
@@ -515,7 +516,6 @@ tasks = [
 ]
 verify_company_responses = utils.async_utils.run_async_tasks(tasks)
 
-
 # ### list verified company name and quant value files
 tasks = [
     bg_sync.async_list_doc_files(
@@ -633,45 +633,80 @@ tasks = [
     bg_async.async_synthesize_quant_data(
         doc_name=doc_name,
     )
-    for doc_name in doc_names[:1]
+    for doc_name in doc_names
 ]
 quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
 
-
 # ## Vectorise quant data for semantic searching
 
-# ### read quants
+# ### set columns to embed
+cols_to_embed = ['category', 'company name', 'date', 'unit', 'value', 'variable', 'variable description']
+
+# ### embed quant files
 tasks = [
-    bg_sync.async_read_quants(
+    bg_async.async_embed_doc_data(
         doc_name=doc_name,
         file_pattern='variable_desc=structured-quant-summary/**.csv',
+        cols_to_use=cols_to_embed,
     )
     for doc_name in doc_names
 ]
-df_quants = utils.async_utils.run_async_tasks(tasks)
-df_quants = [resp.get_data() for resp in df_quants]
-df_quants = [pd.DataFrame(df) for df in df_quants]
-df_quants = pd.concat(df_quants)
-df_quants = df_quants[~df_quants['value'].isin(['', 'n/a'])]
+doc_emb_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### list embedding files for quants
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='data_type=embeddings/**/variable_desc=structured-quant-summary/**.csv',
+    )
+    for doc_name in doc_names
+]
+embed_doc_files = utils.async_utils.run_async_tasks(tasks)
+embed_doc_files = [resp.get_data() for resp in embed_doc_files if resp.get_data() is not None]
 """
-df_quants columns: list(df_quants.columns)
-['category', 'company name', 'context', 'date', 'doc_name', 'pagenum', 'relevant quote', 'unit', 'value', 'variable', 'variable description']
-df_quants.drop(columns=['context', 'relevant quote']).head().to_dict('records')
+Number of documents with embedding files: len(embed_doc_files): 49
+First 5 embedding files for the first documnet: embed_doc_files[0][:5]
 [
-    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '32%', 'variable': 'Women in Manager', 'variable description': 'Percentage of women in first level manager roles'}, 
-    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '1', 'variable': 'Women in Manager', 'variable description': 'Number of women in first level manager roles'}, 
-    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '5', 'variable': 'Women in Manager', 'variable description': ''}, 
-    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': 'TERR 2', 'variable': 'Women in Manager', 'variable description': ''}, 
-    {'category': 'Gender Diversity', 'company name': 'American Express', 'date': '', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'pagenum': 1, 'unit': '', 'value': '3', 'variable': 'Women in Manager', 'variable description': ''}
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_similarity_query-emissions-by-scope_embeddings.csv'
 ]
 """
 
-# ### vectorise quant data
-vectorise_resp = bg_async.add_embeddings_to_data(
-    data=list(df_quants.to_dict('records')),
-    cols_to_use=list(df_quants.columns),
-)
-df_vectorised = vectorise_resp.read_output_data()
+# ## Vectorise text segments for semantic searching
+
+# ### set columns to embed
+cols_to_embed = ['text']
+
+# ### embed text files
+tasks = [
+    bg_async.async_embed_doc_data(
+        doc_name=doc_name,
+        file_pattern='variable_desc=text-segments/**.csv',
+        cols_to_use=cols_to_embed,
+    )
+    for doc_name in doc_names
+]
+text_emb_responses = utils.async_utils.run_async_tasks(tasks)
+
+
+# ### list embedding files for text segments
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='data_type=embeddings/**/variable_desc=text-segments/**.csv',
+    )
+    for doc_name in doc_names
+]
+embed_text_files = utils.async_utils.run_async_tasks(tasks)
+embed_text_files = [resp.get_data() for resp in embed_text_files if resp.get_data() is not None]
+"""
+Number of documents with embedding files: len(embed_text_files): 49
+First 5 embedding files for the first documnet: embed_text_files[0][:5]
+
+"""
 
 
 # ## Rank quants
@@ -701,18 +736,38 @@ quant_kpis = [
     'anti-bribery policies',
 ]
 
-# ### Rank quant data by relevance to KPIs
-tasks = [
-    bg_async.async_rank_data(
-        doc_name=doc_name,
-        file_pattern='variable_desc=structured-quant-summary/**.csv',
-        attr=attr,
-        attr_type='quantitative',
-        frac_rows_to_keep=0.1,
-    )
-    for attr in quant_kpis[:1]
-    for doc_name in doc_names[:1]
-]
-quant_ranking_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### score quant data similarity
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
+    try:
+        tasks = [
+            bg_async.async_score_doc_text_similarity(
+                doc_name=doc_name,
+                file_pattern='data_type=embeddings/**/variable_desc=structured-quant-summary/**.csv',
+                query=query,
+            )
+            for query in quant_kpis
+        ]
+        score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
+    except Exception as e:
+        logger.warning(f"Error running similarity scoring for: {doc_name}")
+    ## wait for 2 min before starting next document to avoid rate limit errors
+    time.sleep(2 * 60)
+
+
+# # ### Rank quant data by relevance to KPIs
+# tasks = [
+#     bg_async.async_rank_data(
+#         doc_name=doc_name,
+#         file_pattern='variable_desc=structured-quant-summary/**.csv',
+#         attr=attr,
+#         attr_type='quantitative',
+#         frac_rows_to_keep=0.1,
+#     )
+#     for attr in quant_kpis
+#     for doc_name in doc_names
+# ]
+# quant_ranking_responses = utils.async_utils.run_async_tasks(tasks)
 
 # ## extract quatns from most relevant text segments and tables
