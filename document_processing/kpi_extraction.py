@@ -644,6 +644,8 @@ quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
 cols_to_embed = ['category', 'company name', 'date', 'unit', 'value', 'variable', 'variable description']
 
 # ### embed quant files
+bg_async.overwrite = 1
+bg_async.overwrite_base_output = 1
 tasks = [
     bg_async.async_embed_doc_data(
         doc_name=doc_name,
@@ -652,7 +654,16 @@ tasks = [
     )
     for doc_name in doc_names
 ]
-doc_emb_responses = utils.async_utils.run_async_tasks(tasks)
+## run tasks in batches of 10 documents at a time to avoid rate limit errors
+batch_size = 10
+wait_time = 2 * 60
+doc_emb_responses = []
+for task_num, task in enumerate(tasks):
+    logger.info(f"running task: {task_num}/{len(tasks)}")
+    doc_emb_response_ = utils.async_utils.run_async_tasks([task])
+    doc_emb_responses.append(doc_emb_response_)
+    if (task_num % batch_size == 0) and (task_num > 0):
+        time.sleep(wait_time)
 
 # ### list embedding files for quants
 tasks = [
@@ -665,8 +676,8 @@ tasks = [
 embed_doc_files = utils.async_utils.run_async_tasks(tasks)
 embed_doc_files = [resp.get_data() for resp in embed_doc_files if resp.get_data() is not None]
 """
-Number of documents with embedding files: len(embed_doc_files): 49
-First 5 embedding files for the first documnet: embed_doc_files[0][:5]
+Number of documents with embedding files, len(embed_doc_files): 49
+First 5 embedding files for the first document: embed_doc_files[0][:5]
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings.csv', 
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings.csv', 
@@ -753,8 +764,8 @@ for doc_num, doc_name in enumerate(doc_names):
         score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
     except Exception as e:
         logger.warning(f"Error running similarity scoring for: {doc_name}")
-    ## wait for 2 min before starting next document to avoid rate limit errors
-    time.sleep(2 * 60)
+    ## wait for 15 sec before starting next document to avoid rate limit errors
+    time.sleep(15)
 
 
 # ## Rank text by relevance to keyphrases
@@ -785,8 +796,8 @@ for doc_num, doc_name in enumerate(doc_names):
         score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
     except Exception as e:
         logger.warning(f"Error running similarity scoring for: {doc_name}")
-    ## wait for 2 min before starting next document to avoid rate limit errors
-    time.sleep(2 * 60)
+    ## wait for 15 sec before starting next document to avoid rate limit errors
+    time.sleep(15)
 
 
 # ## Filter out quant data most relevant to KPIs
@@ -881,4 +892,16 @@ upload_resp = bg_sync.upload_data(
 
 # ### identify the top 10% rows for each KPI
 
-# ### verify
+# ### identify and fixerrors
+
+# ### remove query files from embeddings
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='data_type=embeddings/**/variable_desc=structured-quant-summary/**query-*.csv'
+    )
+    for doc_name in doc_names
+]
+query_emb_files = utils.async_utils.run_async_tasks(tasks)
+query_emb_files = [resp.get_data() for resp in query_emb_files]
+query_emb_files = [file for doc_files in query_emb_files for file in doc_files]
