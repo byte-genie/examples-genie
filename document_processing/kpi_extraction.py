@@ -10,6 +10,7 @@ import pandas as pd
 import utils.common
 import utils.async_utils
 from utils.logging import logger
+from utils.async_utils import to_async
 from utils.byte_genie import ByteGenie
 
 # ## init byte-genie
@@ -156,22 +157,22 @@ for doc_num, doc_name in enumerate(doc_names):
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern="variable_desc=text-blocks/**.csv"
+        file_pattern="data_type=semi-structured/**/variable_desc=text-blocks/**.csv"
     )
     for doc_name in doc_names
 ]
 ocr_text_files = utils.async_utils.run_async_tasks(tasks)
 ocr_text_files = [resp.get_data() for resp in ocr_text_files if resp.get_data() is not None]
 """
-Number of documents with OCR text files, len(ocr_text_files): 49
-Number of OCR text files for one document, len(ocr_text_files[0]): 132
+Number of documents with OCR text files, `len(ocr_text_files)`: 49
+Number of OCR text files for one document, `len(ocr_text_files[0])`: 8
 First 5 OCR text files for one document: ocr_text_files[0][:5]
 [
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-0_text-blocks.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-100_text-blocks.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-101_text-blocks.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-102_text-blocks.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-103_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-0_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-1_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-2_text-blocks.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-3_text-blocks.csv', 
+'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-4_text-blocks.csv'
 ]
 Extracted text files contain page number from which the text was extracted, so tables belonging to a specific page can be filtered, if needed.
 """
@@ -180,7 +181,7 @@ Extracted text files contain page number from which the text was extracted, so t
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern="variable_desc=table-cells/**.csv"
+        file_pattern="data_type=semi-structured/**variable_desc=table-cells/**.csv"
     )
     for doc_name in doc_names
 ]
@@ -225,7 +226,7 @@ for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"triggering original table reconstruction for ({doc_num}/{len(doc_names)}: {doc_name})")
     resp = bg_async.reconstruct_orig_tables(
         doc_name=doc_name,
-        file_pattern='variable_desc=table-cells/**.csv',
+        file_pattern='data_type=semi-structured/**/variable_desc=table-cells/**.csv',
     )
     responses = responses + [resp]
 
@@ -284,7 +285,7 @@ for doc_num, doc_name in enumerate(doc_names):
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern="variable_desc=text-segments/**.csv"
+        file_pattern="data_type=semi-structured/**/variable_desc=text-segments/**.csv"
     )
     for doc_name in doc_names
 ]
@@ -354,7 +355,7 @@ quant_extraction_start_time = time.time()
 tasks = [
     bg_async.async_structure_passage_quants(
         doc_name=doc_name,
-        file_pattern='variable_desc=text-segments/**.csv',
+        file_pattern='data_type=semi-structured/**/variable_desc=text-segments/**.csv',
         text_col='text',
     )
     for doc_name in doc_names
@@ -374,7 +375,7 @@ tabular_quant_extraction_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern=f"source=passage-quants/**.csv"
+        file_pattern=f"data_type=structured/**/source=passage-quants/**.csv"
     )
     for doc_name in doc_names
 ]
@@ -397,7 +398,7 @@ passage_quant_files[0][:5]
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern=f"source=tabular-quants/**.csv"
+        file_pattern=f"data_type=structured/**/source=tabular-quants/**.csv"
     )
     for doc_name in doc_names
 ]
@@ -469,7 +470,7 @@ verify_value_start_time
 tasks = [
     bg_async.async_verify_data(
         doc_name=doc_name,
-        file_pattern='variable_desc=structured-quant-summary/**.csv',
+        file_pattern='data_type=structured/**/variable_desc=structured-quant-summary/**.csv',
     )
     for doc_name in doc_names
 ]
@@ -479,7 +480,7 @@ verify_value_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern='variable_desc=verified-quants/**.csv',
+        file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
     )
     for doc_name in doc_names
 ]
@@ -510,7 +511,7 @@ verify_company_start_time
 tasks = [
     bg_async.async_verify_quants_company_info(
         doc_name=doc_name,
-        file_pattern='variable_desc=verified-quants/**.csv',
+        file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
     )
     for doc_name in doc_names
 ]
@@ -520,7 +521,7 @@ verify_company_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_list_doc_files(
         doc_name=doc_name,
-        file_pattern='variable_desc=verified-company-quants/**.csv',
+        file_pattern='data_type=structured/**/variable_desc=verified-company-quants/**.csv',
     )
     for doc_name in doc_names
 ]
@@ -646,7 +647,7 @@ cols_to_embed = ['category', 'company name', 'date', 'unit', 'value', 'variable'
 tasks = [
     bg_async.async_embed_doc_data(
         doc_name=doc_name,
-        file_pattern='variable_desc=structured-quant-summary/**.csv',
+        file_pattern='data_type=structured/**/variable_desc=structured-quant-summary/**.csv',
         cols_to_use=cols_to_embed,
     )
     for doc_name in doc_names
@@ -684,7 +685,7 @@ cols_to_embed = ['text']
 tasks = [
     bg_async.async_embed_doc_data(
         doc_name=doc_name,
-        file_pattern='variable_desc=text-segments/**.csv',
+        file_pattern='data_type=semi-structured/**/variable_desc=text-segments/**.csv',
         cols_to_use=cols_to_embed,
     )
     for doc_name in doc_names
@@ -756,22 +757,6 @@ for doc_num, doc_name in enumerate(doc_names):
     time.sleep(2 * 60)
 
 
-# # ### Rank quant data by relevance to KPIs
-# tasks = [
-#     bg_async.async_rank_data(
-#         doc_name=doc_name,
-#         file_pattern='variable_desc=structured-quant-summary/**.csv',
-#         attr=attr,
-#         attr_type='quantitative',
-#         frac_rows_to_keep=0.1,
-#     )
-#     for attr in quant_kpis
-#     for doc_name in doc_names
-# ]
-# quant_ranking_responses = utils.async_utils.run_async_tasks(tasks)
-
-# ## extract quatns from most relevant text segments and tables
-
 # ## Rank text by relevance to keyphrases
 """
 Once we have the text segments extracted from documents, we can rank them by relevance to the KPIs to filter out the most relevant data.
@@ -802,3 +787,98 @@ for doc_num, doc_name in enumerate(doc_names):
         logger.warning(f"Error running similarity scoring for: {doc_name}")
     ## wait for 2 min before starting next document to avoid rate limit errors
     time.sleep(2 * 60)
+
+
+# ## Filter out quant data most relevant to KPIs
+
+# ### read similarity scored files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
+    )
+    for doc_name in doc_names
+]
+sim_score_files = utils.async_utils.run_async_tasks(tasks)
+sim_score_files = [resp.get_data() for resp in sim_score_files if resp.get_data() is not None]
+"""
+Number of documents with sim_score_files, `len(sim_score_files)`: 49
+First 5 sim_score_files for the first document, `sim_score_files[0][:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-anti-bribery-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-anti-corruption-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-emissions-to-water.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-gender-pay-gap.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv'
+]
+"""
+## flatten sim_score_files
+sim_score_files = [file for doc_files in sim_score_files for file in doc_files]
+"""
+Total number of sim_score_files across all documents, `len(sim_score_files)`: 150615
+"""
+
+# ### create a dataframe of files by KPI
+df_sim_files = pd.DataFrame()
+df_sim_files['file'] = sim_score_files
+df_sim_files['query'] = [os.path.splitext(file.split('/')[-1].split('query-')[-1])[0] for file in sim_score_files]
+"""
+Unique queries/KPIs for which we have similarity scored files, `list(df_sim_files['query'].unique())`
+[
+    'anti-bribery-policies', 
+    'anti-corruption-policies', 
+    'emissions-to-water', 
+    'gender-pay-gap', 
+    'ghg-scope-1-emissions', 
+    'ghg-scope-2-emissions', 
+    'ghg-scope-3-emissions', 
+    'hazardous-waste', 
+    'non-renewable-energy-consumption', 
+    'of-female-representation-on-the-board', 
+    'percentage-of-non-renewable-energy-production', 
+    'emissions-by-scope'
+]
+First 5 files for 'ghg-scope-1-emissions', df_sim_files[df_sim_files['query'] == 'ghg-scope-1-emissions']['file'].unique().tolist()[:5]
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_similarity_query-emissions-by-scope_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_similarity_query-emissions-by-scope_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv'
+]
+"""
+
+# ### define a function to read and and filter out most relevant rows from each file
+
+
+@to_async
+def read_and_filter_data(file: str):
+    resp = bg_sync.read_file(file=file)
+
+
+# ### read all sim_score_files for each query
+for query_num, query in enumerate(df_sim_files['query'].unique().tolist()):
+    query_files = df_sim_files[df_sim_files['query'] == query]['file'].unique().tolist()
+    tasks = [
+        bg_sync.async_read_file(
+            file=file
+        )
+        for file in query_files
+    ]
+df_quants_sim_score = utils.async_utils.run_async_tasks(tasks)
+df_quants_sim_score = [resp.get_data() for resp in df_quants_sim_score if resp.get_data() is not None]
+df_quants_sim_score = pd.DataFrame(df_quants_sim_score)
+
+# ### save df_quants_sim_score locally
+df_quants_sim_score.to_csv('/tmp/df_quants_sim_score.csv', index=False)
+
+# ### save df_quants_sim_score as an upload (so we can retrieve it later on and start from there)
+upload_resp = bg_sync.upload_data(
+    contents=[df_quants_sim_score.to_dict('records')],
+    filenames=['similarity-scored-quants'],
+    username=bg_sync.read_username(),
+)
+
+# ### identify the top 10% rows for each KPI
+
+# ### verify

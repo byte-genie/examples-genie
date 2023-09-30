@@ -337,17 +337,19 @@ class ByteGenie:
             self,
             contents: list,
             filenames: list,
-            username: str,
+            username: str = None,
             timeout: int = 15 * 60,
     ):
         """
         Upload files
         :param contents: file contents to upload
-        :param filenames: names for uploaded file contents
+        :param filenames: file names for uploaded file contents
         :param username: user name
         :param timeout:
         :return:
         """
+        if username is None:
+            username = self.read_username()
         func = 'upload_data'
         args = {
             'contents': contents,
