@@ -514,6 +514,52 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in read_file(): {e}")
 
+    def read_files(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Read files
+        :param doc_name: document name
+        :param file_pattern: file pattern to match when listing files
+        :param timeout: time out for the api call
+        :return:
+        """
+        func = 'read_files'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_read_files(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.read_files(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in read_files(): {e}")
+
     def read_quants(
             self,
             doc_name: str,
@@ -2107,20 +2153,23 @@ class ByteGenie:
 
     def trace_evidence(
             self,
-            file: str,
+            doc_name: str,
+            file_pattern: str,
             destination: str = None,
             timeout: int = 15 * 60,
     ):
         """
         Trace evidence for extracted data
-        :param file: file for which to trace evidence
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
         :param destination: destination until which to trace evidence (optional)
         :param timeout:
         :return:
         """
         func = 'trace_evidence'
         args = {
-            'file': file,
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
             'destination': destination,
         }
         payload = self.create_api_payload(
@@ -2136,20 +2185,23 @@ class ByteGenie:
     @to_async
     def async_trace_evidence(
             self,
-            file: str,
+            doc_name: str,
+            file_pattern: str,
             destination: str = None,
             timeout: int = 15 * 60,
     ):
         """
         Trace evidence for extracted data (asynchronous)
-        :param file: file for which to trace evidence
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
         :param destination: destination until which to trace evidence (optional)
         :param timeout:
         :return:
         """
         try:
             resp = self.trace_evidence(
-                file=file,
+                doc_name=doc_name,
+                file_pattern=file_pattern,
                 destination=destination,
                 timeout=timeout,
             )

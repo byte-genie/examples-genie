@@ -953,25 +953,36 @@ df_text_filtered.head().to_dict('records')
 
 # ## Retrieve evidence for all filtered values
 """
-We can use `/trace_evidence` endpoint to trace evidence for any extracted or derived data. `/trace_evidence` takes a file as an input, 
-and determines where this file lies in the processing pipeline, and which previous output is relevant for contextualising the data in this file. 
+We can use `/trace_evidence` endpoint to trace evidence for any extracted or derived data. `/trace_evidence` takes a document name and file pattern as inputs,  
+and determines where these files lie in the processing pipeline, and which previous output is relevant for contextualising the data in these files. 
 For example, for similarity-scored data, it will fetch the base structured data (before any vectorisation and similarity scoring), 
-and original page image, from which all the data in the similarity-score file is derived.  
+and original page image, from which all the data in the similarity-score files are derived.  
 """
 
-# ### evidence tracing for quant files
+# ### trace evidence for quant files
 
 ## define tasks
 tasks = [
     bg_async.async_trace_evidence(
-        file=file,
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
     )
-    for file in df_quants_filtered['file'].unique().tolist()
+    for doc_name in doc_names
 ]
 ## run tasks
 quant_evidence_responses = utils.async_utils.run_async_tasks(tasks)
-## read output
-df_quant_evidence = [resp.get_output() for resp in quant_evidence_responses]
+
+# ### read quant evidence files
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=evidence/**/variable_desc=structured-quant-summary/**.csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
+]
+df_quant_evidence = utils.async_utils.run_async_tasks(tasks)
+df_quant_evidence = [resp.get_output() for resp in df_quant_evidence]
 df_quant_evidence = [pd.DataFrame(df) for df in df_quant_evidence]
 df_quant_evidence = pd.concat(df_quant_evidence)
 """
@@ -996,26 +1007,40 @@ Snapshot of quants data merged with evidence from where it was extracted, `df_qu
     {'query': 'hazardous waste', 'score': 0.7572854523436736, 'category': 'Energy Consumption and Production', 'date': '2021', 'unit': 'GWh', 'value': 516.0, 'variable': 'Sold secondary energy (waste heat)', 'variable description': 'Secondary energy (waste heat) sold to external sources', 'context': '"113 BILLERUDKORSNAS ANNUAL AND SUSTAINABILITY REPORT 2021 \\n\\n Environmental statistics \\n\\n Production (102-7) Board, paper and pulp, ktonnes \\n\\n Materials used (301-1) Wood, thousand m\\u00b3sub Pulp, purchased externally, ktonnes Pulp, purchased internally, ktonnes Chemicals (renewable), ktonnes Total renewable materials, ktonnes Chemicals (non-renewable), ktonnes Total materials used, ktonnes \\n\\n Air emissions (305-7) Sulphur (S), tonnes of which diffuse sources, tonnes Nitrogen oxides (NOx), tonnes Dust, tonnes \\n\\n Water withdrawal (303-3) Surface water, million m\\u00b3 Groundwater, million m\\u00b3 Municipal water, million m\\u00b3 Total water withdrawal1, million m\\u00b3 \\n\\n 2021 in brief \\n\\n Target fulfilment \\n\\n External trends \\n\\n 2021 \\n\\n 3129 \\n\\n 10 100 375 148 74 10 697 407 11 105 \\n\\n 276 166 2891 509 \\n\\n 186 0 0.3 187 \\n\\n 2020 \\n\\n 3047 \\n\\n 10 351 300 160 74 885 420 11 306 \\n\\n 371 277 3050 604 \\n\\n 190 0 0.4 191 \\n\\n Strategy Our business Sustainability Directors\' report Risk management Financial reports \\n\\n 2019 \\n\\n 2888 \\n\\n 9480 276 164 68 9 988 373 10 360 \\n\\n 416 301 2905 543 \\n\\n 177 0 0.4 177 \\n\\n Sustainability data \\n\\n 1 The water is used to wash pulp in several stages during manufacturing. In total, virtually all the water is circulated and reused. How times the process many process water is used varies, but according to our examples, it is used 30-50 times before being for biological treatment. sent 2 COD is calculated from TOC. \\n\\n Comments The decrese in sulphur emissions can be attributed to measures and investments at multiple production units. Process waste returned to a lower level after a steep increase in 2020. \\n\\n Energy consumption and production 2021, % Self-generated biofuels, 77.8 Purchased biofuels, 10.9 Net steam and electricity, purchased, 8.8 Purchased fossil fuels, 2.5 \\n\\n Emissions to water (303-4) Process water, million m\\u00b3 COD (chemical oxygen demand)\\u00b2, tonnes TSS (total suspended solids), tonnes Organically bound chlorine (AOX), tonnes Nitrogen (N), tonnes Phosphorus (P), tonnes \\n\\n Waste (306-3) Process waste, tonnes Hazardous waste, tonnes \\n\\n 61 503 90292 1803 1201 \\n\\n 2021 \\n\\n 135 \\n\\n 27 156 3830 \\n\\n 131 434 49 \\n\\n 2020 \\n\\n 141 \\n\\n 28249 3078 \\n\\n 146 454 47 \\n\\n 2019 \\n\\n 134 \\n\\n 236 2914 \\n\\n 145 424 41 \\n\\n 73 656 851 \\n\\n Additional information \\n\\n 2021 2020 2019 Energy consumption (302-1) Solid biofuels, self-generated, GWh 2081 2068 2231 Waste liquor, GWh 10 241 10 419 9777 tall oil, GWh Raw - 1 5 Other (e.g. turpentine, soap, gas, methanol), GWh 135 139 119 Total self-generated biofuels, GWh 12 457 12 627 12 132 Solid biofuels, purchased, GWh 832 759 622 Tar oil, GWh 916 875 872 Total purchased biofuels, GWh 1748 1633 1494 Total biofuels, GWh 4205 14 260 3 626 light fuel oil, GWh Heavy and 191 165 224 LPG, GWh 113 110 106 Natural gas, GWh 92 109 120 Total purchased fossil fuels, GWh 396 384 450 Total fuel consumption, GWh 14 602 14 644 14 076 Proportion fossil fuels used, % 2,7 2,6 3.2 Steam, bio-based, GWh 273 211 228 Steam, fossil-based, GWh 1 2 1 Hot water, GWh 23 18 17 Total purchased steam, hot water (GWh) 297 231 246 Sold primary energy, GWh 460 364 387 Sold secondary energy (waste heat), GWh 516 571 552 Total sold energy, GWh 976 935 939 Purchased electricity, GWh 1953 1981 1806 Self-generated electricity, GWh 1 407 1393 1391 Sold electricity, GWh 55 52 54 Total electricity, GWh 3 305 3 322 3 143 Total energy consumption1, GWh 16 6008 121 15 367 Energy intensity MWh/tonne 5.12 5.29 5.32 1 Use of electricity and energy minus fuel for self-generated electricity and sold energy. \\n\\n Comments BillerudKorsn\\u00e4s used 2.7% fossil fuels in 2021, which is a small increase compared to the previous year. The increase is fully attribut- able to increase in fossile fuel oil wheras the decrease in natural gas is mainly explained by the divestment of Beetham in late 2021. The energy intensity improved during 2021 from 5.29 to 5.12 MWh/tonne. \\n\\n "', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-112.png', 'pagenum': 112, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf'}
 ]
 """
+## write data locally
+df_quant_evidence.to_csv(f"/tmp/df_quant_evidence.csv", index=False)
+
 # ### evidence tracing for text files
 
 ## tasks
 tasks = [
     bg_async.async_trace_evidence(
-        file=file,
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
     )
-    for file in df_text_filtered['file'].unique().tolist()
+    for doc_name in doc_names
 ]
 ## run tasks
 text_evidence_responses = utils.async_utils.run_async_tasks(tasks)
-## get output
-df_text_evidence = [resp.get_output() for resp in text_evidence_responses]
+
+# ### read text evidence files
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=evidence/**/variable_desc=text-segments/**.csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
+]
+df_text_evidence = utils.async_utils.run_async_tasks(tasks)
+df_text_evidence = [resp.get_output() for resp in df_text_evidence]
 df_text_evidence = [pd.DataFrame(df) for df in df_text_evidence]
 df_text_evidence = pd.concat(df_text_evidence)
 """
 df_text_evidence columns, `list(df_text_evidence.columns)`
 
-df_text_evidence.head().to_dict('records')
 """
+
 
 # ## Verify filtered data
 
