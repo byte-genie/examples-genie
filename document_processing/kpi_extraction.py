@@ -3,6 +3,7 @@
 # ## import necessary libraries
 
 import os
+import pickle
 import time
 import uuid
 import numpy as np
@@ -791,9 +792,9 @@ for doc_num, doc_name in enumerate(doc_names):
                 file_pattern='data_type=embeddings/**/variable_desc=text-segments/**.csv',
                 query=query,
             )
-            for query in quant_kpis
+            for query in qual_kpis
         ]
-        score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
+        score_quanl_sim_responses = utils.async_utils.run_async_tasks(tasks)
     except Exception as e:
         logger.warning(f"Error running similarity scoring for: {doc_name}")
     ## wait for 15 sec before starting next document to avoid rate limit errors
@@ -826,7 +827,7 @@ First 5 sim_score_files for the first document, `sim_score_files[0][:5]`
 ## flatten sim_score_files
 sim_score_files = [file for doc_files in sim_score_files for file in doc_files]
 """
-Total number of sim_score_files across all documents, `len(sim_score_files)`: 150615
+Total number of sim_score_files across all documents, `len(sim_score_files)`: 119732
 """
 
 # ### create a dataframe of files by KPI
@@ -851,57 +852,98 @@ Unique queries/KPIs for which we have similarity scored files, `list(df_sim_file
 ]
 First 5 files for 'ghg-scope-1-emissions', df_sim_files[df_sim_files['query'] == 'ghg-scope-1-emissions']['file'].unique().tolist()[:5]
 [
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_similarity_query-emissions-by-scope_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_similarity_query-emissions-by-scope_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_embeddings_similarity_query-ghg-scope-1-emissions.csv'
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-2_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-ghg-scope-1-emissions.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-4_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-ghg-scope-1-emissions.csv'
 ]
 """
 
-# ### define a function to read and and filter out most relevant rows from each file
+# ### save files locally
+df_sim_files.to_csv(f"/tmp/df_sim_files.csv", index=False)
 
+# ### read from local file
+df_sim_files = pd.read_csv(f"/tmp/df_sim_files.csv")
 
-@to_async
-def read_and_filter_data(file: str):
-    resp = bg_sync.read_file(file=file)
-
-
-# ### read all sim_score_files for each query
-for query_num, query in enumerate(df_sim_files['query'].unique().tolist()):
-    query_files = df_sim_files[df_sim_files['query'] == query]['file'].unique().tolist()
+# ### read all similarity scored quant files for each document
+filtered_quant_data_dict = {}
+for doc_num, doc_name in enumerate(doc_names):
+    ## create tasks to filter similarity scored data across all documents
     tasks = [
-        bg_sync.async_read_file(
-            file=file
+        bg_async.async_filter_similarity_scored_data(
+            doc_name=doc_name,
+            file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
+            non_null_cols=['value'],
+            frac_rows_to_keep=0.1,
         )
-        for file in query_files
     ]
-df_quants_sim_score = utils.async_utils.run_async_tasks(tasks)
-df_quants_sim_score = [resp.get_data() for resp in df_quants_sim_score if resp.get_data() is not None]
-df_quants_sim_score = pd.DataFrame(df_quants_sim_score)
+    ## run tasks
+    filtered_responses = utils.async_utils.run_async_tasks(tasks)
+    # ## check if output files exist
+    # output_file_exists_flags = [resp.check_output_file_exists() for resp in filtered_responses]
+    ## read output data
+    df_quants_filtered = [resp.read_output_data() for resp in filtered_responses]
+    df_quants_filtered = [pd.DataFrame(df) for df in df_quants_filtered]
+    df_quants_filtered = pd.concat(df_quants_filtered)
+    ## sort by score
+    df_quants_filtered = df_quants_filtered.sort_values(['score'], ascending=False).reset_index(drop=True)
+    ## add to filtered_data_dict
+    filtered_quant_data_dict[doc_name] = df_quants_filtered
 
-# ### save df_quants_sim_score locally
-df_quants_sim_score.to_csv('/tmp/df_quants_sim_score.csv', index=False)
+# ### save filtered_text_data_dict locally
+with open('/tmp/filtered_quant_data_dict.pickle', 'wb') as f:
+    pickle.dump(filtered_quant_data_dict, f)
+    f.close()
 
-# ### save df_quants_sim_score as an upload (so we can retrieve it later on and start from there)
-upload_resp = bg_sync.upload_data(
-    contents=[df_quants_sim_score.to_dict('records')],
-    filenames=['similarity-scored-quants'],
-    username=bg_sync.read_username(),
-)
+# ### read all similarity scored text files for each document
+filtered_text_data_dict = {}
+for doc_num, doc_name in enumerate(doc_names):
+    ## create tasks to filter similarity scored data across all documents
+    tasks = [
+        bg_async.async_filter_similarity_scored_data(
+            doc_name=doc_name,
+            file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+            non_null_cols=['value'],
+            frac_rows_to_keep=0.1,
+        )
+    ]
+    ## run tasks
+    filtered_responses = utils.async_utils.run_async_tasks(tasks)
+    ## check if output files exist
+    output_file_exists_flags = [resp.check_output_file_exists() for resp in filtered_responses]
+    ## read output data
+    df_text_filtered = [resp.read_output_data() for resp in filtered_responses]
+    df_text_filtered = [pd.DataFrame(df) for df in df_text_filtered]
+    df_text_filtered = pd.concat(df_text_filtered)
+    ## filter over relevant queries
+    df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
+    ## sort by score
+    df_text_filtered = df_text_filtered.sort_values(['score'], ascending=False).reset_index(drop=True)
+    ## add to filtered_data_dict
+    filtered_text_data_dict[doc_name] = df_text_filtered
 
-# ### identify the top 10% rows for each KPI
+# ### save filtered_text_data_dict locally
+with open('/tmp/filtered_text_data_dict.pickle', 'wb') as f:
+    pickle.dump(filtered_text_data_dict, f)
+    f.close()
 
-# ### identify and fixerrors
+# ## Retrieve evidence for all filtered values
 
-# ### remove query files from embeddings
-tasks = [
-    bg_sync.async_list_doc_files(
-        doc_name=doc_name,
-        file_pattern='data_type=embeddings/**/variable_desc=structured-quant-summary/**query-*.csv'
-    )
-    for doc_name in doc_names
-]
-query_emb_files = utils.async_utils.run_async_tasks(tasks)
-query_emb_files = [resp.get_data() for resp in query_emb_files]
-query_emb_files = [file for doc_files in query_emb_files for file in doc_files]
+# ### Rank pages by relevance to KPIs
+
+# ### Retrieve extraction context
+
+# ### Retrieve page text & tables
+
+# ### Merge extraction context and page details with filtered data
+
+# ## Verify filtered data
+
+# ### Verify extracted values based on extraction context
+
+# ### Keep only verified values
+
+# ## Process filtered data
+
+# ### estimate values for each KPI for each document

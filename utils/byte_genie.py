@@ -2039,6 +2039,62 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in score_doc_text_similarity(): {e}")
 
+    def filter_similarity_scored_data(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            non_null_cols: list = None,
+            frac_rows_to_keep: float = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Filter similarity scored data to keep only the most relevant rows
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param non_null_cols: only rows where all these columns are non-null will be returned
+        :param frac_rows_to_keep: fraction of top rows to keep, sorted by similarity score
+        :param timeout:
+        :return:
+        """
+        func = 'filter_similarity_scored_data'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'non_null_cols': non_null_cols,
+            'frac_rows_to_keep': frac_rows_to_keep,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_filter_similarity_scored_data(
+            self,
+            doc_name: str,
+            file_pattern: str,
+            non_null_cols: list = None,
+            frac_rows_to_keep: float = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.filter_similarity_scored_data(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                non_null_cols=non_null_cols,
+                frac_rows_to_keep=frac_rows_to_keep,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in filter_similarity_scored_data(): {e}")
+
     def get_usage_summary(
             self,
             username: str = None,
