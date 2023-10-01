@@ -2101,6 +2101,7 @@ class ByteGenie:
             file_pattern: str,
             non_null_cols: list = None,
             frac_rows_to_keep: float = None,
+            filename_sfx: str = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -2109,6 +2110,7 @@ class ByteGenie:
         :param file_pattern: file pattern to select input files
         :param non_null_cols: only rows where all these columns are non-null will be returned
         :param frac_rows_to_keep: fraction of top rows to keep, sorted by similarity score
+        :param filename_sfx: filename suffix to add to output file
         :param timeout:
         :return:
         """
@@ -2118,6 +2120,7 @@ class ByteGenie:
             'file_pattern': file_pattern,
             'non_null_cols': non_null_cols,
             'frac_rows_to_keep': frac_rows_to_keep,
+            'filename_sfx': filename_sfx,
         }
         payload = self.create_api_payload(
             func=func,
@@ -2136,6 +2139,7 @@ class ByteGenie:
             file_pattern: str,
             non_null_cols: list = None,
             frac_rows_to_keep: float = None,
+            filename_sfx: str = None,
             timeout: int = 15 * 60,
     ):
         try:
@@ -2144,6 +2148,7 @@ class ByteGenie:
                 file_pattern=file_pattern,
                 non_null_cols=non_null_cols,
                 frac_rows_to_keep=frac_rows_to_keep,
+                filename_sfx=filename_sfx,
                 timeout=timeout,
             )
             return resp

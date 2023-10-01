@@ -871,26 +871,34 @@ tasks = [
         file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
         non_null_cols=['value'],
         frac_rows_to_keep=0.1,
+        filename_sfx='quant-kpi-01',
     )
-    for doc_num, doc_name in enumerate(doc_names)
+    for doc_name in doc_names
 ]
 ## run tasks
 filtered_quant_responses = utils.async_utils.run_async_tasks(tasks)
-## read output data
-df_quants_filtered = [
-    resp.get_data() if (resp.get_data() is not None) else resp.read_output_data()
-    for resp in filtered_quant_responses
+## read filtered quants
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=similarity/**/variable_desc=filtered-data/**quant-kpi-01*csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
 ]
+df_quants_filtered = utils.async_utils.run_async_tasks(tasks)
+df_quants_filtered = [resp.get_output() for resp in df_quants_filtered]
 df_quants_filtered = [pd.DataFrame(df) for df in df_quants_filtered]
 df_quants_filtered = pd.concat(df_quants_filtered)
+## drop unwanted columns
+if 'context' in df_quants_filtered.columns:
+    df_quants_filtered = df_quants_filtered.drop(columns=['context'])
 ## sort by (query, score)
 df_quants_filtered = \
     df_quants_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
-## drop unwanted columns
-df_quants_filtered = df_quants_filtered.drop(columns=['context'])
 ## re-arrange columns
 df_quants_filtered = df_quants_filtered[[
-    'query', 'score',  'category', 'company name',
+    'query', 'score', 'category', 'company name',
     'variable description', 'variable', 'value', 'date', 'unit',
     'pagenum', 'doc_name', 'file',
 ]]
@@ -908,27 +916,37 @@ df_quants_filtered.head().to_dict('records')
 ]
 """
 
-# ### read all similarity scored text files for each document
+# ### filter similarity-scored text files
 
-## create tasks to filter similarity scored data across all documents
+## create tasks
 tasks = [
     bg_async.async_filter_similarity_scored_data(
         doc_name=doc_name,
         file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
         non_null_cols=['text'],
         frac_rows_to_keep=0.1,
+        filename_sfx='qual-kpi-01',
     )
     for doc_name in doc_names
 ]
 ## run tasks
 filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
-## read output data
-df_text_filtered = [
-    resp.get_data() if (resp.get_data() is not None) else resp.read_output_data()
-    for resp in filtered_text_responses
+## read filtered text
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=similarity/**/variable_desc=filtered-data/**qual-kpi-01.csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
 ]
+df_text_filtered = utils.async_utils.run_async_tasks(tasks)
+df_text_filtered = [resp.get_output() for resp in df_text_filtered]
 df_text_filtered = [pd.DataFrame(df) for df in df_text_filtered]
 df_text_filtered = pd.concat(df_text_filtered)
+## drop unwanted columns
+if 'context' in df_text_filtered.columns:
+    df_text_filtered = df_text_filtered.drop(columns=['context'])
 ## filter over relevant queries
 df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
 ## sort by score
@@ -965,7 +983,7 @@ and original page image, from which all the data in the similarity-score files a
 tasks = [
     bg_async.async_trace_evidence(
         doc_name=doc_name,
-        file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
+        file_pattern='data_type=similarity/**/variable_desc=filtered-data/**quant-kpi-01*csv',
     )
     for doc_name in doc_names
 ]
@@ -976,7 +994,7 @@ quant_evidence_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_read_files(
         doc_name=doc_name,
-        file_pattern=f"data_type=evidence/**/variable_desc=structured-quant-summary/**.csv",
+        file_pattern=f"data_type=evidence/**/variable_desc=filtered-data/**quant-kpi-01*csv",
         timeout=15 * 60,
     )
     for doc_name in doc_names
@@ -1016,7 +1034,7 @@ df_quant_evidence.to_csv(f"/tmp/df_quant_evidence.csv", index=False)
 tasks = [
     bg_async.async_trace_evidence(
         doc_name=doc_name,
-        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+        file_pattern='data_type=similarity/**/variable_desc=filtered-data/**qual-kpi-01*csv',
     )
     for doc_name in doc_names
 ]
@@ -1027,7 +1045,7 @@ text_evidence_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_read_files(
         doc_name=doc_name,
-        file_pattern=f"data_type=evidence/**/variable_desc=text-segments/**.csv",
+        file_pattern=f"data_type=evidence/**/variable_desc=filtered-data/**qual-kpi-01*csv",
         timeout=15 * 60,
     )
     for doc_name in doc_names
@@ -1040,7 +1058,6 @@ df_text_evidence = pd.concat(df_text_evidence)
 df_text_evidence columns, `list(df_text_evidence.columns)`
 
 """
-
 
 # ## Verify filtered data
 
