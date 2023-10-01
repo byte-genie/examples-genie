@@ -139,6 +139,10 @@ class ByteGenieResponse:
                 logger.warning(f"Error in read_output_data(): {e}")
 
     def get_output(self):
+        """
+        Returns the output data from the response if it is not None, otherwise reads it from the output file
+        :return:
+        """
         if self.get_data() is not None:
             return self.get_data()
         else:

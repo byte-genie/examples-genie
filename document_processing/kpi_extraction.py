@@ -886,9 +886,27 @@ df_quants_filtered = pd.concat(df_quants_filtered)
 ## sort by (query, score)
 df_quants_filtered = \
     df_quants_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
-
+## drop unwanted columns
+df_quants_filtered = df_quants_filtered.drop(columns=['context'])
+## re-arrange columns
+df_quants_filtered = df_quants_filtered[[
+    'query', 'score',  'category', 'company name',
+    'variable description', 'variable', 'value', 'date', 'unit',
+    'pagenum', 'doc_name', 'file',
+]]
 ## save filtered_text_data_dict locally
 df_quants_filtered.to_csv(f"/tmp/df_quants_filtered.csv", index=False)
+"""
+Number of rows in df_quants_filtered, len(df_quants_filtered): 61518
+df_quants_filtered.head().to_dict('records')
+[
+    {'query': 'hazardous waste', 'score': 0.8145144484413344, 'category': 'Waste', 'company name': nan, 'variable description': 'Hazardous waste generated from the manufacturing process in tonnes', 'variable': 'Hazardous waste', 'value': '27.0', 'date': '2021', 'unit': 'tonnes', 'pagenum': 112, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-112_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-hazardous-waste.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.8074640482800609, 'category': 'Waste Recycling', 'company name': 'VINCI Energies', 'variable description': '"VINCI Energies divisions that were part of the reporting scope in 2021 achieved recycling rates of 69% for hazardous waste."', 'variable': 'Hazardous Waste Rate', 'value': '69%', 'date': '2021.0', 'unit': nan, 'pagenum': 120, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf_pagenum-120_contextnum-1_passage-quants_structured-quant-summary_embeddings_similarity_query-hazardous-waste.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.798367934167774, 'category': 'Waste', 'company name': nan, 'variable description': 'Non-hazardous waste generated from the manufacturing process in tonnes', 'variable': 'Process waste', 'value': '135.0', 'date': '2021', 'unit': 'tonnes', 'pagenum': 112, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-112_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-hazardous-waste.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.7958005310728269, 'category': 'Waste Recovery', 'company name': 'VINCI Construction Central Europe', 'variable description': '"At VINCI Construction, only the Central Europe division is included in the scope for waste recovered, with recovery rates of 31% for hazardous waste."', 'variable': 'Hazardous Waste Rate', 'value': '31%', 'date': nan, 'unit': nan, 'pagenum': 120, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf_pagenum-120_contextnum-1_passage-quants_structured-quant-summary_embeddings_similarity_query-hazardous-waste.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.7920064789552598, 'category': 'Environment', 'company name': 'Aker Carbon', 'variable description': 'Total amount of hazardous waste generated in 2021', 'variable': 'Hazardous waste generated', 'value': '0.002', 'date': '2021.0', 'unit': 'Tons', 'pagenum': 104, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf_pagenum-104_contextnum-0_passage-quants_structured-quant-summary_embeddings_similarity_query-hazardous-waste.csv'}
+]
+"""
 
 # ### read all similarity scored text files for each document
 
@@ -905,16 +923,33 @@ tasks = [
 ## run tasks
 filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
 ## read output data
-df_text_filtered = [resp.read_output_data() for resp in filtered_text_responses]
+df_text_filtered = [
+    resp.get_data() if (resp.get_data() is not None) else resp.read_output_data()
+    for resp in filtered_text_responses
+]
 df_text_filtered = [pd.DataFrame(df) for df in df_text_filtered]
 df_text_filtered = pd.concat(df_text_filtered)
 ## filter over relevant queries
 df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
 ## sort by score
 df_text_filtered = df_text_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
+## drop unwanted columns
+df_text_filtered = df_text_filtered.drop(columns=['context'])
+## re-arrange columns
+df_text_filtered = df_text_filtered[['query', 'score', 'text', 'pagenum', 'doc_name', 'file']]
 ## save data locally
 df_text_filtered.to_csv(f"/tmp/df_text_filtered.csv", index=False)
-
+"""
+Number of rows in df_quants_filtered, len(df_text_filtered): 30206
+df_text_filtered.head().to_dict('records')
+[
+    {'query': 'anti-corruption policies', 'score': 0.871208445921234, 'text': 'Anti- corruption Policy', 'pagenum': 112, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/al_9_2021-annual-report_compressedpdf_pagenum-112_text-blocks_text-segments_embeddings_similarity_query-anti-corruption-policies.csv'}, 
+    {'query': 'anti-corruption policies', 'score': 0.8698307926193798, 'text': 'Anti-corruption: the anti-corruption principles to be adhered to by employees, based on the fundamental tenet of "zero tolerance".', 'pagenum': 113, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/al_9_2021-annual-report_compressedpdf_pagenum-113_text-blocks_text-segments_embeddings_similarity_query-anti-corruption-policies.csv'}, 
+    {'query': 'anti-corruption policies', 'score': 0.863275482062681, 'text': 'Anti-Corruption', 'pagenum': 106, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_srpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_srpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_09_srpdf_pagenum-106_text-blocks_text-segments_embeddings_similarity_query-anti-corruption-policies.csv'}, 
+    {'query': 'anti-corruption policies', 'score': 0.8528518716714095, 'text': "VINCI's anti-corruption arrangements", 'pagenum': 110, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/al_8_vinci-2021-universal-registration-documentpdf_pagenum-110_text-blocks_text-segments_embeddings_similarity_query-anti-corruption-policies.csv'}, 
+    {'query': 'anti-corruption policies', 'score': 0.8526271061198671, 'text': 'Anti-corruption Code of Conduct', 'pagenum': 110, 'doc_name': 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/al_8_vinci-2021-universal-registration-documentpdf_pagenum-110_text-blocks_text-segments_embeddings_similarity_query-anti-corruption-policies.csv'}
+]
+"""
 
 # ## Retrieve evidence for all filtered values
 """
