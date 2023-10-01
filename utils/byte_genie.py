@@ -138,6 +138,12 @@ class ByteGenieResponse:
             if self.verbose:
                 logger.warning(f"Error in read_output_data(): {e}")
 
+    def get_output(self):
+        if self.get_data() is not None:
+            return self.get_data()
+        else:
+            return self.read_output_data()
+
 
 class ByteGenie:
 
@@ -2094,6 +2100,59 @@ class ByteGenie:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in filter_similarity_scored_data(): {e}")
+
+    def trace_evidence(
+            self,
+            file: str,
+            destination: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trace evidence for extracted data
+        :param file: file for which to trace evidence
+        :param destination: destination until which to trace evidence (optional)
+        :param timeout:
+        :return:
+        """
+        func = 'trace_evidence'
+        args = {
+            'file': file,
+            'destination': destination,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_trace_evidence(
+            self,
+            file: str,
+            destination: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trace evidence for extracted data (asynchronous)
+        :param file: file for which to trace evidence
+        :param destination: destination until which to trace evidence (optional)
+        :param timeout:
+        :return:
+        """
+        try:
+            resp = self.trace_evidence(
+                file=file,
+                destination=destination,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in trace_evidence(): {e}")
 
     def get_usage_summary(
             self,

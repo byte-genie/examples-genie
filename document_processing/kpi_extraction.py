@@ -704,7 +704,6 @@ tasks = [
 ]
 text_emb_responses = utils.async_utils.run_async_tasks(tasks)
 
-
 # ### list embedding files for text segments
 tasks = [
     bg_sync.async_list_doc_files(
@@ -749,7 +748,6 @@ quant_kpis = [
     'anti-bribery policies',
 ]
 
-
 # ### score quant data similarity
 for doc_num, doc_name in enumerate(doc_names):
     logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
@@ -767,7 +765,6 @@ for doc_num, doc_name in enumerate(doc_names):
         logger.warning(f"Error running similarity scoring for: {doc_name}")
     ## wait for 15 sec before starting next document to avoid rate limit errors
     time.sleep(15)
-
 
 # ## Rank text by relevance to keyphrases
 """
@@ -799,7 +796,6 @@ for doc_num, doc_name in enumerate(doc_names):
         logger.warning(f"Error running similarity scoring for: {doc_name}")
     ## wait for 15 sec before starting next document to avoid rate limit errors
     time.sleep(15)
-
 
 # ## Filter out quant data most relevant to KPIs
 
@@ -867,76 +863,108 @@ df_sim_files.to_csv(f"/tmp/df_sim_files.csv", index=False)
 df_sim_files = pd.read_csv(f"/tmp/df_sim_files.csv")
 
 # ### read all similarity scored quant files for each document
-filtered_quant_data_dict = {}
-for doc_num, doc_name in enumerate(doc_names):
-    ## create tasks to filter similarity scored data across all documents
-    tasks = [
-        bg_async.async_filter_similarity_scored_data(
-            doc_name=doc_name,
-            file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
-            non_null_cols=['value'],
-            frac_rows_to_keep=0.1,
-        )
-    ]
-    ## run tasks
-    filtered_responses = utils.async_utils.run_async_tasks(tasks)
-    # ## check if output files exist
-    # output_file_exists_flags = [resp.check_output_file_exists() for resp in filtered_responses]
-    ## read output data
-    df_quants_filtered = [resp.read_output_data() for resp in filtered_responses]
-    df_quants_filtered = [pd.DataFrame(df) for df in df_quants_filtered]
-    df_quants_filtered = pd.concat(df_quants_filtered)
-    ## sort by score
-    df_quants_filtered = df_quants_filtered.sort_values(['score'], ascending=False).reset_index(drop=True)
-    ## add to filtered_data_dict
-    filtered_quant_data_dict[doc_name] = df_quants_filtered
 
-# ### save filtered_text_data_dict locally
-with open('/tmp/filtered_quant_data_dict.pickle', 'wb') as f:
-    pickle.dump(filtered_quant_data_dict, f)
-    f.close()
+## create tasks to filter similarity scored data across all documents
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
+        non_null_cols=['value'],
+        frac_rows_to_keep=0.1,
+    )
+    for doc_num, doc_name in enumerate(doc_names)
+]
+## run tasks
+filtered_quant_responses = utils.async_utils.run_async_tasks(tasks)
+## read output data
+df_quants_filtered = [
+    resp.get_data() if (resp.get_data() is not None) else resp.read_output_data()
+    for resp in filtered_quant_responses
+]
+df_quants_filtered = [pd.DataFrame(df) for df in df_quants_filtered]
+df_quants_filtered = pd.concat(df_quants_filtered)
+## sort by (query, score)
+df_quants_filtered = \
+    df_quants_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
+
+## save filtered_text_data_dict locally
+df_quants_filtered.to_csv(f"/tmp/df_quants_filtered.csv", index=False)
 
 # ### read all similarity scored text files for each document
-filtered_text_data_dict = {}
-for doc_num, doc_name in enumerate(doc_names):
-    ## create tasks to filter similarity scored data across all documents
-    tasks = [
-        bg_async.async_filter_similarity_scored_data(
-            doc_name=doc_name,
-            file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
-            non_null_cols=['value'],
-            frac_rows_to_keep=0.1,
-        )
-    ]
-    ## run tasks
-    filtered_responses = utils.async_utils.run_async_tasks(tasks)
-    ## check if output files exist
-    output_file_exists_flags = [resp.check_output_file_exists() for resp in filtered_responses]
-    ## read output data
-    df_text_filtered = [resp.read_output_data() for resp in filtered_responses]
-    df_text_filtered = [pd.DataFrame(df) for df in df_text_filtered]
-    df_text_filtered = pd.concat(df_text_filtered)
-    ## filter over relevant queries
-    df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
-    ## sort by score
-    df_text_filtered = df_text_filtered.sort_values(['score'], ascending=False).reset_index(drop=True)
-    ## add to filtered_data_dict
-    filtered_text_data_dict[doc_name] = df_text_filtered
 
-# ### save filtered_text_data_dict locally
-with open('/tmp/filtered_text_data_dict.pickle', 'wb') as f:
-    pickle.dump(filtered_text_data_dict, f)
-    f.close()
+## create tasks to filter similarity scored data across all documents
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+        non_null_cols=['text'],
+        frac_rows_to_keep=0.1,
+    )
+    for doc_name in doc_names
+]
+## run tasks
+filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
+## read output data
+df_text_filtered = [resp.read_output_data() for resp in filtered_text_responses]
+df_text_filtered = [pd.DataFrame(df) for df in df_text_filtered]
+df_text_filtered = pd.concat(df_text_filtered)
+## filter over relevant queries
+df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
+## sort by score
+df_text_filtered = df_text_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
+## save data locally
+df_text_filtered.to_csv(f"/tmp/df_text_filtered.csv", index=False)
+
 
 # ## Retrieve evidence for all filtered values
+"""
+We can use `/trace_evidence` endpoint to trace evidence for any extracted or derived data. `/trace_evidence` takes a file as an input, 
+and determines where this file lies in the processing pipeline, and which previous output is relevant for contextualising the data in this file. 
+For example, for similarity-scored data, it will fetch the base structured data (before any vectorisation and similarity scoring), 
+and original page image, from which all the data in the similarity-score file is derived.  
+"""
 
-# ### Rank pages by relevance to KPIs
+# ### evidence tracing for quant files
 
-# ### Retrieve extraction context
+## define tasks
+tasks = [
+    bg_async.async_trace_evidence(
+        file=file,
+    )
+    for file in df_quants_filtered['file'].unique().tolist()
+]
+## run tasks
+quant_evidence_responses = utils.async_utils.run_async_tasks(tasks)
+## read output
+df_quant_evidence = [resp.read_output_data() for resp in quant_evidence_responses]
+df_quant_evidence = [pd.DataFrame(df) for df in df_quant_evidence]
+df_quant_evidence = pd.concat(df_quant_evidence)
+"""
+df_quant_evidence columns, `list(df_quant_evidence.columns)`
 
-# ### Retrieve page text & tables
+df_quant_evidence.head().to_dict('records')
+"""
 
-# ### Merge extraction context and page details with filtered data
+# ### evidence tracing for text files
+
+## tasks
+tasks = [
+    bg_async.async_trace_evidence(
+        file=file,
+    )
+    for file in df_text_filtered['file'].unique().tolist()
+]
+## run tasks
+text_evidence_responses = utils.async_utils.run_async_tasks(tasks)
+## get output
+df_text_evidence = [resp.read_output_data() for resp in text_evidence_responses]
+df_text_evidence = [pd.DataFrame(df) for df in df_text_evidence]
+df_text_evidence = pd.concat(df_text_evidence)
+"""
+df_text_evidence columns, `list(df_text_evidence.columns)`
+
+df_text_evidence.head().to_dict('records')
+"""
 
 # ## Verify filtered data
 
