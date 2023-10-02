@@ -862,9 +862,9 @@ df_sim_files.to_csv(f"/tmp/df_sim_files.csv", index=False)
 # ### read from local file
 df_sim_files = pd.read_csv(f"/tmp/df_sim_files.csv")
 
-# ### read all similarity scored quant files for each document
+# ### filter similarity scored quant files to keep the most relevant rows
 
-## create tasks to filter similarity scored data across all documents
+## create tasks
 tasks = [
     bg_async.async_filter_similarity_scored_data(
         doc_name=doc_name,
@@ -916,7 +916,7 @@ df_quants_filtered.head().to_dict('records')
 ]
 """
 
-# ### filter similarity-scored text files
+# ### filter similarity-scored text files to keep the most relevant rows
 
 ## create tasks
 tasks = [
@@ -952,7 +952,8 @@ df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
 ## sort by score
 df_text_filtered = df_text_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
 ## drop unwanted columns
-df_text_filtered = df_text_filtered.drop(columns=['context'])
+if 'context' in df_text_filtered.columns:
+    df_text_filtered = df_text_filtered.drop(columns=['context'])
 ## re-arrange columns
 df_text_filtered = df_text_filtered[['query', 'score', 'text', 'pagenum', 'doc_name', 'file']]
 ## save data locally
@@ -974,7 +975,8 @@ df_text_filtered.head().to_dict('records')
 We can use `/trace_evidence` endpoint to trace evidence for any extracted or derived data. `/trace_evidence` takes a document name and file pattern as inputs,  
 and determines where these files lie in the processing pipeline, and which previous output is relevant for contextualising the data in these files. 
 For example, for similarity-scored data, it will fetch the base structured data (before any vectorisation and similarity scoring), 
-and original page image, from which all the data in the similarity-score files are derived.  
+and original page image, from which all the data in the similarity-score files are derived. 
+`/trace_evidence` call will write new files with `data_type=evidence`. These files will contain the relevant evidence for each extracted row of the data.  
 """
 
 # ### trace evidence for quant files
