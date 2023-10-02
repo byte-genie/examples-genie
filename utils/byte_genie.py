@@ -1568,6 +1568,7 @@ class ByteGenie:
             val_col: str = None,
             context_col: str = None,
             fuzzy_match_min: float = None,
+            output_data_type: str = 'verification',
             timeout: int = 15 * 60,
     ):
         """
@@ -1578,6 +1579,7 @@ class ByteGenie:
         :param val_col: name for value column
         :param context_col: name for context column
         :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param output_data_type: data type to use for output file path
         :param timeout: time out for api call
         :return:
         """
@@ -1589,6 +1591,7 @@ class ByteGenie:
             'val_col': val_col,
             'context_col': context_col,
             'fuzzy_match_min': fuzzy_match_min,
+            'output_data_type': output_data_type,
         }
         payload = self.create_api_payload(
             func=func,
@@ -1609,6 +1612,7 @@ class ByteGenie:
             val_col: str = None,
             context_col: str = None,
             fuzzy_match_min: float = None,
+            output_data_type: str = 'verification',
             timeout: int = 15 * 60,
     ):
         """
@@ -1619,6 +1623,7 @@ class ByteGenie:
         :param val_col: name for value column
         :param context_col: name for context column
         :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param output_data_type: data type to use for output file path
         :param timeout: time out for api call
         :return:
         """
@@ -1630,6 +1635,7 @@ class ByteGenie:
                 val_col=val_col,
                 context_col=context_col,
                 fuzzy_match_min=fuzzy_match_min,
+                output_data_type=output_data_type,
                 timeout=timeout,
             )
             return resp
