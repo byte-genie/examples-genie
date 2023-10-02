@@ -870,7 +870,9 @@ tasks = [
         doc_name=doc_name,
         file_pattern='data_type=similarity/**/variable_desc=structured-quant-summary/**.csv',
         non_null_cols=['value'],
-        frac_rows_to_keep=0.1,
+        groupby_cols=['query'],
+        max_rows_to_keep=20,
+        max_frac_rows_to_keep=0.1,
         filename_sfx='quant-kpi-01',
     )
     for doc_name in doc_names
@@ -924,7 +926,9 @@ tasks = [
         doc_name=doc_name,
         file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
         non_null_cols=['text'],
-        frac_rows_to_keep=0.1,
+        groupby_cols=['query'],
+        max_rows_to_keep=20,
+        max_frac_rows_to_keep=0.1,
         filename_sfx='qual-kpi-01',
     )
     for doc_name in doc_names
@@ -1064,10 +1068,22 @@ df_text_evidence = utils.async_utils.run_async_tasks(tasks)
 df_text_evidence = [resp.get_output() for resp in df_text_evidence]
 df_text_evidence = [pd.DataFrame(df) for df in df_text_evidence]
 df_text_evidence = pd.concat(df_text_evidence)
+## re-arrange columns
+df_text_evidence = df_text_evidence[
+    ['query', 'score', 'text', 'context_file', 'img_file', 'pagenum', 'doc_name']
+]
 """
 Number of documents for which text evidence files are available, `len(df_text_evidence['doc_name'].unique())`: 49
 df_text_evidence columns, `list(df_text_evidence.columns)`
-
+['query', 'score', 'text', 'context_file', 'img_file', 'pagenum', 'doc_name']
+df_text_evidence.head().to_dict('records')
+[
+    {'query': 'anti-bribery policies', 'score': 0.7144075502491216, 'text': 'AMERICAN', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-0_text-blocks_text-segments.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jason_08_gpgpdf_pagenum-0.png', 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'query': 'anti-bribery policies', 'score': 0.7003961798659838, 'text': 'EXPRESS', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-0_text-blocks_text-segments.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jason_08_gpgpdf_pagenum-0.png', 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'query': 'anti-bribery policies', 'score': 0.7341672165364279, 'text': 'UK Gender Pay Gap REPORT 2021', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-0_text-blocks_text-segments.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jason_08_gpgpdf_pagenum-0.png', 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'query': 'anti-corruption policies', 'score': 0.7057159443441187, 'text': 'AMERICAN', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-0_text-blocks_text-segments.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jason_08_gpgpdf_pagenum-0.png', 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'query': 'anti-corruption policies', 'score': 0.6886003988493039, 'text': 'EXPRESS', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-0_text-blocks_text-segments.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/jason_08_gpgpdf_pagenum-0.png', 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
+]
 """
 ## write data locally
 df_text_evidence.to_csv(f"/tmp/df_text_evidence.csv", index=False)
@@ -1079,16 +1095,36 @@ That is the context column is essentially the original source data from which (v
 `/verify_data` is meant to flag such errors, so we can handle these errors separately.
 """
 
-
 # ### Verify extracted quant values
 tasks = [
-    bg_async.verify_data(
+    bg_async.async_verify_data(
         doc_name=doc_name,
         file_pattern='data_type=evidence/**/variable_desc=filtered-data/**quant-kpi-01*csv',
+        var_col='variable',
+        val_col='value',
+        context_col='context',
+        output_data_type='verification',
     )
     for doc_name in doc_names
 ]
 verify_quants_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### read verified quant files
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=verification/**/variable_desc=filtered-data/**quant-kpi-01*csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
+]
+df_text_evidence = utils.async_utils.run_async_tasks(tasks)
+df_text_evidence = [resp.get_output() for resp in df_text_evidence]
+df_text_evidence = [pd.DataFrame(df) for df in df_text_evidence]
+df_text_evidence = pd.concat(df_text_evidence)
+"""
+Number of documents for which verified quant files are available, `len(df_text_evidence['doc_name'].unique())`: 35
+"""
 
 # ### Keep only verified values
 

@@ -2106,7 +2106,9 @@ class ByteGenie:
             doc_name: str,
             file_pattern: str,
             non_null_cols: list = None,
-            frac_rows_to_keep: float = None,
+            groupby_cols: list = None,
+            max_rows_to_keep: int = None,
+            max_frac_rows_to_keep: float = None,
             filename_sfx: str = None,
             timeout: int = 15 * 60,
     ):
@@ -2115,6 +2117,7 @@ class ByteGenie:
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
         :param non_null_cols: only rows where all these columns are non-null will be returned
+        :param groupby_cols: group data by these columns when filtering over rows to keep
         :param frac_rows_to_keep: fraction of top rows to keep, sorted by similarity score
         :param filename_sfx: filename suffix to add to output file
         :param timeout:
@@ -2125,7 +2128,9 @@ class ByteGenie:
             'doc_name': doc_name,
             'file_pattern': file_pattern,
             'non_null_cols': non_null_cols,
-            'frac_rows_to_keep': frac_rows_to_keep,
+            'groupby_cols': groupby_cols,
+            'max_rows_to_keep': max_rows_to_keep,
+            'max_frac_rows_to_keep': max_frac_rows_to_keep,
             'filename_sfx': filename_sfx,
         }
         payload = self.create_api_payload(
@@ -2144,7 +2149,9 @@ class ByteGenie:
             doc_name: str,
             file_pattern: str,
             non_null_cols: list = None,
-            frac_rows_to_keep: float = None,
+            groupby_cols: list = None,
+            max_rows_to_keep: int = None,
+            max_frac_rows_to_keep: float = None,
             filename_sfx: str = None,
             timeout: int = 15 * 60,
     ):
@@ -2153,7 +2160,9 @@ class ByteGenie:
                 doc_name=doc_name,
                 file_pattern=file_pattern,
                 non_null_cols=non_null_cols,
-                frac_rows_to_keep=frac_rows_to_keep,
+                groupby_cols=groupby_cols,
+                max_rows_to_keep=max_rows_to_keep,
+                max_frac_rows_to_keep=max_frac_rows_to_keep,
                 filename_sfx=filename_sfx,
                 timeout=timeout,
             )
