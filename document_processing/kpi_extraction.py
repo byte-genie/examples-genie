@@ -1124,6 +1124,23 @@ df_quant_verified = [pd.DataFrame(df) for df in df_quant_verified]
 df_quant_verified = pd.concat(df_quant_verified)
 """
 Number of documents for which verified quant files are available, `len(df_quant_verified['doc_name'].unique())`: 48
+Number of rows in df_quant_verified, `len(df_quant_verified)`: 10743
+Number of documents for each KPI 
+`df_quant_verified.groupby(['query']).apply(lambda x: len(x['doc_name'].unique())).reset_index().values.tolist()`
+[
+    ['% of female representation on the board', 40], 
+    ['Emissions to water', 41], 
+    ['GHG Scope 1 emissions', 38], 
+    ['GHG Scope 2 emissions', 37], 
+    ['GHG Scope 3 emissions', 40], 
+    ['Non-renewable energy consumption', 38],
+    ['Percentage of non-renewable energy production', 39], 
+    ['anti-bribery policies', 47], 
+    ['anti-corruption policies', 45], 
+    ['emissions by scope', 1], 
+    ['gender pay gap', 41], 
+    ['hazardous waste', 38]
+]
 """
 
 # ### Keep only verified values
