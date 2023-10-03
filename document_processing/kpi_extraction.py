@@ -1118,12 +1118,12 @@ tasks = [
     )
     for doc_name in doc_names
 ]
-df_text_evidence = utils.async_utils.run_async_tasks(tasks)
-df_text_evidence = [resp.get_output() for resp in df_text_evidence]
-df_text_evidence = [pd.DataFrame(df) for df in df_text_evidence]
-df_text_evidence = pd.concat(df_text_evidence)
+df_quant_verified = utils.async_utils.run_async_tasks(tasks)
+df_quant_verified = [resp.get_output() for resp in df_quant_verified]
+df_quant_verified = [pd.DataFrame(df) for df in df_quant_verified]
+df_quant_verified = pd.concat(df_quant_verified)
 """
-Number of documents for which verified quant files are available, `len(df_text_evidence['doc_name'].unique())`: 35
+Number of documents for which verified quant files are available, `len(df_quant_verified['doc_name'].unique())`: 48
 """
 
 # ### Keep only verified values
