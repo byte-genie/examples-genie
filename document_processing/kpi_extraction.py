@@ -3,7 +3,6 @@
 # ## import necessary libraries
 
 import os
-import pickle
 import time
 import uuid
 import numpy as np
@@ -11,7 +10,6 @@ import pandas as pd
 import utils.common
 import utils.async_utils
 from utils.logging import logger
-from utils.async_utils import to_async
 from utils.byte_genie import ByteGenie
 
 # ## init byte-genie
@@ -454,190 +452,149 @@ check a **short sample of df_tabular_quants_sample**
     {'company name': '', 'category': '% W/M', 'variable description': '', 'variable': 'MEN', 'unit': '', 'value': '45%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
 ]
 """
+#
+# # ## Verify extracted quants info
+# """
+# After the quant extraction, we can run a data verification layer to remove any values that may be incorrectly extracted.
+# """
+#
+# # ### start time for quant value verification
+# verify_value_start_time = time.time()
+# """
+# verify_value_start_time
+# 1695790862.0567858
+# """
+#
+# # ### verify extracted quant values
+# tasks = [
+#     bg_async.async_verify_data(
+#         doc_name=doc_name,
+#         file_pattern='data_type=structured/**/variable_desc=structured-quant-summary/**.csv',
+#     )
+#     for doc_name in doc_names
+# ]
+# verify_value_responses = utils.async_utils.run_async_tasks(tasks)
+#
+# # ### list verified quant value files
+# tasks = [
+#     bg_sync.async_list_doc_files(
+#         doc_name=doc_name,
+#         file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
+#     )
+#     for doc_name in doc_names
+# ]
+# verify_value_files = utils.async_utils.run_async_tasks(tasks)
+# verify_value_files = [resp.get_data() for resp in verify_value_files if resp.get_data() is not None]
+# """
+# Number of documents with verified quant value files: `len(verify_value_files)`: 48
+# **verified value files** for the first document: `verify_value_files[0]`
+# [
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-2_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv'
+# ]
+# """
+#
+# # ### start time for verifying company names
+# verify_company_start_time = time.time()
+# """
+# verify_company_start_time
+# 1695795411.6313999
+# """
+#
+# # ### verify extracted company names
+# tasks = [
+#     bg_async.async_verify_quants_company_info(
+#         doc_name=doc_name,
+#         file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
+#     )
+#     for doc_name in doc_names
+# ]
+# verify_company_responses = utils.async_utils.run_async_tasks(tasks)
+#
+# # ### list verified company name and quant value files
+# tasks = [
+#     bg_sync.async_list_doc_files(
+#         doc_name=doc_name,
+#         file_pattern='data_type=structured/**/variable_desc=verified-company-quants/**.csv',
+#     )
+#     for doc_name in doc_names
+# ]
+# verify_company_quant_files = utils.async_utils.run_async_tasks(tasks)
+# verify_company_quant_files = [resp.get_data() for resp in verify_company_quant_files if resp.get_data() is not None]
+# """
+# Number of documents with verified company and quant files, `len(verify_company_quant_files)`: 46
+# First 5 verified company name and quant value files for the first document: verify_company_quant_files[0][:5]
+# [
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified_verified-company-names.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
+#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv'
+# ]
+# """
+#
+# # ## Find missing files
+# """
+# At any step of the processing, we can check for any documents that are missing in the current output.
+# To do so, we can get document names for the available output files, and compare them with our initial list of document names.
+# """
+#
+# # ### flatten verify_value_files
+# verify_value_files = [file for doc_files in verify_value_files for file in doc_files]
+#
+# # ### get doc_name for verify_value_files
+# verify_value_doc_names = [utils.common.get_doc_name(file) for file in verify_value_files]
+# verify_value_doc_names = list(set(verify_value_doc_names))
+#
+# # ### find missing doc_names
+# missing_doc_names_from_verify_value = [
+#     doc_name for doc_name in doc_names
+#     if doc_name not in verify_value_doc_names
+# ]
+# """
+# document names missing from verified quant value files are: `missing_doc_names_from_verify_value`
+# [
+#     'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf',
+#     'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf',
+#     'userid_stuartcullinan_uploadfilename_28_kim_cartapdf',
+#     'userid_stuartcullinan_uploadfilename_1_accor_mrpdf',
+#     'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf',
+#     'userid_stuartcullinan_uploadfilename_jason_08_srpdf',
+#     'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf',
+#     'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf',
+#     'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf'
+# ]
+# """
 
-# ## Verify extracted quants info
-"""
-After the quant extraction, we can run a data verification layer to remove any values that may be incorrectly extracted.
-"""
-
-# ### start time for quant value verification
-verify_value_start_time = time.time()
-"""
-verify_value_start_time
-1695790862.0567858
-"""
-
-# ### verify extracted quant values
-tasks = [
-    bg_async.async_verify_data(
-        doc_name=doc_name,
-        file_pattern='data_type=structured/**/variable_desc=structured-quant-summary/**.csv',
-    )
-    for doc_name in doc_names
-]
-verify_value_responses = utils.async_utils.run_async_tasks(tasks)
-
-# ### list verified quant value files
-tasks = [
-    bg_sync.async_list_doc_files(
-        doc_name=doc_name,
-        file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
-    )
-    for doc_name in doc_names
-]
-verify_value_files = utils.async_utils.run_async_tasks(tasks)
-verify_value_files = [resp.get_data() for resp in verify_value_files if resp.get_data() is not None]
-"""
-Number of documents with verified quant value files: `len(verify_value_files)`: 48
-**verified value files** for the first document: `verify_value_files[0]` 
-[
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-2_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv'
-]
-"""
-
-# ### start time for verifying company names
-verify_company_start_time = time.time()
-"""
-verify_company_start_time
-1695795411.6313999
-"""
-
-# ### verify extracted company names
-tasks = [
-    bg_async.async_verify_quants_company_info(
-        doc_name=doc_name,
-        file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
-    )
-    for doc_name in doc_names
-]
-verify_company_responses = utils.async_utils.run_async_tasks(tasks)
-
-# ### list verified company name and quant value files
-tasks = [
-    bg_sync.async_list_doc_files(
-        doc_name=doc_name,
-        file_pattern='data_type=structured/**/variable_desc=verified-company-quants/**.csv',
-    )
-    for doc_name in doc_names
-]
-verify_company_quant_files = utils.async_utils.run_async_tasks(tasks)
-verify_company_quant_files = [resp.get_data() for resp in verify_company_quant_files if resp.get_data() is not None]
-"""
-Number of documents with verified company and quant files, `len(verify_company_quant_files)`: 46
-First 5 verified company name and quant value files for the first document: verify_company_quant_files[0][:5]
-[
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified_verified-company-names.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv'
-]
-"""
-
-# ## Find missing files
-"""
-At any step of the processing, we can check for any documents that are missing in the current output. 
-To do so, we can get document names for the available output files, and compare them with our initial list of document names. 
-"""
-
-# ### flatten verify_value_files
-verify_value_files = [file for doc_files in verify_value_files for file in doc_files]
-
-# ### get doc_name for verify_value_files
-verify_value_doc_names = [utils.common.get_doc_name(file) for file in verify_value_files]
-verify_value_doc_names = list(set(verify_value_doc_names))
-
-# ### find missing doc_names
-missing_doc_names_from_verify_value = [
-    doc_name for doc_name in doc_names
-    if doc_name not in verify_value_doc_names
-]
-"""
-document names missing from verified quant value files are: `missing_doc_names_from_verify_value`
-[
-    'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 
-    'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf', 
-    'userid_stuartcullinan_uploadfilename_28_kim_cartapdf', 
-    'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 
-    'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 
-    'userid_stuartcullinan_uploadfilename_jason_08_srpdf', 
-    'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf', 
-    'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf', 
-    'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf'
-]
-"""
-
-# ## Extract document info
-"""
-In order to better contextualise the information extracted from within the documents, we will now use `/extract_doc_info` 
-to extract some key document-level information, e.g. document organisation, document year, document type, etc. 
-By default `/extract_doc_info' uses a pre-defined list of document types, which includes documents related to corporate disclosures, 
-e.g. annual reports, sustainability reports, press releases, etc. However, you can also pass your own list of choices for document types 
-you want to classify documents into. For this example, we will stick to the default choices. 
-"""
-
-# ### start time
-doc_info_extraction_start_time = time.time()
-"""
-doc_info_extraction_start_time
-1695727051.7271008
-"""
-
-# ### trigger doc info extraction
-tasks = [
-    bg_async.async_extract_doc_info(
-        doc_name=doc_name,
-    )
-    for doc_name in doc_names
-]
-df_doc_info = utils.async_utils.run_async_tasks(tasks)
-
-# ### read extracted doc info
-df_doc_info = [resp.read_output_data() for resp in df_doc_info]
-# convert to dataframe
-df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
-df_doc_info = pd.concat(df_doc_info)
-logger.info(f"length of df_doc_info: {len(df_doc_info)}")
-"""
-df_doc_info.head().to_dict('records')
-[
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
-]
-"""
-
-# ## Synthesize quant data with document meta-data
-"""
-Now we can combine the document-level info with the specific quantitative info extracted from the document, as the document info 
-can help determine the dates or company names for quant values when not provided directly in passages or tables.
-For this, we will use `/synthesize_quant_data` endpoint, which will synthesize quant data with document meta-data, 
-and also create embeddings for each row of the data, which can later be used to run semantic searches. 
-"""
-
-# ### quant synthesis start time
-quant_synthesis_start_time = time.time()
-"""
-quant_synthesis_start_time
-
-"""
-
-# ### define asynchronous tasks for synthesizing quant data
-tasks = [
-    bg_async.async_synthesize_quant_data(
-        doc_name=doc_name,
-    )
-    for doc_name in doc_names
-]
-quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
+#
+# # ## Synthesize quant data with document meta-data
+# """
+# Now we can combine the document-level info with the specific quantitative info extracted from the document, as the document info
+# can help determine the dates or company names for quant values when not provided directly in passages or tables.
+# For this, we will use `/synthesize_quant_data` endpoint, which will synthesize quant data with document meta-data,
+# and also create embeddings for each row of the data, which can later be used to run semantic searches.
+# """
+#
+# # ### quant synthesis start time
+# quant_synthesis_start_time = time.time()
+# """
+# quant_synthesis_start_time
+#
+# """
+#
+# # ### define asynchronous tasks for synthesizing quant data
+# tasks = [
+#     bg_async.async_synthesize_quant_data(
+#         doc_name=doc_name,
+#     )
+#     for doc_name in doc_names
+# ]
+# quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
 
 # ## Vectorise quant data for semantic searching
 
@@ -1102,8 +1059,8 @@ tasks = [
         file_pattern='data_type=evidence/**/variable_desc=filtered-data/**quant-kpi-01*csv',
         var_col='variable',
         val_col='value',
+        verification_type='variable-value',
         context_col='context',
-        output_data_type='verification',
     )
     for doc_name in doc_names
 ]
@@ -1113,7 +1070,7 @@ verify_quants_responses = utils.async_utils.run_async_tasks(tasks)
 tasks = [
     bg_sync.async_read_files(
         doc_name=doc_name,
-        file_pattern=f"data_type=verification/**/variable_desc=filtered-data/**quant-kpi-01*csv",
+        file_pattern=f"data_type=verification/**/variable_desc=verified-variable-values/**quant-kpi-01*csv",
         timeout=15 * 60,
     )
     for doc_name in doc_names
@@ -1135,7 +1092,7 @@ df_quant_verified = df_quant_verified[[
 ]]
 """
 Number of documents for which verified quant files are available, `len(df_quant_verified['doc_name'].unique())`: 48
-Number of rows in df_quant_verified, `len(df_quant_verified)`: 10743
+Number of rows in df_quant_verified, `len(df_quant_verified)`: 10600
 Number of documents for each KPI 
 `df_quant_verified.groupby(['query']).apply(lambda x: len(x['doc_name'].unique())).reset_index().values.tolist()`
 [
@@ -1161,8 +1118,206 @@ Verified quants for a specific KPI, df_quant_verified[df_quant_verified['query']
     {'query': 'Percentage of non-renewable energy production', 'score': 0.8128389164472071, 'company name': 'Adani Ports and Special Economic Zone Ltd', 'category': 'Standalone (in %)', 'variable description': 'Percentage of non-renewable energy consumption in standalone operations', 'variable': 'Non-Renewable Energy', 'value': '87', 'date': '', 'unit': '%', 'fuzzy_verification_flag': False, 'lm_verification_flag': False, 'context': '"Adani Ports and Special Economic Zone Limited \\n\\n 32 \\n\\n Types of fuel and coolant consumed during FY 19 \\n\\n 1,055 kg 30kg 2.5 kg R22 R410 R134 \\n\\n Energy \\n\\n FY 19 \\n\\n FY 17 \\n\\n FY 16 \\n\\n FY \\n\\n 27.8 ML \\n\\n Diesel \\n\\n 18 \\n\\n 52.8 kL \\n\\n Petrol \\n\\n Mix \\n\\n 4.3KL \\n\\n Furnace Oil \\n\\n There is also a significant impact that we face in terms of cost of acquisition of power 8 fuel. Over the years, the per capita cost has increased further putting pressure on our profitability. So, switching to a cleaner fuel may be of strategic importance for us in the longer term. \\n\\n 82 kg 2,317 kg R407C Acetylene \\n\\n Fuel \\n\\n 28,272 kg LPG \\n\\n Standalone (in %) \\n\\n 87% \\n\\n 39% \\n\\n 57% \\n\\n 58% \\n\\n 42% \\n\\n 59% \\n\\n 43% \\n\\n 5% \\n\\n 14,139 SCM PNG \\n\\n FY 16 \\n\\n Grid \\n\\n Energy \\n\\n FY 19 \\n\\n FY 18 \\n\\n FY \\n\\n Mix \\n\\n 17 \\n\\n Renewable \\n\\n Consolidated \\n\\n 52% \\n\\n 65% \\n\\n 67% \\n\\n 72% \\n\\n (in %) \\n\\n 45% \\n\\n 33% \\n\\n 33% \\n\\n 28% \\n\\n Sustainability Report FY 19 \\n\\n At our ports, energy is primarily used for crane operations, transportation of cargo within campus through trucks 8 conveyor belts, automatic cargo handling system and tug boat. During the FY 19, our total energy consumption was 19,03,253 GJ and total GHG emissions were 2,70,170 tCOe. Through a series of interventions, including technological and process changes we have been able to reduce our energy intensity year-on-year since our base year. \\n\\n Energy Standalone \\n\\n Energy consumption per MMT of cargo handled 47% from previous year KY 67% from the base year \\n\\n Non- Renewable Energy (GJ) \\n\\n 9,906 \\n\\n -7,82,276 1,743 -6.81.000 \\n\\n FY 16 FY 17 \\n\\n 6,246 7,043 \\n\\n FY 18 \\n\\n -9,071 \\n\\n FY 19 \\n\\n -15,806 3,296 3,05,201 \\n\\n Consolidated \\n\\n 9.738 \\n\\n Energy consumption per MMT of cargo handled 32% from previous year 48% from the base year \\n\\n Renewable Energy (GJ) Intensity (GJ/MMT) \\n\\n o 25,65,281 1,748 44,610 -23.42.188 -22,95,625 -18,851 15,503 -14,356 \\n\\n FY 16 FY 17 \\n\\n 52,851 18,50,402 \\n\\n FY 18 FY 19 \\n\\n "', 'context_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=passage-quants/userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf_pagenum-17_contextnum-0_passage-quants_structured-quant-summary.csv', 'img_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/karishma-12-apsez-sustainability-report-fy19pdf_pagenum-17.png', 'pagenum': 17, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf'}
 ]
 """
+# ### save df_quant_verified locally
+df_quant_verified.to_csv(f'/tmp/df_quant_verified.csv', index=False)
 
-# ## Process verified quants
+# ## Verify extracted company names
+"""
+Similar to verifying extracted quant values, we can also run one layer of verification for company names, to minimize any errors for values getting attributed to incorrect companies
+"""
+
+# ### Verify company names in verified quant files
+tasks = [
+    bg_async.async_verify_data(
+        doc_name=doc_name,
+        file_pattern='data_type=verification/**/variable_desc=verified-variable-values/**/source=var-variable_val-value/**.csv',
+        val_col='company name',
+        context_col='context',
+        verification_type='values',
+    )
+    for doc_name in doc_names
+]
+verify_company_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### read quant files with verified values and company names
+tasks = [
+    bg_sync.async_read_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=verification/**/variable_desc=verified-values/**/source=company-name/**quant-kpi-01*csv",
+        timeout=15 * 60,
+    )
+    for doc_name in doc_names
+]
+df_quant_verified = utils.async_utils.run_async_tasks(tasks)
+df_quant_verified = [resp.get_output() for resp in df_quant_verified]
+df_quant_verified = [pd.DataFrame(df) for df in df_quant_verified]
+df_quant_verified = pd.concat(df_quant_verified)
+"""
+Number of documents with verified values and company name files, `len(df_quant_verified['doc_name'].unique())`: 48
+df_quant_verified columns, `list(df_quant_verified.columns)`
+['category', 'company name', 'company name_verification_flag', 'context', 'context_file', 'doc_name', 'fuzzy_verification_flag', 'img_file', 'lm_verification_flag', 'pagenum', 'query', 'row_id', 'score', 'value', 'variable', 'variable description', 'date', 'unit']
+As we can see, this data contains an additional column, `company name_verification_flag`, which comes from the call to `/verify_data` with `company name` as the value column. 
+"""
+
+# ## Extract document info
+"""
+In order to better contextualise the information extracted from within the documents, we will now use `/extract_doc_info` 
+to extract some key document-level information, e.g. document organisation, document year, document type, etc. 
+By default `/extract_doc_info' uses a pre-defined list of document types, which includes documents related to corporate disclosures, 
+e.g. annual reports, sustainability reports, press releases, etc. However, you can also pass your own list of choices for document types 
+you want to classify documents into. For this example, we will stick to the default choices. 
+"""
+
+# ### start time
+doc_info_extraction_start_time = time.time()
+"""
+doc_info_extraction_start_time
+1695727051.7271008
+"""
+
+# ### trigger doc info extraction
+tasks = [
+    bg_async.async_extract_doc_info(
+        doc_name=doc_name,
+    )
+    for doc_name in doc_names
+]
+df_doc_info = utils.async_utils.run_async_tasks(tasks)
+
+# ### read extracted doc info
+df_doc_info = [resp.get_output() for resp in df_doc_info]
+# convert to dataframe
+df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
+df_doc_info = pd.concat(df_doc_info)
+logger.info(f"length of df_doc_info: {len(df_doc_info)}")
+"""
+Number of documents in df_doc_info: `len(df_doc_info['doc_name'].unique())`: 53
+df_doc_info.head().to_dict('records')
+[
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
+]
+"""
+
+# ### merge doc_info with verified quant data
+df_quant_verified = pd.merge(
+    left=df_quant_verified,
+    right=df_doc_info,
+    on=['doc_name'],
+    how='left'
+)
+
+# ## Organise KPIs by company name
+"""
+Once we have the document meta-data merged with extracted values, we can group extracted values 
+by company names, so synthesize values across documents for the same company
+"""
+
+# ### clean company name
+"""
+By default, we will have company name extracted both from document meta-data and specific content within the document. 
+The company names extracted from within the content are useful if a company is reporting some value for a subsidiary, or a specific business unit, or it's parent entity, etc. 
+However, for many of the values disclosed in the contents of the document, no specific company name may be mentioned, as it is understood that these values belong to the same 
+company, who published the document. In such cases, where no company name is explicitly provided in the contents of the document, we can use the company name from the meta-data of the document.
+"""
+## fill missing values with na
+df_quant_verified = df_quant_verified.fillna('')
+## convert company name and doc_org columns to str
+for col in ['company name', 'doc_org']:
+    df_quant_verified[col] = df_quant_verified[col].map(str)
+## mask for rows where company name is none, but doc_org (extracted from document meta-data) is not None
+empty_vals = ['', 'nan']
+mask = (df_quant_verified['company name'].isin(empty_vals)) & \
+       (~df_quant_verified['doc_org'].isin(empty_vals))
+## set doc_org as company name for masked rows
+df_quant_verified.loc[mask, 'company name'] = df_quant_verified.loc[mask, 'doc_org']
+logger.info(f"unique company names after cleaning: {list(df_quant_verified['company name'].unique())}")
+"""
+Unique company names, `list(df_quant_verified['company name'].unique())`
+[
+    'eROI', 
+    'Adani Ports and Special Economic Zone Limited', 
+    '3M', 
+    'Compass Group', 
+    'ABB', 
+    'Ecolab', 
+    'American Express', 
+    'RAVEN PROPERTY GROUP LIMITED', 
+    'WEBUILD', 
+    'Webuild Group', 
+    'Arch Capital Group Ltd.', 
+    'Aggreko plc', 
+    'Webuild', 
+    'Adani Ports and Special Economic Zone Ltd', 
+    'VINCI', 
+    'SCGG', 
+    'Ashtead Group', 
+    'AIG', 
+    'Raven Property Group Limited', 
+    'Samsung SDS', 
+    'Aker Carbon', 
+    'Admiral Group PLC', 
+    'KIN + CARTA', 
+    'Air New Zealand', 
+    'AIR NEW ZEALAND', 
+    'Ashtead Group plc', 
+    'Accor', 
+    'Raven Property Group', 
+    'Webuild S.p.A.', 
+    'Deutsche EuroShop', 
+    'Sunbelt Rentals', 
+    'Weapons Down Gloves Up', 
+    'Capita', 
+    'UPM', 
+    'Admiral Group', 
+    'Boliden', 
+    'adesso Group', 
+    'THE a2 MILK COMPANY LIMITED', 
+    'APSEZ', 
+    'Massey University / Spark', 
+    'Embassy Village', 
+    'Bank of America', 
+    'BillerudKorsnäs', 
+    'China Education Group Holdings Limited', 
+    'Lenzing', 
+    'DEG Deutsche EuroShop', 
+    'Admiral Group plc', 
+    'Compass Group PLC', 
+    'Fresh by Eurest initiatives', 
+    'CGG', 
+    'webuild', 
+    'a2 Milk Company', 
+    'Arch', 
+    'Company Name', 
+    'CHINA EDUCATION GROUP HOLDINGS LIMITED', 
+    'Savills', 
+    'Savills plc', 
+    'Aviva', 
+    'Aviva Investors', 
+    'China Education Group Holdings', 
+    'Jiangxi Provincial', 
+    'Albioma', 
+    'Lenzing Group', 
+    'Sunbelt', 
+    'adesso SE', 
+    'CGG SA', 
+    'WEBUILD S.p.A.', 
+    'RANUTS', 
+    'Aviva plc', 
+    'Arch Insurance', 
+    'Fonds Stratégique de', 
+    'Bayer', 
+    'Mondi', 
+    'ARKEMA', 
+    'Participations (FSP)', 
+    'Isabelle Boccon-Gibod', 
+    'Allianz MD', 
+    'Kier'
+]
+"""
 
 # ### Keep only verified values
 

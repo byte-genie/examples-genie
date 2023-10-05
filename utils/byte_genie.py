@@ -1566,6 +1566,101 @@ class ByteGenie:
             file_pattern: str = None,
             var_col: str = None,
             val_col: str = None,
+            val_desc: str = None,
+            verification_type: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            output_data_type: str = 'verification',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify extracted data
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param var_col: name for variable column
+        :param val_col: name for value column
+        :param val_desc: short description of value column
+        :param verification_type: type of verification
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param output_data_type: data type to use for output file path
+        :param timeout: time out for api call
+        :return:
+        """
+        func = 'verify_data'
+        args = {
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'var_col': var_col,
+            'val_col': val_col,
+            'val_desc': val_desc,
+            'verification_type': verification_type,
+            'context_col': context_col,
+            'fuzzy_match_min': fuzzy_match_min,
+            'output_data_type': output_data_type,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_verify_data(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            var_col: str = None,
+            val_col: str = None,
+            val_desc: str = None,
+            verification_type: str = None,
+            context_col: str = None,
+            fuzzy_match_min: float = None,
+            output_data_type: str = 'verification',
+            timeout: int = 15 * 60,
+    ):
+        """
+        Verify extracted data (asynchronous)
+        :param doc_name: document name
+        :param file_pattern: file pattern to select input files
+        :param var_col: name for variable column
+        :param val_col: name for value column
+        :param val_desc: short description of value column
+        :param verification_type: type of verification
+        :param context_col: name for context column
+        :param fuzzy_match_min: minimum match threshold for fuzzy match
+        :param output_data_type: data type to use for output file path
+        :param timeout: time out for api call
+        :return:
+        """
+        try:
+            resp = self.verify_data(
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                var_col=var_col,
+                val_col=val_col,
+                val_desc=val_desc,
+                verification_type=verification_type,
+                context_col=context_col,
+                fuzzy_match_min=fuzzy_match_min,
+                output_data_type=output_data_type,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in verify_data(): {e}")
+
+    def verify_names(
+            self,
+            doc_name: str,
+            file_pattern: str = None,
+            name_col: str = None,
+            val_col: str = None,
             context_col: str = None,
             fuzzy_match_min: float = None,
             output_data_type: str = 'verification',
@@ -1592,86 +1687,6 @@ class ByteGenie:
             'context_col': context_col,
             'fuzzy_match_min': fuzzy_match_min,
             'output_data_type': output_data_type,
-        }
-        payload = self.create_api_payload(
-            func=func,
-            args=args,
-        )
-        resp = self.call_api(
-            payload=payload,
-            timeout=timeout,
-        )
-        return resp
-
-    @to_async
-    def async_verify_data(
-            self,
-            doc_name: str,
-            file_pattern: str = None,
-            var_col: str = None,
-            val_col: str = None,
-            context_col: str = None,
-            fuzzy_match_min: float = None,
-            output_data_type: str = 'verification',
-            timeout: int = 15 * 60,
-    ):
-        """
-        Verify extracted data (asynchronous)
-        :param doc_name: document name
-        :param file_pattern: file pattern to select input files
-        :param var_col: name for variable column
-        :param val_col: name for value column
-        :param context_col: name for context column
-        :param fuzzy_match_min: minimum match threshold for fuzzy match
-        :param output_data_type: data type to use for output file path
-        :param timeout: time out for api call
-        :return:
-        """
-        try:
-            resp = self.verify_data(
-                doc_name=doc_name,
-                file_pattern=file_pattern,
-                var_col=var_col,
-                val_col=val_col,
-                context_col=context_col,
-                fuzzy_match_min=fuzzy_match_min,
-                output_data_type=output_data_type,
-                timeout=timeout,
-            )
-            return resp
-        except Exception as e:
-            if self.verbose:
-                logger.error(f"Error in verify_data(): {e}")
-
-    def verify_quants_company_info(
-            self,
-            doc_name: str,
-            file_pattern: str = None,
-            company_col: str = None,
-            val_col: str = None,
-            context_col: str = None,
-            fuzzy_match_min: float = None,
-            timeout: int = 15 * 60,
-    ):
-        """
-        Verify company names in extracted quant data
-        :param doc_name: document name
-        :param file_pattern: file pattern to select input files
-        :param company_col: name for company name column
-        :param val_col: name for value column
-        :param context_col: name for context column
-        :param fuzzy_match_min: minimum match threshold for fuzzy match
-        :param timeout: time out for api call
-        :return:
-        """
-        func = 'verify_quants_company_info'
-        args = {
-            'doc_name': doc_name,
-            'file_pattern': file_pattern,
-            'company_col': company_col,
-            'val_col': val_col,
-            'context_col': context_col,
-            'fuzzy_match_min': fuzzy_match_min,
         }
         payload = self.create_api_payload(
             func=func,
