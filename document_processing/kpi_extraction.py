@@ -336,6 +336,50 @@ df_text_segments['text'].tolist()[:5]
 ]
 """
 
+# ## Rank text and table files by relevance to KPIs
+
+# ### embed table files
+tasks = [
+    bg_async.async_embed_doc_data(
+        doc_name=doc_name,
+        file_pattern='data_type=semi-structured/**/variable_desc=orig-table/**.csv',
+        cols_to_use=None,
+    )
+    for doc_name in doc_names
+]
+## run tasks in batches of 10 documents at a time to avoid rate limit errors
+batch_size = 10
+wait_time = 2 * 60
+doc_emb_responses = []
+for task_num, task in enumerate(tasks):
+    logger.info(f"running task: {task_num}/{len(tasks)}")
+    doc_emb_response_ = utils.async_utils.run_async_tasks([task])
+    doc_emb_responses.append(doc_emb_response_)
+    if (task_num % batch_size == 0) and (task_num > 0):
+        time.sleep(wait_time)
+
+
+# ### embed text segment files
+tasks = [
+    bg_async.async_embed_doc_data(
+        doc_name=doc_name,
+        file_pattern='data_type=semi-structured/**/variable_desc=text-segments/**.csv',
+        cols_to_use=['text'],
+    )
+    for doc_name in doc_names
+]
+## run tasks in batches of 10 documents at a time to avoid rate limit errors
+batch_size = 10
+wait_time = 2 * 60
+doc_emb_responses = []
+for task_num, task in enumerate(tasks):
+    logger.info(f"running task: {task_num}/{len(tasks)}")
+    doc_emb_response_ = utils.async_utils.run_async_tasks([task])
+    doc_emb_responses.append(doc_emb_response_)
+    if (task_num % batch_size == 0) and (task_num > 0):
+        time.sleep(wait_time)
+
+
 # ## Extract quant metrics
 """
 ByteGenie API has dedicated endpoints for extracting quants in a structured form, from text passages and tables. 
@@ -452,149 +496,8 @@ check a **short sample of df_tabular_quants_sample**
     {'company name': '', 'category': '% W/M', 'variable description': '', 'variable': 'MEN', 'unit': '', 'value': '45%', 'date': '', 'pagenum': 3, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
 ]
 """
-#
-# # ## Verify extracted quants info
-# """
-# After the quant extraction, we can run a data verification layer to remove any values that may be incorrectly extracted.
-# """
-#
-# # ### start time for quant value verification
-# verify_value_start_time = time.time()
-# """
-# verify_value_start_time
-# 1695790862.0567858
-# """
-#
-# # ### verify extracted quant values
-# tasks = [
-#     bg_async.async_verify_data(
-#         doc_name=doc_name,
-#         file_pattern='data_type=structured/**/variable_desc=structured-quant-summary/**.csv',
-#     )
-#     for doc_name in doc_names
-# ]
-# verify_value_responses = utils.async_utils.run_async_tasks(tasks)
-#
-# # ### list verified quant value files
-# tasks = [
-#     bg_sync.async_list_doc_files(
-#         doc_name=doc_name,
-#         file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
-#     )
-#     for doc_name in doc_names
-# ]
-# verify_value_files = utils.async_utils.run_async_tasks(tasks)
-# verify_value_files = [resp.get_data() for resp in verify_value_files if resp.get_data() is not None]
-# """
-# Number of documents with verified quant value files: `len(verify_value_files)`: 48
-# **verified value files** for the first document: `verify_value_files[0]`
-# [
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-2_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified.csv'
-# ]
-# """
-#
-# # ### start time for verifying company names
-# verify_company_start_time = time.time()
-# """
-# verify_company_start_time
-# 1695795411.6313999
-# """
-#
-# # ### verify extracted company names
-# tasks = [
-#     bg_async.async_verify_quants_company_info(
-#         doc_name=doc_name,
-#         file_pattern='data_type=structured/**/variable_desc=verified-quants/**.csv',
-#     )
-#     for doc_name in doc_names
-# ]
-# verify_company_responses = utils.async_utils.run_async_tasks(tasks)
-#
-# # ### list verified company name and quant value files
-# tasks = [
-#     bg_sync.async_list_doc_files(
-#         doc_name=doc_name,
-#         file_pattern='data_type=structured/**/variable_desc=verified-company-quants/**.csv',
-#     )
-#     for doc_name in doc_names
-# ]
-# verify_company_quant_files = utils.async_utils.run_async_tasks(tasks)
-# verify_company_quant_files = [resp.get_data() for resp in verify_company_quant_files if resp.get_data() is not None]
-# """
-# Number of documents with verified company and quant files, `len(verify_company_quant_files)`: 46
-# First 5 verified company name and quant value files for the first document: verify_company_quant_files[0][:5]
-# [
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=passage-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_contextnum-0_passage-quants_structured-quant-summary_verified_verified-company-names.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_tablenum-1_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-6_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv',
-#     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=verified-company-quants/source=tabular-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_tablenum-0_contextnum-0_tabular-quants_structured-quant-summary_verified_verified-company-names.csv'
-# ]
-# """
-#
-# # ## Find missing files
-# """
-# At any step of the processing, we can check for any documents that are missing in the current output.
-# To do so, we can get document names for the available output files, and compare them with our initial list of document names.
-# """
-#
-# # ### flatten verify_value_files
-# verify_value_files = [file for doc_files in verify_value_files for file in doc_files]
-#
-# # ### get doc_name for verify_value_files
-# verify_value_doc_names = [utils.common.get_doc_name(file) for file in verify_value_files]
-# verify_value_doc_names = list(set(verify_value_doc_names))
-#
-# # ### find missing doc_names
-# missing_doc_names_from_verify_value = [
-#     doc_name for doc_name in doc_names
-#     if doc_name not in verify_value_doc_names
-# ]
-# """
-# document names missing from verified quant value files are: `missing_doc_names_from_verify_value`
-# [
-#     'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf',
-#     'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf',
-#     'userid_stuartcullinan_uploadfilename_28_kim_cartapdf',
-#     'userid_stuartcullinan_uploadfilename_1_accor_mrpdf',
-#     'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf',
-#     'userid_stuartcullinan_uploadfilename_jason_08_srpdf',
-#     'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf',
-#     'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf',
-#     'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf'
-# ]
-# """
 
-#
-# # ## Synthesize quant data with document meta-data
-# """
-# Now we can combine the document-level info with the specific quantitative info extracted from the document, as the document info
-# can help determine the dates or company names for quant values when not provided directly in passages or tables.
-# For this, we will use `/synthesize_quant_data` endpoint, which will synthesize quant data with document meta-data,
-# and also create embeddings for each row of the data, which can later be used to run semantic searches.
-# """
-#
-# # ### quant synthesis start time
-# quant_synthesis_start_time = time.time()
-# """
-# quant_synthesis_start_time
-#
-# """
-#
-# # ### define asynchronous tasks for synthesizing quant data
-# tasks = [
-#     bg_async.async_synthesize_quant_data(
-#         doc_name=doc_name,
-#     )
-#     for doc_name in doc_names
-# ]
-# quant_synthesis_responses = utils.async_utils.run_async_tasks(tasks)
+
 
 # ## Vectorise quant data for semantic searching
 
@@ -1566,6 +1469,10 @@ df_quant_verified[[
 As we can see, the top 5 rows of the sorted data are highly relevant to the query ('hazardous waste' in this case). 
 """
 
+# # ### Keep only verified values
+# df_quant_verified_filtered = \
+#     df_quant_verified[df_quant_verified['lm_verification_flag'] == True].reset_index(drop=True)
+
 # ### keep top 5 values for each company and KPI
 df_quant_verified_filtered = df_quant_verified.groupby(
     by=['company name_std', 'query'],
@@ -1580,7 +1487,7 @@ df_quant_verified_filtered = df_quant_verified.groupby(
 data_cols = ['company name_std', 'query', 'score', 'variable description', 'variable', 'value', 'unit', 'date']
 ## check values for one company and kpi
 mask = (df_quant_verified_filtered['company name_std'] == '3M') & \
-       (df_quant_verified_filtered['query'] == 'GHG Scope 1 emissions')
+       (df_quant_verified_filtered['query'] == 'gender pay gap')
 logger.info(f"df_quant_verified_filtered[mask][data_cols].to_dict('records'): "
             f"{df_quant_verified_filtered[mask][data_cols].to_dict('records')}")
 """
@@ -1599,7 +1506,8 @@ df_quant_verified_filtered[mask][data_cols].to_dict('records')
 ]
 """
 
-# ### Keep only verified values
+
+
 
 # ## Process filtered data
 
