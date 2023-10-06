@@ -995,13 +995,15 @@ class ByteGenie:
             data: list,
             text_col: str,
             groupby_cols: list = None,
+            name_keyword: str = None,
             timeout: int = 15 * 60,
     ):
         """
         Standardise text values in a single column in the data
         :param data: data to be standardised
         :param text_col: name of the column to be standardised
-        :param groupby_cols: columns to group the data by when standaridsing text_col; each group will be standardised independently
+        :param name_keyword: word to use to to refer to values in text_col, e.g. metrics, compnay names, etc
+        :param groupby_cols: columns to group the data by when standardising text_col; each group will be standardised independently
         :param timeout: timeout value for api call
         :return:
         """
@@ -1010,6 +1012,7 @@ class ByteGenie:
             'text_data': data,
             'text_col': text_col,
             'groupby_cols': groupby_cols,
+            'name_keyword': name_keyword,
         }
         payload = self.create_api_payload(
             func=func,

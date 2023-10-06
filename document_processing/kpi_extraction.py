@@ -1123,7 +1123,7 @@ df_quant_verified.to_csv(f'/tmp/df_quant_verified.csv', index=False)
 
 # ## Verify extracted company names
 """
-Similar to verifying extracted quant values, we can also run one layer of verification for company names, to minimize any errors for values getting attributed to incorrect companies
+Similar to verifying extracted quant values, we can also run one layer of verification for company names, to minimize any errors for values getting attributed to incorrect companies. 
 """
 
 # ### Verify company names in verified quant files
@@ -1317,6 +1317,253 @@ Unique company names, `list(df_quant_verified['company name'].unique())`
     'Allianz MD', 
     'Kier'
 ]
+"""
+## set company names that failed company name verification to doc_org
+mask = (df_quant_verified['company name_verification_flag'] != True)
+df_quant_verified.loc[mask, 'company name'] = df_quant_verified.loc[mask, 'doc_org']
+"""
+Unique company names, `list(df_quant_verified['company name'].unique())`
+[
+    'American Express', 
+    'BillerudKorsnäs', 
+    'Air New Zealand', 
+    'UPM', 
+    'American International Group, Inc.', 
+    'AIG', 
+    'Aviva plc', 
+    'China Education Group Holdings Limited', 
+    'CHINA EDUCATION GROUP HOLDINGS LIMITED', 
+    'Jiangxi Provincial', 
+    'China Education Group Holdings', 
+    'RAVEN PROPERTY GROUP LIMITED', 
+    'Accor', 
+    'Admiral Group plc', 
+    'Admiral Group', 
+    'DEG Deutsche EuroShop', 
+    'Deutsche EuroShop', 
+    'Raven Property Group Limited', 
+    'Raven Property Group', 
+    'Boliden', 
+    'Albioma', 
+    'Aker Carbon', 
+    'ABB', 
+    '3M', 
+    'Webuild S.p.A.', 
+    'Webuild Group', 
+    'Webuild', 
+    'VINCI', 
+    'Allianz MD', 
+    'Arch', 
+    'Arch Capital Group Ltd.', 
+    'Air New Zealand Limited', 
+    'Ecolab', 
+    'ECOLAB', 
+    'Samsung SDS', 
+    'Bayer', 
+    'WEBUILD', 
+    'webuild', 
+    'Aggreko plc', 
+    'Ashtead Group plc', 
+    'Sunbelt Rentals', 
+    'Weapons Down Gloves Up', 
+    'Embassy Village', 
+    'Ashtead Group', 
+    'Sunbelt', 
+    'Kier Group plc', 
+    'Adani Ports and Special Economic Zone Limited', 
+    'Adani Ports and Special Economic Zone Ltd', 
+    'KIN +CARTA', 
+    'KIN + CARTA', 
+    'SCGG',
+    'CGG SA', 
+    'CGG', 
+    'Lenzing Group', 
+    'Lenzing', 
+    'adesso SE', 
+    'adesso Group', 
+    'Mondi', 
+    'ARKEMA', 
+    'Isabelle Boccon-Gibod', 
+    'Participations (FSP)', 
+    'Responsible Business Report', 
+    'Capita', 
+    'APSEZ', 
+    'Compass Group', 
+    'Bank of America', 
+    'COMPASS GROUP', 
+    'Fresh by Eurest initiatives',
+    'Compass Group PLC', 
+    'Aviva Investors', 
+    'Aviva', 
+    'WEBUILD S.p.A.', 
+    'THE a2 MILK COMPANY LIMITED', 
+    'a2 Milk Company', 
+    'Arch Insurance', 
+    'Savills', 
+    'Savills plc', 
+    'AIR NEW ZEALAND', 
+    'Massey University / Spark'
+]
+As we can see, replacing company name with doc_org for rows where company name verification failed, fixes a couple of incorrect company names we had previously, ['Company Name', 'Fonds Stratégique de', 'eROI']. 
+It is worth noting here that we could also flag specific rows in the data where `company name` does not match `doc_org`, and 
+then run a more verification only for these rows, as these are the rows where company name needs more attention, as it is being extracted as something different from the document-level company name, 
+and may in some cases just be the name of a product or business unit, rather a company per se. However, we will skip such deeper verification in this example, and use the `company name` as extracted, whenever 
+it passes our previous verification check, and use `doc_org` otherwise.
+"""
+## save df_quant_verified locally
+df_quant_verified.to_csv(f'/tmp/df_quant_verified.csv', index=False)
+
+# ## Standardise company names
+"""
+Since the company names are extracted from different pages and sections of a document, these names may take slightly different form, 
+e.g. we have pairs ('American International Group, Inc.', 'AIG') and ('China Education Group Holdings Limited', 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'China Education Group Holdings'), 
+which correspond to the same company name written with small variations. We can standardise these names to make our downstream analysis easier, and to be able to use `company name` as a useful grouping column.
+"""
+# ### trigger company name standardisation
+name_std_resp = bg_async.standardise_names(
+    data=df_quant_verified[['company name']].drop_duplicates().to_dict('records'),
+    text_col='company name',
+    name_keyword='company name',
+)
+## get output
+df_std_company_names = name_std_resp.get_output()
+df_std_company_names = pd.DataFrame(df_std_company_names)
+"""
+Standardised company names, `df_std_company_names[['orig_name', 'std_name']].to_dict('records')`
+[
+    {'orig_name': 'American Express', 'std_name': 'American Express'}, 
+    {'orig_name': 'BillerudKorsnäs', 'std_name': 'BillerudKorsnäs'}, 
+    {'orig_name': 'Air New Zealand', 'std_name': 'Air New Zealand'}, 
+    {'orig_name': 'UPM', 'std_name': 'UPM'}, 
+    {'orig_name': 'American International Group, Inc.', 'std_name': 'American International Group, Inc.'}, 
+    {'orig_name': 'AIG', 'std_name': 'American International Group, Inc.'}, 
+    {'orig_name': 'Aviva plc', 'std_name': 'Aviva plc'}, 
+    {'orig_name': 'China Education Group Holdings Limited', 'std_name': 'China Education Group Holdings Limited'}, 
+    {'orig_name': 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'std_name': 'China Education Group Holdings Limited'}, 
+    {'orig_name': 'Jiangxi Provincial', 'std_name': 'Jiangxi Provincial'}, 
+    {'orig_name': 'China Education Group Holdings', 'std_name': 'China Education Group Holdings Limited'}, 
+    {'orig_name': 'RAVEN PROPERTY GROUP LIMITED', 'std_name': 'RAVEN PROPERTY GROUP LIMITED'}, 
+    {'orig_name': 'Accor', 'std_name': 'Accor'}, 
+    {'orig_name': 'Admiral Group plc', 'std_name': 'Admiral Group plc'}, 
+    {'orig_name': 'Admiral Group', 'std_name': 'Admiral Group plc'}, 
+    {'orig_name': 'DEG Deutsche EuroShop', 'std_name': 'DEG Deutsche EuroShop'}, 
+    {'orig_name': 'Deutsche EuroShop', 'std_name': 'DEG Deutsche EuroShop'}, 
+    {'orig_name': 'Raven Property Group Limited', 'std_name': 'RAVEN PROPERTY GROUP LIMITED'}, 
+    {'orig_name': 'Raven Property Group', 'std_name': 'RAVEN PROPERTY GROUP LIMITED'}, 
+    {'orig_name': 'Boliden', 'std_name': 'Boliden'}, 
+    {'orig_name': 'Albioma', 'std_name': 'Albioma'}, 
+    {'orig_name': 'Aker Carbon', 'std_name': 'Aker Carbon'}, 
+    {'orig_name': 'ABB', 'std_name': 'ABB'}, 
+    {'orig_name': '3M', 'std_name': '3M'}, 
+    {'orig_name': 'Webuild S.p.A.', 'std_name': 'WEBUILD S.p.A.'}, 
+    {'orig_name': 'Webuild Group', 'std_name': 'WEBUILD S.p.A.'}, 
+    {'orig_name': 'Webuild', 'std_name': 'WEBUILD S.p.A.'}, 
+    {'orig_name': 'VINCI', 'std_name': 'VINCI'}, 
+    {'orig_name': 'Allianz MD', 'std_name': 'Allianz MD'}, 
+    {'orig_name': 'Arch', 'std_name': 'Arch'}, 
+    {'orig_name': 'Arch Capital Group Ltd.', 'std_name': 'Arch'}, 
+    {'orig_name': 'Air New Zealand Limited', 'std_name': 'Air New Zealand'}, 
+    {'orig_name': 'Ecolab', 'std_name': 'Ecolab'}, 
+    {'orig_name': 'ECOLAB', 'std_name': 'Ecolab'}, 
+    {'orig_name': 'Samsung SDS', 'std_name': 'Samsung SDS'}, 
+    {'orig_name': 'Bayer', 'std_name': 'Bayer'}, 
+    {'orig_name': 'WEBUILD', 'std_name': 'WEBUILD S.p.A.'}, 
+    {'orig_name': 'webuild', 'std_name': 'WEBUILD S.p.A.'}, 
+    {'orig_name': 'Aggreko plc', 'std_name': 'Aggreko plc'}, 
+    {'orig_name': 'Ashtead Group plc', 'std_name': 'Ashtead Group plc'}, 
+    {'orig_name': 'Sunbelt Rentals', 'std_name': 'Ashtead Group plc'}, 
+    {'orig_name': 'Weapons Down Gloves Up', 'std_name': 'Weapons Down Gloves Up'}, 
+    {'orig_name': 'Embassy Village', 'std_name': 'Embassy Village'}, 
+    {'orig_name': 'Ashtead Group', 'std_name': 'Ashtead Group plc'}, 
+    {'orig_name': 'Sunbelt', 'std_name': 'Ashtead Group plc'}, 
+    {'orig_name': 'Kier Group plc', 'std_name': 'Kier Group plc'}, 
+    {'orig_name': 'Adani Ports and Special Economic Zone Limited', 'std_name': 'Adani Ports and Special Economic Zone Limited'}, 
+    {'orig_name': 'Adani Ports and Special Economic Zone Ltd', 'std_name': 'Adani Ports and Special Economic Zone Limited'}, 
+    {'orig_name': 'KIN +CARTA', 'std_name': 'KIN + CARTA'}, 
+    {'orig_name': 'KIN + CARTA', 'std_name': 'KIN + CARTA'}, 
+    {'orig_name': 'SCGG', 'std_name': 'SCGG'}, 
+    {'orig_name': 'CGG SA', 'std_name': 'SCGG'}, 
+    {'orig_name': 'CGG', 'std_name': 'SCGG'}, 
+    {'orig_name': 'Lenzing Group', 'std_name': 'Lenzing Group'}, 
+    {'orig_name': 'Lenzing', 'std_name': 'Lenzing Group'}, 
+    {'orig_name': 'adesso SE', 'std_name': 'adesso SE'}, 
+    {'orig_name': 'adesso Group', 'std_name': 'adesso SE'}, 
+    {'orig_name': 'Mondi', 'std_name': 'Mondi'}, 
+    {'orig_name': 'ARKEMA', 'std_name': 'ARKEMA'}, 
+    {'orig_name': 'Isabelle Boccon-Gibod', 'std_name': 'Isabelle Boccon-Gibod'}, 
+    {'orig_name': 'Participations (FSP)', 'std_name': 'Isabelle Boccon-Gibod'},
+    {'orig_name': 'Responsible Business Report', 'std_name': 'Isabelle Boccon-Gibod'}, 
+    {'orig_name': 'Capita', 'std_name': 'Capita'}, 
+    {'orig_name': 'APSEZ', 'std_name': 'APSEZ'}, 
+    {'orig_name': 'Compass Group', 'std_name': 'Compass Group'}, 
+    {'orig_name': 'Bank of America', 'std_name': 'Bank of America'}, 
+    {'orig_name': 'COMPASS GROUP', 'std_name': 'Compass Group'}, 
+    {'orig_name': 'Fresh by Eurest initiatives', 'std_name': 'Compass Group'}, 
+    {'orig_name': 'Compass Group PLC', 'std_name': 'Compass Group'}, 
+    {'orig_name': 'Aviva Investors', 'std_name': 'Aviva Investors'}, 
+    {'orig_name': 'Aviva', 'std_name': 'Aviva Investors'}, 
+    {'orig_name': 'THE a2 MILK COMPANY LIMITED', 'std_name': 'THE a2 MILK COMPANY LIMITED'}, 
+    {'orig_name': 'a2 Milk Company', 'std_name': 'THE a2 MILK COMPANY LIMITED'}, 
+    {'orig_name': 'Arch Insurance', 'std_name': 'Arch Insurance'}, 
+    {'orig_name': 'Savills', 'std_name': 'Savills'}, 
+    {'orig_name': 'Savills plc', 'std_name': 'Savills'}, 
+    {'orig_name': 'AIR NEW ZEALAND', 'std_name': 'Air New Zealand'}, 
+    {'orig_name': 'Massey University / Spark', 'std_name': 'Massey University / Spark'}
+]
+Number of unique standardised company names: `len(df_std_company_names['orig_name'].unique())`: 78
+Number of unique standardised company names: `len(df_std_company_names['std_name'].unique())`: 46
+As we can see, company names have now been standardised quite well, 
+and number of company names have gone down from 78 in the original names to 46 in the standardised names. 
+"""
+
+# ### merge standardised names onto df_quant_verified
+df_quant_verified = pd.merge(
+    left=df_quant_verified,
+    right=df_std_company_names[['orig_name', 'std_name']].rename(
+        columns={'orig_name': 'company name',
+                 'std_name': 'company name_std'},
+    ),
+    on=['company name'],
+    how='left',
+)
+"""
+Check standardised names in df_quant_verified, `df_quant_verified[['company name', 'company name_std']].drop_duplicates().tail().to_dict('records')`
+[
+    {'company name': 'Arch Insurance', 'company name_std': 'Arch Insurance'}, 
+    {'company name': 'Savills', 'company name_std': 'Savills'}, 
+    {'company name': 'Savills plc', 'company name_std': 'Savills'}, 
+    {'company name': 'AIR NEW ZEALAND', 'company name_std': 'Air New Zealand'}, 
+    {'company name': 'Massey University / Spark', 'company name_std': 'Massey University / Spark'}
+]
+"""
+## save df_quant_verified locally
+df_quant_verified.to_csv(f'/tmp/df_quant_verified.csv', index=False)
+
+# ## Filter most relevant data
+"""
+With company names standardised, we can filter data by company name, and keep most relevant rows for each KPI for each company.
+"""
+
+# ### sort data by company name, KPI
+df_quant_verified = df_quant_verified.sort_values(
+    by=['query', 'score', 'company name_std', ],
+    ascending=False
+).reset_index(drop=True)
+"""
+A sample of sorted data
+df_quant_verified[[ 
+    'query', 'score', 
+    'company name_std', 'variable description', 'variable', 'value', 'unit', 'date',
+    'doc_year', 'pagenum', 'doc_name'
+]].head().to_dict('records')
+[
+    {'query': 'hazardous waste', 'score': 0.774275504945014, 'company name_std': 'Ecolab', 'variable description': 'Avoid more than 84 MILLION pounds of waste', 'variable': 'Pounds of waste', 'value': '84 million', 'unit': nan, 'date': '2021', 'doc_year': '2021', 'pagenum': 13, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_27_ecolab_corporate-responsibility-report_2021pdf'}, 
+    {'query': 'hazardous waste', 'score': 0.7736468217838872, 'company name_std': 'Adani Ports and Special Economic Zone Limited', 'variable description': 'Achievement of 75% reduction in waste intensity', 'variable': 'Waste intensity reduction', 'value': '75%', 'unit': nan, 'date': 'FY 2021-22', 'doc_year': '2021', 'pagenum': 108, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf'}, 
+    {'query': 'hazardous waste', 'score': 0.7712695153236897, 'company name_std': 'Adani Ports and Special Economic Zone Limited', 'variable description': 'Quantity of wastewater recycled and reused', 'variable': '-', 'value': '650', 'unit': 'ML', 'date': nan, 'doc_year': '2021', 'pagenum': 100, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf'}, 
+    {'query': 'hazardous waste', 'score': 0.7703765424786837, 'company name_std': 'Adani Ports and Special Economic Zone Limited', 'variable description': 'Target for achieving 20% reduction in waste intensity', 'variable': 'Waste intensity reduction', 'value': '20%', 'unit': nan, 'date': 'FY 2024-25', 'doc_year': '2021', 'pagenum': 108, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf'}, 
+    {'query': 'hazardous waste', 'score': 0.7693046430369277, 'company name_std': 'Adani Ports and Special Economic Zone Limited', 'variable description': 'Quantity of waste managed', 'variable': '-', 'value': '29,359', 'unit': 'MT', 'date': nan, 'doc_year': '2021', 'pagenum': 100, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf'}
+]
+As we can see, the top 5 rows of the sorted data are highly relevant to the query ('hazardous waste' in this case). 
 """
 
 # ### Keep only verified values
