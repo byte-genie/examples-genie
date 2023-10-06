@@ -1566,6 +1566,39 @@ df_quant_verified[[
 As we can see, the top 5 rows of the sorted data are highly relevant to the query ('hazardous waste' in this case). 
 """
 
+# ### keep top 5 values for each company and KPI
+df_quant_verified_filtered = df_quant_verified.groupby(
+    by=['company name_std', 'query'],
+    group_keys=False,
+).apply(
+    lambda x: x.sort_values(
+        by=['company name_std', 'query', 'score'],
+        ascending=False
+    ).head(10)
+).reset_index()
+## relevant columns for printing data
+data_cols = ['company name_std', 'query', 'score', 'variable description', 'variable', 'value', 'unit', 'date']
+## check values for one company and kpi
+mask = (df_quant_verified_filtered['company name_std'] == '3M') & \
+       (df_quant_verified_filtered['query'] == 'GHG Scope 1 emissions')
+logger.info(f"df_quant_verified_filtered[mask][data_cols].to_dict('records'): "
+            f"{df_quant_verified_filtered[mask][data_cols].to_dict('records')}")
+"""
+df_quant_verified_filtered[mask][data_cols].to_dict('records')
+[
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8206044541364184, 'variable description': 'Total Scope 1 and 2 location-based emissions', 'variable': 'Emissions', 'value': '73.3', 'unit': 'metric tons CO2e', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8203032984225203, 'variable description': 'Scope 1 emissions', 'variable': 'Emissions', 'value': '20,600', 'unit': 'metric tons COe', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.817225411941106, 'variable description': 'Scope 2 location-based emissions', 'variable': 'Emissions', 'value': '14,600', 'unit': 'metric tons CO2e', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8102522382382019, 'variable description': 'Scope 2 market-based emissions', 'variable': 'Emissions', 'value': '1.16', 'unit': 'metric tons COe', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8093313918397605, 'variable description': 'Total Scope 1 and 2 market-based emissions', 'variable': 'Emissions', 'value': '87.9', 'unit': 'metric tons COe', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8057149633162554, 'variable description': '% reduction Scope 1 and Scope 2 location-based emissions', 'variable': 'Emissions reduction', 'value': '73.5', 'unit': '% CO2e', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.8022968369319777, 'variable description': '% reduction Scope 1 and Scope 2 market-based emissions', 'variable': 'Emissions reduction', 'value': '66.3', 'unit': '% CO2e', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.7822868484425515, 'variable description': 'Total customer avoided metric tons CO2e emissions, cumulative since 2015', 'variable': 'Total customer avoided emissions', 'value': '25', 'unit': 'metric tons CO2e', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.7601040228162862, 'variable description': '% improved energy efficiency, indexed to net sales', 'variable': 'Energy efficiency', 'value': '34.7', 'unit': '%', 'date': '2022.0'}, 
+    {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.7555038645494616, 'variable description': '% renewable energy to total electricity use', 'variable': 'Renewable energy', 'value': '29.1', 'unit': '%', 'date': '2022.0'}
+]
+"""
+
 # ### Keep only verified values
 
 # ## Process filtered data
