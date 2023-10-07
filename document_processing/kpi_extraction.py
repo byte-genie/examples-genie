@@ -435,39 +435,7 @@ First 5 filtered table files, `filtered_table_sim_files[:5]`
 ] 
 """
 
-# ## filter most relevant text files
-
-## create tasks
-tasks = [
-    bg_async.async_filter_similarity_scored_data(
-        doc_name=doc_name,
-        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
-        filter_what='files',
-        groupby_cols=['query'],
-        max_rows_to_keep=5,
-        filename_sfx='filtered-text',
-    )
-    for doc_name in doc_names
-]
-## run tasks
-filtered_text_sim_responses = utils.async_utils.run_async_tasks(tasks)
-
-# ### get filtered text files
-filtered_text_sim_files = [resp.get_output() for resp in filtered_text_sim_responses]
-filtered_text_sim_files = [file for file in filtered_text_sim_files if file is not None]
-"""
-Number of filtered text files, `len(filtered_text_sim_files)`: 48
-First 5 filtered table files, `filtered_text_sim_files[:5]`
-[
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_filtered-text.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_filtered-text.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf_filtered-text.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf_filtered-text.csv', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_srpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_09_srpdf_filtered-text.csv'
-]
-"""
-
-# ## Get most similar orignal-table files
+# ## Get most similar original-table files
 """
 Once, we have scored extracted table files by similarity to our KPIs, 
 we can retrieve the most similar table files for each KPI from each document. 
@@ -489,7 +457,6 @@ df_filtered_table_sim_files['doc_name'] = [
     file.split('entity=')[-1].split('/')[0]
     for file in df_filtered_table_sim_files['file']
 ]
-filtered_table_sim_files = df_filtered_table_sim_files['file'].unique().tolist()
 ## check filtered table similarity files for 1st document, for a specific KPI
 mask = (df_filtered_table_sim_files['doc_name'] == doc_names[0]) & \
        (df_filtered_table_sim_files['query'] == kpis[0])
@@ -511,11 +478,11 @@ As we kept max of 5 table files in `/filter_similarity_scored_data` api call, we
 # ### Get underlying orig-table files
 """
 Once, we have filtered the similarity-scored files, we need to get the underlying original-table that contain the tables data. 
-We can retrieve these files using /get_corresponding_file endpoint.
+We can retrieve these files using `/list_corresponding_files` endpoint.
 """
 tasks = [
     bg_sync.async_list_corresponding_files(
-        files=filtered_table_sim_files,
+        files=df_filtered_table_sim_files['file'].unique().tolist(),
         data_type='semi-structured',
         variable_desc='orig-table',
         file_format='csv',
@@ -552,6 +519,114 @@ So we will use this dataframe to access the most relevant files, and do further 
 """
 # ### save df_filtered_table_sim_files locally
 df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
+
+# ## ToDo: Merge document info
+
+# ## ToDo: Estimate values from tabular data
+
+
+# ## filter most relevant text files
+
+## create tasks
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+        filter_what='files',
+        groupby_cols=['query'],
+        max_rows_to_keep=5,
+        filename_sfx='filtered-text',
+    )
+    for doc_name in doc_names
+]
+## run tasks
+filtered_text_sim_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### get filtered text files
+filtered_text_sim_files = [resp.get_output() for resp in filtered_text_sim_responses if resp.get_output() is not None]
+"""
+Number of documents for which filtered text files exist, `len(filtered_text_sim_files)`: 49
+First 5 filtered text files, `filtered_text_sim_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_srpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_09_srpdf_filtered-text.csv'
+]
+"""
+
+# ### Read filtered text similarity files
+tasks = [
+    bg_sync.async_read_file(
+        file=file
+    )
+    for file in filtered_text_sim_files
+]
+df_filtered_text_sim_files = utils.async_utils.run_async_tasks(tasks)
+df_filtered_text_sim_files = [resp.get_output() for resp in df_filtered_text_sim_files]
+df_filtered_text_sim_files = [pd.DataFrame(df) for df in df_filtered_text_sim_files]
+df_filtered_text_sim_files = pd.concat(df_filtered_text_sim_files)
+## add doc_name to df
+df_filtered_text_sim_files['doc_name'] = [
+    file.split('entity=')[-1].split('/')[0]
+    for file in df_filtered_text_sim_files['file']
+]
+## drop duplicates
+df_filtered_text_sim_files = df_filtered_text_sim_files.drop_duplicates().reset_index(drop=True)
+"""
+Number of documents available in df_filtered_text_sim_files, `len(df_filtered_text_sim_files['doc_name'].unique())`: 49
+df_filtered_text_sim_files.head().to_dict('records')
+[
+    {'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-3_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 'query': 'hazardous waste', 'score': 0.7243718383028761, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-2_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 'query': 'hazardous waste', 'score': 0.7184264913346579, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-7_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 'query': 'hazardous waste', 'score': 0.7183537716707852, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-1_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 'query': 'hazardous waste', 'score': 0.7015001997580329, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}, 
+    {'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-4_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 'query': 'hazardous waste', 'score': 0.6981161775811571, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf'}
+]
+"""
+
+# ### Get underlying text-segment files
+"""
+Once, we have filtered the similarity-scored files, we need to get the underlying text-segments that contain the text data. 
+We can retrieve these files using `/list_corresponding_files` endpoint.
+"""
+tasks = [
+    bg_sync.async_list_corresponding_files(
+        files=df_filtered_text_sim_files['file'].unique().tolist(),
+        data_type='semi-structured',
+        variable_desc='text-segments',
+        file_format='csv',
+    )
+]
+filtered_text_segments_files = utils.async_utils.run_async_tasks(tasks)
+filtered_text_segments_files = [resp.get_output() for resp in filtered_text_segments_files]
+## flatten filtered_text_segments_files
+filtered_text_segments_files = [file for files in filtered_text_segments_files for file in files]
+## add to df_filtered_text_sim_files
+df_filtered_text_sim_files['text_segment_file'] = filtered_text_segments_files
+## check df_filtered_text_sim_files
+mask = (df_filtered_text_sim_files['doc_name'] == doc_names[0]) & \
+       (df_filtered_text_sim_files['query'] == kpis[0])
+logger.info(
+    f"First 5 rows of df_filtered_text_sim_files for first document and first kpi: "
+    f"{df_filtered_text_sim_files[mask][['query', 'score', 'doc_name', 'text_segment_file']].head().to_dict('records')}"
+)
+"""
+Text segment files for first document and first KPI, 
+[
+    {'query': '% of female representation on the board', 'score': 0.841910903716324, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'text_segment_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-2_text-blocks_text-segments.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.827191327421238, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'text_segment_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-1_text-blocks_text-segments.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.7952882407662112, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'text_segment_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-7_text-blocks_text-segments.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.7950848086745431, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'text_segment_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-6_text-blocks_text-segments.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.7891511878288711, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'text_segment_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-3_text-blocks_text-segments.csv'}
+]
+`df_filtered_text_sim_files` contains the most similar text files for each KPI and document, 
+so we will use this dataframe to access the most relevant text files, and extract info from them.
+"""
+## save df_filtered_text_sim_files locally
+df_filtered_text_sim_files.to_csv(f"/tmp/df_filtered_text_sim_files.csv", index=False)
+
 
 # ## Extract quants from most similar files
 
