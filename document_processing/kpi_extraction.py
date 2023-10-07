@@ -161,7 +161,7 @@ tasks = [
     for doc_name in doc_names
 ]
 ocr_text_files = utils.async_utils.run_async_tasks(tasks)
-ocr_text_files = [resp.get_data() for resp in ocr_text_files if resp.get_data() is not None]
+ocr_text_files = [resp.get_output() for resp in ocr_text_files if resp.get_output() is not None]
 """
 Number of documents with OCR text files, `len(ocr_text_files)`: 49
 Number of OCR text files for one document, `len(ocr_text_files[0])`: 8
@@ -185,7 +185,7 @@ tasks = [
     for doc_name in doc_names
 ]
 ocr_table_files = utils.async_utils.run_async_tasks(tasks)
-ocr_table_files = [resp.get_data() for resp in ocr_table_files if resp.get_data() is not None]
+ocr_table_files = [resp.get_output() for resp in ocr_table_files if resp.get_output() is not None]
 """
 Number of documents with OCR table output files, len(ocr_table_files): 48
 Number of OCR table files for one document, len(ocr_table_files[5]): 24
@@ -228,45 +228,6 @@ for doc_num, doc_name in enumerate(doc_names):
         file_pattern='data_type=semi-structured/**/variable_desc=table-cells/**.csv',
     )
     responses = responses + [resp]
-
-# ## Convert pdf documents to latex
-"""
-PDF to latex converter uses a specialised OCR that can convert PDF files to a latex markdown format. 
-This converts text, tables, and equations into latex code. This is particularly useful for documents that contain equations or mathematical symbols. 
-"""
-
-# ### trigger pdf to markdown conversion
-doc_names.reverse()
-convert_to_markdown_responses = []
-for doc_num, doc_name in enumerate(doc_names):
-    logger.info(f"triggering pdf to markdown conversion for ({doc_num}/{len(doc_names)}): {doc_name}")
-    convert_to_markdown_resp = bg_async.convert_pdf_to_markdown(
-        doc_name=doc_name,
-        cluster_args={
-            'accelerators': 'T4:1',
-            'use_spot': False,
-        }
-    )
-    convert_to_markdown_responses = convert_to_markdown_responses + [convert_to_markdown_resp]
-
-# ### list markdown files
-tasks = [
-    bg_sync.async_list_doc_files(
-        doc_name=doc_name,
-        file_pattern='variable_desc=markdown/**.mmd'
-    )
-    for doc_name in doc_names
-]
-markdown_files = utils.async_utils.run_async_tasks(tasks)
-markdown_files = [resp.get_data() for resp in markdown_files if resp.get_data() is not None]
-"""
-Number of documents with markdown files, len(markdown_files): 4
-markdown files for first two documents, markdown_files[0] + markdown_files[1]
-[
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=mmd/variable_desc=markdown/source=app.esgnie.org/jason_08_gpgpdf.mmd', 
-    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=semi-structured/format=mmd/variable_desc=markdown/source=app.esgnie.org/jeon_20_billerudkorsnas_annual-report_2021pdf.mmd'
-]
-"""
 
 # ## Segment OCR extracted text
 """
@@ -457,6 +418,23 @@ tasks = [
 ## run tasks
 filtered_table_responses = utils.async_utils.run_async_tasks(tasks)
 
+# ### get filtered table files
+filtered_table_sim_files = [resp.get_output() for resp in filtered_table_responses]
+filtered_table_sim_files = [file for file in filtered_table_sim_files if file is not None]
+# filtered_table_docnames = [file.split('entity=')[-1].split('/')[0] for file in filtered_table_files]
+# missing_filtered_table_docnames = [doc_name for doc_name in doc_names if doc_name not in filtered_table_docnames]
+"""
+Number of filtered table files, `len(filtered_table_sim_files)`: 48
+First 5 filtered table files, `filtered_table_sim_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_descorig-tablecsv/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_filtered-tables.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_descorig-tablecsv/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_filtered-tables.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_descorig-tablecsv/userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf_filtered-tables.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_descorig-tablecsv/userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf_filtered-tables.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_srpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_descorig-tablecsv/userid_stuartcullinan_uploadfilename_jason_09_srpdf_filtered-tables.csv'
+] 
+"""
+
 # ## filter most relevant text files
 
 ## create tasks
@@ -472,23 +450,130 @@ tasks = [
     for doc_name in doc_names
 ]
 ## run tasks
-filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
+filtered_text_sim_responses = utils.async_utils.run_async_tasks(tasks)
 
-# ## Extract quants from filtered tables
+# ### get filtered text files
+filtered_text_sim_files = [resp.get_output() for resp in filtered_text_sim_responses]
+filtered_text_sim_files = [file for file in filtered_text_sim_files if file is not None]
+"""
+Number of filtered text files, `len(filtered_text_sim_files)`: 48
+First 5 filtered table files, `filtered_text_sim_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_srpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_09_srpdf_filtered-text.csv'
+]
+"""
 
-# ### get filtered table files
-filtered_table_files = [resp.get_output() for resp in filtered_table_responses]
+# ## Get most similar orignal-table files
+"""
+Once, we have scored extracted table files by similarity to our KPIs, 
+we can retrieve the most similar table files for each KPI from each document. 
+"""
 
-# ### trigger quant extractions
+# ### Read filtered table similarity files
 tasks = [
-    bg_async.async_structure_tabular_quants(
-        files=filtered_table_files,
+    bg_sync.async_read_file(
+        file=file
+    )
+    for file in filtered_table_sim_files
+]
+df_filtered_table_sim_files = utils.async_utils.run_async_tasks(tasks)
+df_filtered_table_sim_files = [resp.get_output() for resp in df_filtered_table_sim_files]
+df_filtered_table_sim_files = [pd.DataFrame(df) for df in df_filtered_table_sim_files]
+df_filtered_table_sim_files = pd.concat(df_filtered_table_sim_files)
+## add doc_name to df
+df_filtered_table_sim_files['doc_name'] = [
+    file.split('entity=')[-1].split('/')[0]
+    for file in df_filtered_table_sim_files['file']
+]
+filtered_table_sim_files = df_filtered_table_sim_files['file'].unique().tolist()
+## check filtered table similarity files for 1st document, for a specific KPI
+mask = (df_filtered_table_sim_files['doc_name'] == doc_names[0]) & \
+       (df_filtered_table_sim_files['query'] == kpis[0])
+logger.info(
+    f"Filtered table similarity files for 1st document, and first KPI: "
+    f"{df_filtered_table_sim_files[mask]['file'].unique().tolist()}"
+)
+"""
+Filtered table similarity files for 1st document, and first KPI
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-2_embeddings_similarity_query-of-female-representation-on-the-board.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-0_embeddings_similarity_query-of-female-representation-on-the-board.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-1_embeddings_similarity_query-of-female-representation-on-the-board.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-1_embeddings_similarity_query-of-female-representation-on-the-board.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-0_embeddings_similarity_query-of-female-representation-on-the-board.csv'
+]
+As we kept max of 5 table files in `/filter_similarity_scored_data` api call, we will have 5 top ranked files from each document for each KPI
+"""
+# ### Get underlying orig-table files
+"""
+Once, we have filtered the similarity-scored files, we need to get the underlying original-table that contain the tables data. 
+We can retrieve these files using /get_corresponding_file endpoint.
+"""
+tasks = [
+    bg_sync.async_list_corresponding_files(
+        files=filtered_table_sim_files,
+        data_type='semi-structured',
+        variable_desc='orig-table',
+        file_format='csv',
     )
 ]
-tabular_quant_extraction_responses = utils.async_utils.run_async_tasks(tasks)
+filtered_orig_table_files = utils.async_utils.run_async_tasks(tasks)
+filtered_orig_table_files = [resp.get_output() for resp in filtered_orig_table_files]
+## flatten filtered_orig_table_files
+filtered_orig_table_files = [file for files in filtered_orig_table_files for file in files]
+"""
+Number of original-table files after filtering over relevant KPIs: `len(filtered_orig_table_files)`: 2384
+Fist 5 original table files after filtering over relevant KPIs: `filtered_orig_table_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-0.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-5_table-cells_orig-table_tablenum-0.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-0_table-cells_orig-table_tablenum-0.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-1.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-6_table-cells_orig-table_tablenum-0.csv'
+]
+"""
+# ### add orig-table files to df_filtered_table_sim_files
+df_filtered_table_sim_files['orig_table_file'] = filtered_orig_table_files
+"""
+First 5 rows of df_filtered_table_sim_files, df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file']].head(5).to_dict('records')
+[
+    {'query': 'hazardous waste', 'score': 0.6973772931528301, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-0.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.690958398363218, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-5_table-cells_orig-table_tablenum-0.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.6870429295359026, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-0_table-cells_orig-table_tablenum-0.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.6820895998128814, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-1.csv'}, 
+    {'query': 'hazardous waste', 'score': 0.6817806352540019, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-6_table-cells_orig-table_tablenum-0.csv'}
+]
+`df_filtered_table_sim_files` now contains the most relevant table files for each KPI from each document. 
+So we will use this dataframe to access the most relevant files, and do further processing on them. 
+"""
+# ### save df_filtered_table_sim_files locally
+df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
 
-# ### Read extracted tabular quants
-filtered_tabular_quants_files = [resp.get_output() for resp in tabular_quant_extraction_responses]
+# ## Extract quants from most similar files
+
+# ### trigger quant structuring from filtered table files
+tasks = [
+    bg_async.async_structure_tabular_quants(
+        files=df_filtered_table_sim_files['orig_table_file'].unique().tolist(),
+    )
+]
+tabular_quant_structuring_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### Get structured tabular quants files
+structured_tabular_quants_files = [
+    resp.get_output() for resp in tabular_quant_structuring_responses
+    if resp.get_output() is not None
+]
+## flatten structured tabular quant files
+structured_tabular_quants_files = [file for files in structured_tabular_quants_files for file in files]
+## read one structured tabular quant file
+df_structured_quants = bg_sync.read_file(structured_tabular_quants_files[0]).get_output()
+df_structured_quants = pd.DataFrame(df_structured_quants)
+
 
 # ## ToDo: Merge tabular quants with doc info
 
@@ -897,7 +982,7 @@ df_text_filtered = pd.concat(df_text_filtered)
 if 'context' in df_text_filtered.columns:
     df_text_filtered = df_text_filtered.drop(columns=['context'])
 ## filter over relevant queries
-df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(qual_kpis)]
+df_text_filtered = df_text_filtered[df_text_filtered['query'].isin(kpis)]
 ## sort by score
 df_text_filtered = df_text_filtered.sort_values(['query', 'score'], ascending=False).reset_index(drop=True)
 ## drop unwanted columns

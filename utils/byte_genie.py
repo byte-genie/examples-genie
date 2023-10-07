@@ -442,6 +442,71 @@ class ByteGenie:
             if self.verbose:
                 print(f"Error in list_doc_files(): {e}")
 
+    def list_corresponding_files(
+            self,
+            files: list,
+            data_type: str = None,
+            variable_desc: str = None,
+            source: str = None,
+            pagenum: str = None,
+            file_format: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Get corresponding target files given input files
+        :param files:
+        :param data_type:
+        :param variable_desc:
+        :param source:
+        :param pagenum:
+        :param file_format:
+        :param timeout:
+        :return:
+        """
+        func = 'list_corresponding_files'
+        args = {
+            'files': files,
+            'data_type': data_type,
+            'variable_desc': variable_desc,
+            'source': source,
+            'file_format': file_format,
+            'pagenum': pagenum,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_list_corresponding_files(
+            self,
+            files: list,
+            data_type: str = None,
+            variable_desc: str = None,
+            source: str = None,
+            pagenum: str = None,
+            file_format: str = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.list_corresponding_files(
+                files=files,
+                data_type=data_type,
+                variable_desc=variable_desc,
+                source=source,
+                file_format=file_format,
+                pagenum=pagenum,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in list_corresponding_files(): {e}")
+
     def check_file_exists(
             self,
             file: str,
@@ -1667,86 +1732,6 @@ class ByteGenie:
                 context_col=context_col,
                 fuzzy_match_min=fuzzy_match_min,
                 output_data_type=output_data_type,
-                timeout=timeout,
-            )
-            return resp
-        except Exception as e:
-            if self.verbose:
-                logger.error(f"Error in verify_data(): {e}")
-
-    def verify_names(
-            self,
-            doc_name: str,
-            file_pattern: str = None,
-            name_col: str = None,
-            val_col: str = None,
-            context_col: str = None,
-            fuzzy_match_min: float = None,
-            output_data_type: str = 'verification',
-            timeout: int = 15 * 60,
-    ):
-        """
-        Verify extracted data
-        :param doc_name: document name
-        :param file_pattern: file pattern to select input files
-        :param var_col: name for variable column
-        :param val_col: name for value column
-        :param context_col: name for context column
-        :param fuzzy_match_min: minimum match threshold for fuzzy match
-        :param output_data_type: data type to use for output file path
-        :param timeout: time out for api call
-        :return:
-        """
-        func = 'verify_data'
-        args = {
-            'doc_name': doc_name,
-            'file_pattern': file_pattern,
-            'var_col': var_col,
-            'val_col': val_col,
-            'context_col': context_col,
-            'fuzzy_match_min': fuzzy_match_min,
-            'output_data_type': output_data_type,
-        }
-        payload = self.create_api_payload(
-            func=func,
-            args=args,
-        )
-        resp = self.call_api(
-            payload=payload,
-            timeout=timeout,
-        )
-        return resp
-
-    @to_async
-    def async_verify_quants_company_info(
-            self,
-            doc_name: str,
-            file_pattern: str = None,
-            company_col: str = None,
-            val_col: str = None,
-            context_col: str = None,
-            fuzzy_match_min: float = None,
-            timeout: int = 15 * 60,
-    ):
-        """
-        Verify company names in extracted quant data (asynchronous)
-        :param doc_name: document name
-        :param file_pattern: file pattern to select input files
-        :param company_col: name for company name column
-        :param val_col: name for value column
-        :param context_col: name for context column
-        :param fuzzy_match_min: minimum match threshold for fuzzy match
-        :param timeout: time out for api call
-        :return:
-        """
-        try:
-            resp = self.verify_quants_company_info(
-                doc_name=doc_name,
-                file_pattern=file_pattern,
-                company_col=company_col,
-                val_col=val_col,
-                context_col=context_col,
-                fuzzy_match_min=fuzzy_match_min,
                 timeout=timeout,
             )
             return resp
