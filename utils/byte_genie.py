@@ -1153,8 +1153,9 @@ class ByteGenie:
 
     def create_dataset(
             self,
-            data: list,
             attrs: list,
+            file: str = None,
+            data: list = None,
             cols_to_use: list = None,
             groupby_cols: list = None,
             timeout: int = 15 * 60,
@@ -1170,6 +1171,7 @@ class ByteGenie:
         """
         func = 'create_dataset'
         args = {
+            'file': file,
             'data': data,
             'attrs': attrs,
             'cols_to_use': cols_to_use,
@@ -1184,6 +1186,39 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_create_dataset(
+            self,
+            attrs: list,
+            file: str = None,
+            data: list = None,
+            cols_to_use: list = None,
+            groupby_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Create a new dataset with desired features from input data (asynchronous)
+        :param data: input data
+        :param attrs: attributes/columns to have in the new data
+        :param cols_to_use: columns to consider in create the new dataset
+        :param groupby_cols: columns to group data by
+        :param timeout: timeout value for the api call
+        :return:
+        """
+        try:
+            resp = self.create_dataset(
+                file=file,
+                data=data,
+                attrs=attrs,
+                cols_to_use=cols_to_use,
+                groupby_cols=groupby_cols,
+                timeout=timeout
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in create_dataset(): {e}")
 
     def parse_numeric_string(
             self,
@@ -2253,6 +2288,67 @@ class ByteGenie:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in trace_evidence(): {e}")
+
+    def estimate_values(
+            self,
+            text_data: list,
+            cols_to_use: list = None,
+            metrics_to_estimate: list = None,
+            groupby_cols: list = None,
+            context_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Estimate values for a set of metrics
+        :param text_data:
+        :param cols_to_use:
+        :param metrics_to_estimate:
+        :param groupby_cols:
+        :param context_cols:
+        :param timeout:
+        :return:
+        """
+        func = 'estimate_values'
+        args = {
+            'text_data': text_data,
+            'cols_to_use': cols_to_use,
+            'metrics_to_estimate': metrics_to_estimate,
+            'groupby_cols': groupby_cols,
+            'context_cols': context_cols,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_estimate_values(
+            self,
+            text_data: list,
+            cols_to_use: list = None,
+            metrics_to_estimate: list = None,
+            groupby_cols: list = None,
+            context_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.estimate_values(
+                text_data=text_data,
+                cols_to_use=cols_to_use,
+                metrics_to_estimate=metrics_to_estimate,
+                groupby_cols=groupby_cols,
+                context_cols=context_cols,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in estimate_values(): {e}")
 
     def get_usage_summary(
             self,

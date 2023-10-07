@@ -520,10 +520,201 @@ So we will use this dataframe to access the most relevant files, and do further 
 # ### save df_filtered_table_sim_files locally
 df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
 
-# ## ToDo: Merge document info
+# ## Add document info (meta-data)
 
-# ## ToDo: Estimate values from tabular data
+# ### trigger doc info extraction
+tasks = [
+    bg_async.async_extract_doc_info(
+        doc_name=doc_name,
+    )
+    for doc_name in doc_names
+]
+df_doc_info = utils.async_utils.run_async_tasks(tasks)
 
+# ### read extracted doc info
+df_doc_info = [resp.get_output() for resp in df_doc_info]
+# convert to dataframe
+df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
+df_doc_info = pd.concat(df_doc_info)
+logger.info(f"length of df_doc_info: {len(df_doc_info)}")
+"""
+Number of documents in df_doc_info: `len(df_doc_info['doc_name'].unique())`: 53
+df_doc_info.head().to_dict('records')
+[
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
+]
+"""
+
+# ### Merge document info onto filtered tabular files
+df_filtered_table_sim_files = pd.merge(
+    left=df_filtered_table_sim_files,
+    right=df_doc_info,
+    on=['doc_name'],
+    how='left'
+)
+"""
+Checks `doc_org`, i.e. organisation name that published the documents 
+df_filtered_table_sim_files['doc_org'].unique().tolist()
+['American Express', 'BillerudKorsnäs', 'UPM', 'Air New Zealand', 'American International Group, Inc.', 'Aviva plc', 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'AIG', 'RAVEN PROPERTY GROUP LIMITED', 'ACCOR', 'Admiral Group plc', 'DEG Deutsche EuroShop', 'Ledlenser', 'Albioma', 'AKER CARBON CAPTURE', 'ABB', '3M', 'Webuild S.p.A.', 'VINCI', 'Allianz Group', 'Arch Capital Group Ltd.', 'Air New Zealand Limited', 'ECOLAB', 'Samsung SDS', 'Bayer', 'WEBUILD', 'Aggreko plc', 'Ashtead Group plc', 'Kier Group plc', 'Adani Ports and Special Economic Zone Limited', 'KIN +CARTA', 'SCGG', 'Lenzing', 'adesso SE', 'Mondi Group', 'ARKEMA', 'Responsible Business Report', 'COMPASS GROUP', 'Aviva', 'WEBUILD S.p.A.', 'THE a2 MILK COMPANY LIMITED', 'Arch Insurance Group Inc.', 'Savills plc']
+Since different documents may state the same company's name somewhat differently, we see small variations in doc_org values, 
+e.g. ('Air New Zealand', 'Air New Zealand Limited'). Such as variations can be standardized to make downstream processing easier.
+"""
+
+# ## Standardise doc_org
+
+# ### Trigger standardisation
+name_std_resp = bg_async.standardise_names(
+    data=df_filtered_table_sim_files[['doc_org']].drop_duplicates().to_dict('records'),
+    text_col='doc_org',
+    name_keyword='company name',
+)
+## get output
+df_std_doc_org = name_std_resp.get_output()
+df_std_doc_org = pd.DataFrame(df_std_doc_org)
+"""
+Standardised company names, `df_std_doc_org[['orig_name', 'std_name']].to_dict('records')`
+[
+    {'orig_name': 'American Express', 'std_name': 'American Express'}, 
+    {'orig_name': 'BillerudKorsnäs', 'std_name': 'BillerudKorsnäs'}, 
+    {'orig_name': 'UPM', 'std_name': 'UPM'}, 
+    {'orig_name': 'Air New Zealand', 'std_name': 'Air New Zealand'}, 
+    {'orig_name': 'American International Group, Inc.', 'std_name': 'American International Group, Inc.'}, 
+    {'orig_name': 'Aviva plc', 'std_name': 'Aviva plc'}, 
+    {'orig_name': 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'std_name': 'CHINA EDUCATION GROUP HOLDINGS LIMITED'}, 
+    {'orig_name': 'AIG', 'std_name': 'AIG'}, 
+    {'orig_name': 'RAVEN PROPERTY GROUP LIMITED', 'std_name': 'RAVEN PROPERTY GROUP LIMITED'}, 
+    {'orig_name': 'ACCOR', 'std_name': 'ACCOR'}, 
+    {'orig_name': 'Admiral Group plc', 'std_name': 'Admiral Group plc'}, 
+    {'orig_name': 'DEG Deutsche EuroShop', 'std_name': 'DEG Deutsche EuroShop'}, 
+    {'orig_name': 'Ledlenser', 'std_name': 'Ledlenser'}, 
+    {'orig_name': 'Albioma', 'std_name': 'Albioma'}, 
+    {'orig_name': 'AKER CARBON CAPTURE', 'std_name': 'AKER CARBON CAPTURE'}, 
+    {'orig_name': 'ABB', 'std_name': 'ABB'}, 
+    {'orig_name': '3M', 'std_name': '3M'}, 
+    {'orig_name': 'Webuild S.p.A.', 'std_name': 'WEBUILD'}, 
+    {'orig_name': 'VINCI', 'std_name': 'VINCI'}, 
+    {'orig_name': 'Allianz Group', 'std_name': 'Allianz Group'}, 
+    {'orig_name': 'Arch Capital Group Ltd.', 'std_name': 'Arch Capital Group Ltd.'}, 
+    {'orig_name': 'Air New Zealand Limited', 'std_name': 'Air New Zealand'}, 
+    {'orig_name': 'ECOLAB', 'std_name': 'ECOLAB'},
+    {'orig_name': 'Samsung SDS', 'std_name': 'Samsung SDS'}, 
+    {'orig_name': 'Bayer', 'std_name': 'Bayer'}, 
+    {'orig_name': 'WEBUILD', 'std_name': 'WEBUILD'}, 
+    {'orig_name': 'Aggreko plc', 'std_name': 'Aggreko plc'}, 
+    {'orig_name': 'Ashtead Group plc', 'std_name': 'Ashtead Group plc'},
+    {'orig_name': 'Kier Group plc', 'std_name': 'Kier Group plc'}, 
+    {'orig_name': 'Adani Ports and Special Economic Zone Limited', 'std_name': 'Adani Ports and Special Economic Zone Limited'}, 
+    {'orig_name': 'KIN + CARTA', 'std_name': 'KIN + CARTA'}, 
+    {'orig_name': 'SCGG', 'std_name': 'SCGG'}, 
+    {'orig_name': 'Lenzing', 'std_name': 'Lenzing'}, 
+    {'orig_name': 'adesso SE', 'std_name': 'adesso SE'}, 
+    {'orig_name': 'Mondi Group', 'std_name': 'Mondi Group'}, 
+    {'orig_name': 'ARKEMA', 'std_name': 'ARKEMA'}, 
+    {'orig_name': 'Responsible Business Report', 'std_name': 'Responsible Business Report'}, 
+    {'orig_name': 'COMPASS GROUP', 'std_name': 'COMPASS GROUP'}, 
+    {'orig_name': 'Aviva', 'std_name': 'Aviva'}, 
+    {'orig_name': 'WEBUILD S.p.A.', 'std_name': 'WEBUILD'}, 
+    {'orig_name': 'THE a2 MILK COMPANY LIMITED', 'std_name': 'THE a2 MILK COMPANY LIMITED'}, 
+    {'orig_name': 'Arch Insurance Group Inc.', 'std_name': 'Arch Insurance Group Inc.'}, 
+    {'orig_name': 'Savills plc', 'std_name': 'Savills plc'}
+]
+Number of unique standardised company names: `len(df_std_doc_org['orig_name'].unique())`: 43
+Number of unique standardised company names: `len(df_std_doc_org['std_name'].unique())`: 40
+As we can see, number of company names have gone down from 43 in the original names to 40 in the standardised names, so we have removed a few duplicates.
+"""
+
+# ### merge standardise doc_org into df_filtered_table_sim_files
+df_filtered_table_sim_files = pd.merge(
+    left=df_filtered_table_sim_files,
+    right=df_std_doc_org.rename(
+        columns={
+            'orig_name': 'doc_org',
+            'std_name': 'doc_org_std',
+        }
+    ),
+    on=['doc_org'],
+    how='left'
+)
+"""
+Sample of standardised document organisation names in `df_filtered_table_sim_files`
+df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'doc_org_std']].head().to_dict('records')
+[
+    {'query': 'hazardous waste', 'score': 0.6973772931528301, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}, 
+    {'query': 'hazardous waste', 'score': 0.690958398363218, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-5_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}, 
+    {'query': 'hazardous waste', 'score': 0.6870429295359026, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-0_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}, 
+    {'query': 'hazardous waste', 'score': 0.6820895998128814, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-1.csv', 'doc_org_std': 'American Express'}, 
+    {'query': 'hazardous waste', 'score': 0.6817806352540019, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-6_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}
+]
+"""
+
+# ## Create datasets for each KPI
+"""
+Now, we will use the filtered tabular files to estimate the value for each one of our KPIs from each document, 
+based on the data contained in the filtered file.
+"""
+
+# ### Set attributes to extract for each KPI
+kpi_attrs = {
+    '% of female representation on the board': ['company name', 'date', '% of female representation on the board', 'any details about the female representation on the board'],
+    'hazardous waste': ['company name', 'date', 'hazardous waste amount', 'unit of measurement', 'any details of hazardous waste'],
+    'gender pay gap': ['company name', 'date', 'gender pay gap', 'any description of gender pay gap'],
+    'GHG Scope 1 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
+    'GHG Scope 2 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
+    'GHG Scope 3 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
+    'Non-renewable energy consumption': ['company name', 'date', 'amount of energy consumption', 'renewable or non-renewable flag', 'unit of measurement', 'any details of energy consumption'],
+    'Emissions to water': ['company name', 'date', 'amount of emissions to water', 'unit of measurement', 'any details of emissions to water'],
+    'Percentage of non-renewable energy production': ['company name', 'date', 'amount of energy production', 'renewable or non-renewable flag', 'unit of measurement', 'any details of energy production'],
+    'anti-corruption policies': ['company name', 'complete description of anti-corruption policies', 'summary of anti-corruption policies'],
+    'anti-bribery policies': ['company name', 'complete description of anti-bribery policies', 'summary of anti-bribery policies'],
+}
+
+# ### for each doc_org_std, identify the top 2 orig_table_file with highest score
+df_filtered_table_sim_files['file_rank'] = df_filtered_table_sim_files.groupby(
+    by=['doc_org_std', 'query'],
+    group_keys=False,
+)['score'].rank('dense', ascending=False)
+
+# ### save df_filtered_table_sim_files locally
+df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
+
+# ### process top ranked files first
+files_to_process = \
+    df_filtered_table_sim_files[df_filtered_table_sim_files['file_rank'] <= 1]['orig_table_file'].unique().tolist()
+logger.info(f"Number of files to process: {len(files_to_process)}")
+"""
+Number of files to process: `len(files_to_process)`: 214
+"""
+for file_num, file in enumerate(files_to_process):
+    logger.info(f"processing ({file_num}/{len(files_to_process)}): {file}")
+    ## get queries matching this file
+    queries = \
+        df_filtered_table_sim_files[df_filtered_table_sim_files['orig_table_file'] == file]['query'].unique().tolist()
+    ## get corresponding attributes to extract for each query
+    attrs_to_extract = [
+        kpi_attrs[kpi] for kpi in queries
+    ]
+    attrs_to_extract = pd.DataFrame(attrs_to_extract)
+    ## extract the same set of attrs only once
+    attrs_to_extract = attrs_to_extract.drop_duplicates().reset_index(drop=True)
+    attrs_to_extract = attrs_to_extract.values.tolist()
+    ## remove None attributes
+    attrs_to_extract = [[value for value in sublist if value is not None] for sublist in attrs_to_extract]
+    ## create tasks to extract all possible attributes from this file
+    tasks = [
+        bg_async.async_create_dataset(
+            file=file,
+            attrs=attrs_to_extract_,
+        )
+        for attrs_to_extract_ in attrs_to_extract
+    ]
+    ## run tasks
+    attr_extraction_responses = utils.async_utils.run_async_tasks(tasks)
+    ## wait for 15 sec to avoid rate limits
+    time.sleep(30)
 
 # ## filter most relevant text files
 
@@ -627,7 +818,6 @@ so we will use this dataframe to access the most relevant text files, and extrac
 ## save df_filtered_text_sim_files locally
 df_filtered_text_sim_files.to_csv(f"/tmp/df_filtered_text_sim_files.csv", index=False)
 
-
 # ## Extract quants from most similar files
 
 # ### trigger quant structuring from filtered table files
@@ -649,35 +839,7 @@ structured_tabular_quants_files = [file for files in structured_tabular_quants_f
 df_structured_quants = bg_sync.read_file(structured_tabular_quants_files[0]).get_output()
 df_structured_quants = pd.DataFrame(df_structured_quants)
 
-
 # ## ToDo: Merge tabular quants with doc info
-
-# ### trigger doc info extraction
-tasks = [
-    bg_async.async_extract_doc_info(
-        doc_name=doc_name,
-    )
-    for doc_name in doc_names
-]
-df_doc_info = utils.async_utils.run_async_tasks(tasks)
-
-# ### read extracted doc info
-df_doc_info = [resp.get_output() for resp in df_doc_info]
-# convert to dataframe
-df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
-df_doc_info = pd.concat(df_doc_info)
-logger.info(f"length of df_doc_info: {len(df_doc_info)}")
-"""
-Number of documents in df_doc_info: `len(df_doc_info['doc_name'].unique())`: 53
-df_doc_info.head().to_dict('records')
-[
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
-    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
-]
-"""
 
 # ### ToDo: merge tabular quants and with df_doc_info
 
