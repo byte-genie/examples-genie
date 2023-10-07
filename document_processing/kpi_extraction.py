@@ -474,6 +474,30 @@ tasks = [
 ## run tasks
 filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
 
+# ## Extract quants from filtered tables
+
+# ### get filtered table files
+filtered_table_files = [resp.get_output() for resp in filtered_table_responses]
+
+# ### trigger quant extractions
+tasks = [
+    bg_async.async_structure_tabular_quants(
+        files=filtered_table_files,
+    )
+]
+tabular_quant_extraction_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### ToDo: Estimate values for desired KPIs for tabular quants
+
+# ## ToDo: Extract quants from filtered passages
+
+# ### ToDo: Estimate values for desired KPIs for passage quants
+
+# ## ToDo: synthesize values across tables and passages
+
+# ### ToDo: for quant KPIs, whenever a KPI is available in estimate tabular quants, keep it, otherwise take it from passages
+
+# ### ToDo: for qual KPIs, whenever a KPI is available in estimate tabular quants, keep it, otherwise take it from passages
 
 
 # ## Extract quant metrics
