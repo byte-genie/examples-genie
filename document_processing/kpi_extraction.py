@@ -716,7 +716,13 @@ for file_num, file in enumerate(files_to_process):
     ## wait for 15 sec to avoid rate limits
     time.sleep(30)
 
+
 # ## filter most relevant text files
+"""
+Now, we can repeat the same procedure on text files to extract info relevant to the KPIs. 
+For this example, we will only use text files to extract information about qualitative KPIs, 
+such as anti-corruption and anti-bribery policies.
+"""
 
 ## create tasks
 tasks = [
