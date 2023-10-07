@@ -487,7 +487,45 @@ tasks = [
 ]
 tabular_quant_extraction_responses = utils.async_utils.run_async_tasks(tasks)
 
-# ### ToDo: Estimate values for desired KPIs for tabular quants
+# ### Read extracted tabular quants
+filtered_tabular_quants_files = [resp.get_output() for resp in tabular_quant_extraction_responses]
+
+# ## ToDo: Merge tabular quants with doc info
+
+# ### trigger doc info extraction
+tasks = [
+    bg_async.async_extract_doc_info(
+        doc_name=doc_name,
+    )
+    for doc_name in doc_names
+]
+df_doc_info = utils.async_utils.run_async_tasks(tasks)
+
+# ### read extracted doc info
+df_doc_info = [resp.get_output() for resp in df_doc_info]
+# convert to dataframe
+df_doc_info = [pd.DataFrame(df) for df in df_doc_info]
+df_doc_info = pd.concat(df_doc_info)
+logger.info(f"length of df_doc_info: {len(df_doc_info)}")
+"""
+Number of documents in df_doc_info: `len(df_doc_info['doc_name'].unique())`: 53
+df_doc_info.head().to_dict('records')
+[
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'doc_org': 'American Express', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 8}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'doc_org': 'BillerudKorsnäs', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 132}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'doc_org': 'Air New Zealand', 'doc_type': "['sustainability report']", 'doc_year': 2021, 'num_pages': 1}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'doc_org': 'UPM', 'doc_type': "['annual report']", 'doc_year': 2021, 'num_pages': 119}, 
+    {'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'doc_org': 'Air New Zealand', 'doc_type': "['anti-corruption policy']", 'doc_year': 2019, 'num_pages': 4}
+]
+"""
+
+# ### ToDo: merge tabular quants and with df_doc_info
+
+# ## ToDo: Verify extracted tabular quants
+
+# ## ToDo: standardise company names
+
+# ## ToDo: Estimate values for desired KPIs for tabular quants
 
 # ## ToDo: Extract quants from filtered passages
 
