@@ -1402,7 +1402,8 @@ class ByteGenie:
 
     def structure_passage_quants(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             base_attrs: list = None,
             base_attr_names: list = None,
@@ -1413,6 +1414,7 @@ class ByteGenie:
     ):
         """
         Structure quants contained in text passages extracted from documents
+        :param files:
         :param doc_name:
         :param file_pattern:
         :param base_attrs:
@@ -1425,6 +1427,7 @@ class ByteGenie:
         """
         func = 'structure_passage_quants'
         args = {
+            'files': files,
             'doc_name': doc_name,
             'file_pattern': file_pattern,
             'base_attrs': base_attrs,
@@ -1446,7 +1449,8 @@ class ByteGenie:
     @to_async
     def async_structure_passage_quants(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             base_attrs: list = None,
             base_attr_names: list = None,
@@ -1457,6 +1461,7 @@ class ByteGenie:
     ):
         try:
             resp = self.structure_passage_quants(
+                files=files,
                 doc_name=doc_name,
                 file_pattern=file_pattern,
                 base_attrs=base_attrs,
@@ -1473,7 +1478,8 @@ class ByteGenie:
 
     def structure_tabular_quants(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             base_attrs: list = None,
             base_attr_names: list = None,
@@ -1483,6 +1489,7 @@ class ByteGenie:
     ):
         """
         Structure quants contained in tables extracted from documents
+        :param files:
         :param doc_name:
         :param file_pattern:
         :param base_attrs:
@@ -1494,6 +1501,7 @@ class ByteGenie:
         """
         func = 'structure_tabular_quants'
         args = {
+            'files': files,
             'doc_name': doc_name,
             'file_pattern': file_pattern,
             'base_attrs': base_attrs,
@@ -1514,7 +1522,8 @@ class ByteGenie:
     @to_async
     def async_structure_tabular_quants(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             base_attrs: list = None,
             base_attr_names: list = None,
@@ -1524,6 +1533,7 @@ class ByteGenie:
     ):
         try:
             resp = self.structure_tabular_quants(
+                files=files,
                 doc_name=doc_name,
                 file_pattern=file_pattern,
                 base_attrs=base_attrs,
@@ -1565,7 +1575,8 @@ class ByteGenie:
 
     def verify_data(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             var_col: str = None,
             val_col: str = None,
@@ -1578,6 +1589,7 @@ class ByteGenie:
     ):
         """
         Verify extracted data
+        :param files: input files
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
         :param var_col: name for variable column
@@ -1592,6 +1604,7 @@ class ByteGenie:
         """
         func = 'verify_data'
         args = {
+            'files': files,
             'doc_name': doc_name,
             'file_pattern': file_pattern,
             'var_col': var_col,
@@ -1615,7 +1628,8 @@ class ByteGenie:
     @to_async
     def async_verify_data(
             self,
-            doc_name: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             var_col: str = None,
             val_col: str = None,
@@ -1628,6 +1642,7 @@ class ByteGenie:
     ):
         """
         Verify extracted data (asynchronous)
+        :param files: input files
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
         :param var_col: name for variable column
@@ -1642,6 +1657,7 @@ class ByteGenie:
         """
         try:
             resp = self.verify_data(
+                files=files,
                 doc_name=doc_name,
                 file_pattern=file_pattern,
                 var_col=var_col,
@@ -2123,6 +2139,7 @@ class ByteGenie:
             self,
             doc_name: str,
             file_pattern: str,
+            filter_what: str = 'data',
             non_null_cols: list = None,
             groupby_cols: list = None,
             max_rows_to_keep: int = None,
@@ -2134,6 +2151,7 @@ class ByteGenie:
         Filter similarity scored data to keep only the most relevant rows
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
+        :param filter_what: what to filter ('data' or 'files')
         :param non_null_cols: only rows where all these columns are non-null will be returned
         :param groupby_cols: group data by these columns when filtering over rows to keep
         :param frac_rows_to_keep: fraction of top rows to keep, sorted by similarity score
@@ -2145,6 +2163,7 @@ class ByteGenie:
         args = {
             'doc_name': doc_name,
             'file_pattern': file_pattern,
+            'filter_what': filter_what,
             'non_null_cols': non_null_cols,
             'groupby_cols': groupby_cols,
             'max_rows_to_keep': max_rows_to_keep,
@@ -2166,6 +2185,7 @@ class ByteGenie:
             self,
             doc_name: str,
             file_pattern: str,
+            filter_what: str = 'data',
             non_null_cols: list = None,
             groupby_cols: list = None,
             max_rows_to_keep: int = None,
@@ -2177,6 +2197,7 @@ class ByteGenie:
             resp = self.filter_similarity_scored_data(
                 doc_name=doc_name,
                 file_pattern=file_pattern,
+                filter_what=filter_what,
                 non_null_cols=non_null_cols,
                 groupby_cols=groupby_cols,
                 max_rows_to_keep=max_rows_to_keep,

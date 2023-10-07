@@ -358,7 +358,6 @@ for task_num, task in enumerate(tasks):
     if (task_num % batch_size == 0) and (task_num > 0):
         time.sleep(wait_time)
 
-
 # ### embed text segment files
 tasks = [
     bg_async.async_embed_doc_data(
@@ -378,6 +377,103 @@ for task_num, task in enumerate(tasks):
     doc_emb_responses.append(doc_emb_response_)
     if (task_num % batch_size == 0) and (task_num > 0):
         time.sleep(wait_time)
+
+# ## Rank tables by relevance to keyphrases
+"""
+Once we have the tables extracted and structured, we can rank them by relevance to the KPIs to filter out the most relevant data.
+"""
+
+# ### set attributes to extract
+
+## KPIs for which we want quantitative data
+kpis = [
+    '% of female representation on the board',
+    'hazardous waste',
+    'gender pay gap',
+    'GHG Scope 1 emissions',
+    'GHG Scope 2 emissions',
+    'GHG Scope 3 emissions',
+    'Non-renewable energy consumption',
+    'Emissions to water',
+    'Percentage of non-renewable energy production',
+    'anti-corruption policies',
+    'anti-bribery policies',
+]
+
+# ### score table similarity
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
+    try:
+        tasks = [
+            bg_async.async_score_doc_text_similarity(
+                doc_name=doc_name,
+                file_pattern='data_type=embeddings/**/variable_desc=orig-table/**.csv',
+                query=query,
+            )
+            for query in kpis
+        ]
+        score_table_sim_responses = utils.async_utils.run_async_tasks(tasks)
+    except Exception as e:
+        logger.warning(f"Error running similarity scoring for: {doc_name}")
+
+# ## Rank text by relevance to keyphrases
+"""
+Once we have the text segments extracted from documents, we can rank them by relevance to the KPIs to filter out the most relevant data.
+"""
+
+# ### score text data by similarity
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
+    try:
+        tasks = [
+            bg_async.async_score_doc_text_similarity(
+                doc_name=doc_name,
+                file_pattern='data_type=embeddings/**/variable_desc=text-segments/**.csv',
+                query=query,
+            )
+            for query in kpis
+        ]
+        score_text_sim_responses = utils.async_utils.run_async_tasks(tasks)
+    except Exception as e:
+        logger.warning(f"Error running similarity scoring for: {doc_name}")
+
+# ## filter most relevant table files
+"""
+Once, the tables are scored by similarity to relevant KPIs, we can filter out the most relevant table files
+"""
+
+## create tasks
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=orig-table/**.csv',
+        filter_what='files',
+        groupby_cols=['query'],
+        max_rows_to_keep=5,
+        filename_sfx='filtered-tables',
+    )
+    for doc_name in doc_names
+]
+## run tasks
+filtered_table_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ## filter most relevant text files
+
+## create tasks
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+        filter_what='files',
+        groupby_cols=['query'],
+        max_rows_to_keep=5,
+        filename_sfx='filtered-text',
+    )
+    for doc_name in doc_names
+]
+## run tasks
+filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
+
 
 
 # ## Extract quant metrics
@@ -497,8 +593,6 @@ check a **short sample of df_tabular_quants_sample**
 ]
 """
 
-
-
 # ## Vectorise quant data for semantic searching
 
 # ### set columns to embed
@@ -585,77 +679,6 @@ First 5 embedding files for the first documnet: embed_text_files[0][:5]
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=embeddings/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-4_text-blocks_text-segments_embeddings.csv'
 ]
 """
-
-# ## Rank quants by relevance to keyphrases
-"""
-Once we have the quant metrics extracted and structured, we can rank them by relevance to the KPIs to filter out the most relevant data.
-"""
-
-# ### set attributes to extract
-
-## KPIs for which we want quantitative data
-quant_kpis = [
-    '% of female representation on the board',
-    'hazardous waste',
-    'gender pay gap',
-    'GHG Scope 1 emissions',
-    'GHG Scope 2 emissions',
-    'GHG Scope 3 emissions',
-    'Non-renewable energy consumption',
-    'Emissions to water',
-    'Percentage of non-renewable energy production',
-    'anti-corruption policies',
-    'anti-bribery policies',
-]
-
-# ### score quant data similarity
-for doc_num, doc_name in enumerate(doc_names):
-    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
-    try:
-        tasks = [
-            bg_async.async_score_doc_text_similarity(
-                doc_name=doc_name,
-                file_pattern='data_type=embeddings/**/variable_desc=structured-quant-summary/**.csv',
-                query=query,
-            )
-            for query in quant_kpis
-        ]
-        score_quant_sim_responses = utils.async_utils.run_async_tasks(tasks)
-    except Exception as e:
-        logger.warning(f"Error running similarity scoring for: {doc_name}")
-    ## wait for 15 sec before starting next document to avoid rate limit errors
-    time.sleep(15)
-
-# ## Rank text by relevance to keyphrases
-"""
-Once we have the text segments extracted from documents, we can rank them by relevance to the KPIs to filter out the most relevant data.
-"""
-
-# ### set attributes to extract
-
-## KPIs for which we want qualitative data
-qual_kpis = [
-    'anti-corruption policies',
-    'anti-bribery policies',
-]
-
-# ### score text data by similarity
-for doc_num, doc_name in enumerate(doc_names):
-    logger.info(f"running similarity scoring for ({doc_num}/{len(doc_names)}): {doc_name}")
-    try:
-        tasks = [
-            bg_async.async_score_doc_text_similarity(
-                doc_name=doc_name,
-                file_pattern='data_type=embeddings/**/variable_desc=text-segments/**.csv',
-                query=query,
-            )
-            for query in qual_kpis
-        ]
-        score_quanl_sim_responses = utils.async_utils.run_async_tasks(tasks)
-    except Exception as e:
-        logger.warning(f"Error running similarity scoring for: {doc_name}")
-    ## wait for 15 sec before starting next document to avoid rate limit errors
-    time.sleep(15)
 
 # ## Filter out quant data most relevant to KPIs
 
@@ -1505,9 +1528,6 @@ df_quant_verified_filtered[mask][data_cols].to_dict('records')
     {'company name_std': '3M', 'query': 'GHG Scope 1 emissions', 'score': 0.7555038645494616, 'variable description': '% renewable energy to total electricity use', 'variable': 'Renewable energy', 'value': '29.1', 'unit': '%', 'date': '2022.0'}
 ]
 """
-
-
-
 
 # ## Process filtered data
 
