@@ -377,7 +377,7 @@ for doc_num, doc_name in enumerate(doc_names):
     except Exception as e:
         logger.warning(f"Error running similarity scoring for: {doc_name}")
 
-# ## Rank text by relevance to keyphrases
+# ## Rank text by relevance to KPIs
 """
 Once we have the text segments extracted from documents, we can rank them by relevance to the KPIs to filter out the most relevant data.
 """
@@ -557,7 +557,7 @@ df_filtered_table_sim_files = pd.merge(
     how='left'
 )
 """
-Checks `doc_org`, i.e. organisation name that published the documents 
+Check `doc_org`, i.e. organisation name that published the documents 
 df_filtered_table_sim_files['doc_org'].unique().tolist()
 ['American Express', 'BillerudKorsnäs', 'UPM', 'Air New Zealand', 'American International Group, Inc.', 'Aviva plc', 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'AIG', 'RAVEN PROPERTY GROUP LIMITED', 'ACCOR', 'Admiral Group plc', 'DEG Deutsche EuroShop', 'Ledlenser', 'Albioma', 'AKER CARBON CAPTURE', 'ABB', '3M', 'Webuild S.p.A.', 'VINCI', 'Allianz Group', 'Arch Capital Group Ltd.', 'Air New Zealand Limited', 'ECOLAB', 'Samsung SDS', 'Bayer', 'WEBUILD', 'Aggreko plc', 'Ashtead Group plc', 'Kier Group plc', 'Adani Ports and Special Economic Zone Limited', 'KIN +CARTA', 'SCGG', 'Lenzing', 'adesso SE', 'Mondi Group', 'ARKEMA', 'Responsible Business Report', 'COMPASS GROUP', 'Aviva', 'WEBUILD S.p.A.', 'THE a2 MILK COMPANY LIMITED', 'Arch Insurance Group Inc.', 'Savills plc']
 Since different documents may state the same company's name somewhat differently, we see small variations in doc_org values, 
@@ -713,9 +713,34 @@ for file_num, file in enumerate(files_to_process):
     ]
     ## run tasks
     attr_extraction_responses = utils.async_utils.run_async_tasks(tasks)
-    ## wait for 15 sec to avoid rate limits
-    time.sleep(30)
+    # ## wait for 15 sec to avoid rate limits
+    # time.sleep(30)
+"""
+`/create_dataset` will write dataset file with extracted attributes in files with path `.../data_type=dataset/...csv`
+"""
 
+# ### list dataset files
+tasks = [
+    bg_sync.async_list_doc_files(
+        doc_name=doc_name,
+        file_pattern=f"data_type=dataset/**/variable_desc=orig-table/**.csv"
+    )
+    for doc_name in doc_names
+]
+tabular_dataset_files = utils.async_utils.run_async_tasks(tasks)
+tabular_dataset_files = [resp.get_output() for resp in tabular_dataset_files]
+missing_tabular_dataset_files = [
+    resp.get_response_attr('doc_name')
+    for resp in tabular_dataset_files if resp.get_output() is None
+]
+"""
+Number of documents for which dataset files are available, `len(dataset_files)`: 
+Dataset files for the first document, `dataset_files[0]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=dataset/format=csv/variable_desc=orig-table/source=0ce43925c073c45c71d798c13d00d781/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-0.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=dataset/format=csv/variable_desc=orig-table/source=2bbdd7d5532b826b7542438b805b1b7a/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-0.csv'
+]
+"""
 
 # ## filter most relevant text files
 """
