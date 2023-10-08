@@ -417,8 +417,6 @@ filtered_table_responses = utils.async_utils.run_async_tasks(tasks)
 # ### get filtered table files
 filtered_table_sim_files = [resp.get_output() for resp in filtered_table_responses]
 filtered_table_sim_files = [file for file in filtered_table_sim_files if file is not None]
-# filtered_table_docnames = [file.split('entity=')[-1].split('/')[0] for file in filtered_table_files]
-# missing_filtered_table_docnames = [doc_name for doc_name in doc_names if doc_name not in filtered_table_docnames]
 """
 Number of filtered table files, `len(filtered_table_sim_files)`: 48
 First 5 filtered table files, `filtered_table_sim_files[:5]`
@@ -515,6 +513,7 @@ So we will use this dataframe to access the most relevant files, and do further 
 """
 # ### save df_filtered_table_sim_files locally
 df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
+# df_filtered_table_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_table_sim_files.csv", index=False)
 
 # ## Add document info (meta-data)
 
@@ -646,6 +645,9 @@ df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'd
     {'query': 'hazardous waste', 'score': 0.6817806352540019, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-6_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}
 ]
 """
+# ### save df_filtered_table_sim_files locally
+df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
+# df_filtered_table_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_table_sim_files.csv", index=False)
 
 # ## Create datasets for each KPI
 """
@@ -655,17 +657,51 @@ based on the data contained in the filtered file.
 
 # ### Set attributes to extract for each KPI
 kpi_attrs = {
-    '% of female representation on the board': ['company name', 'date', '% of female representation on the board', 'any details about the female representation on the board'],
-    'hazardous waste': ['company name', 'date', 'hazardous waste amount', 'unit of measurement', 'any details of hazardous waste'],
-    'gender pay gap': ['company name', 'date', 'gender pay gap', 'any description of gender pay gap'],
-    'GHG Scope 1 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
-    'GHG Scope 2 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
-    'GHG Scope 3 emissions': ['company name', 'date', 'amount of emissions', 'scope of emissions', 'unit of measurement', 'any details of emissions'],
-    'Non-renewable energy consumption': ['company name', 'date', 'amount of energy consumption', 'renewable or non-renewable flag', 'unit of measurement', 'any details of energy consumption'],
-    'Emissions to water': ['company name', 'date', 'amount of emissions to water', 'unit of measurement', 'any details of emissions to water'],
-    'Percentage of non-renewable energy production': ['company name', 'date', 'amount of energy production', 'renewable or non-renewable flag', 'unit of measurement', 'any details of energy production'],
-    'anti-corruption policies': ['company name', 'complete description of anti-corruption policies', 'summary of anti-corruption policies'],
-    'anti-bribery policies': ['company name', 'complete description of anti-bribery policies', 'summary of anti-bribery policies'],
+    '% of female representation on the board': [
+        'company name', 'date', '% of female representation on the board',
+        'any details about the female representation on the board'
+    ],
+    'hazardous waste': [
+        'company name', 'date', 'hazardous waste amount', 'unit of measurement',
+        'any details of hazardous waste'
+    ],
+    'gender pay gap': [
+        'company name', 'date', 'gender pay gap', 'any description of gender pay gap'
+    ],
+    'GHG Scope 1 emissions': [
+        'company name', 'date', 'amount of emissions', 'scope of emissions',
+        'unit of measurement', 'any details of emissions'
+    ],
+    'GHG Scope 2 emissions': [
+        'company name', 'date', 'amount of emissions', 'scope of emissions',
+        'unit of measurement', 'any details of emissions'
+    ],
+    'GHG Scope 3 emissions': [
+        'company name', 'date', 'amount of emissions', 'scope of emissions',
+        'unit of measurement', 'any details of emissions'
+    ],
+    'Non-renewable energy consumption': [
+        'company name', 'date', 'amount of energy consumption',
+        'renewable or non-renewable flag', 'unit of measurement',
+        'any details of energy consumption'
+    ],
+    'Emissions to water': [
+        'company name', 'date', 'amount of emissions to water', 'unit of measurement',
+        'any details of emissions to water'
+    ],
+    'Percentage of non-renewable energy production': [
+        'company name', 'date', 'amount of energy production',
+        'renewable or non-renewable flag', 'unit of measurement',
+        'any details of energy production'
+    ],
+    'anti-corruption policies': [
+        'company name', 'complete description of anti-corruption policies',
+        'summary of anti-corruption policies'
+    ],
+    'anti-bribery policies': [
+        'company name', 'complete description of anti-bribery policies',
+        'summary of anti-bribery policies'
+    ],
 }
 
 # ### for each doc_org_std, identify the top 2 orig_table_file with highest score
@@ -677,12 +713,14 @@ df_filtered_table_sim_files['file_rank'] = df_filtered_table_sim_files.groupby(
 # ### save df_filtered_table_sim_files locally
 df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
 
-# ### process top ranked files first
+# ### process top 2 ranked files first
 files_to_process = \
-    df_filtered_table_sim_files[df_filtered_table_sim_files['file_rank'] <= 1]['orig_table_file'].unique().tolist()
+    df_filtered_table_sim_files[
+        df_filtered_table_sim_files['file_rank'] <= 2
+        ]['orig_table_file'].unique().tolist()
 logger.info(f"Number of files to process: {len(files_to_process)}")
 """
-Number of files to process: `len(files_to_process)`: 214
+Number of files to process: `len(files_to_process)`: 380
 """
 for file_num, file in enumerate(files_to_process):
     logger.info(f"processing ({file_num}/{len(files_to_process)}): {file}")
@@ -715,6 +753,36 @@ for file_num, file in enumerate(files_to_process):
 `/create_dataset` will write dataset file with extracted attributes in files with path `.../data_type=dataset/...csv`
 """
 
+# ## Verify extracted datasets
+"""
+Extracted dataset files may have some errors, so we can run one layer of verification to remove such errors. 
+For verification, we will use `/verify_data` endpoint, which allows to verify (variable, value) pair, given a context. 
+We will focus on verifying the most important attributes in each dataset, such as 'hazardous waste amount', 'amount of emissions', etc. 
+"""
+
+# ### define tasks
+tasks = [
+    bg_async.async_verify_data(
+        doc_name=doc_name,
+        file_pattern='data_type=dataset/**/variable_desc=orig-table/**.csv',
+        var_col='variable',
+        val_col='value',
+        context_col='context',
+        verification_method='lm-verification',
+        verification_type='variable-value',
+        output_data_type='verification',
+        vars_to_verify=[
+            'gender pay gap',
+            '% of female representation on the board',
+            'hazardous waste amount',
+            'amount of emissions to water',
+            'amount of emissions',
+            'amount of energy production',
+        ],
+    )
+]
+verify_dataset_responses = utils.async_utils.run_async_tasks(tasks)
+
 # ### list dataset files
 tasks = [
     bg_sync.async_list_doc_files(
@@ -741,12 +809,12 @@ df_tabular_dataset_files = pd.DataFrame()
 df_tabular_dataset_files['file'] = tabular_dataset_files
 df_tabular_dataset_files['doc_name'] = tabular_dataset_docnames
 
-
 # ## Read structured datasets extracted from table files
 tasks = [
     bg_async.async_read_files(
-        files=df_tabular_dataset_files[df_tabular_dataset_files['doc_name'] == doc_name]['file'].unique().tolist(), # tabular_dataset_files,
-        add_file_path=1,
+        files=df_tabular_dataset_files[df_tabular_dataset_files['doc_name'] == doc_name]['file'].unique().tolist(),
+        # tabular_dataset_files,
+        add_file_path=1,  ## this will add file path in the returned dataframe
     )
     for doc_name in doc_names
 ]
@@ -757,24 +825,118 @@ df_tabular_datasets = pd.concat(df_tabular_datasets)
 ## add doc_name to df_tabular_datasets
 df_tabular_datasets['doc_name'] = [file.split('entity=')[-1].split('/')[0] for file in df_tabular_datasets['file']]
 """
-Number of documents for which tabular datasets are available, `len(df_tabular_datasets['doc_name'].unique())`:
-df_tabular_datasets columns, `df_tabular_datasets.columns`  
+Number of documents for which tabular datasets are available, `len(df_tabular_datasets['doc_name'].unique())`: 48
+df_tabular_datasets columns, `list(df_tabular_datasets.columns)`
+['context', 'file', 'row_num', 'value', 'variable', 'doc_name']  
 """
+## save df_tabular_datasets locally
+df_tabular_datasets.to_csv(f"/tmp/df_tabular_datasets.csv", index=False)
+# df_tabular_datasets.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_tabular_datasets.csv", index=False)
+
+# ### Merge file scores and document info with df_tabular_datasets
+## add pagenum
+df_tabular_datasets['pagenum'] = [
+    file.split('/')[-1].split('pagenum-')[-1].split('_')[0]
+    for file in df_tabular_datasets['file']
+]
+df_filtered_table_sim_files['pagenum'] = [
+    file.split('/')[-1].split('pagenum-')[-1].split('_')[0]
+    for file in df_filtered_table_sim_files['file']
+]
+## add pagenum
+df_tabular_datasets['tablenum'] = [
+    file.split('/')[-1].split('tablenum-')[-1].split('.csv')[0] for file in df_tabular_datasets['file']
+]
+df_filtered_table_sim_files['tablenum'] = [
+    file.split('/')[-1].split('tablenum-')[-1].split('.csv')[0]
+    for file in df_filtered_table_sim_files['orig_table_file']
+]
+## cols to add from df_filtered_table_sim_files
+cols_to_add = [
+    'doc_name', 'pagenum', 'tablenum', 'orig_table_file',
+    'doc_org', 'doc_org_std', 'doc_year', 'num_pages',
+]
+## merge dataframes
+df_tabular_datasets = pd.merge(
+    left=df_tabular_datasets,
+    right=df_filtered_table_sim_files[cols_to_add].drop_duplicates(),
+    on=['doc_name', 'pagenum', 'tablenum'],
+    how='left'
+)
+## save df_tabular_datasets locally
+df_tabular_datasets.to_csv(f"/tmp/df_tabular_datasets.csv", index=False)
+# df_tabular_datasets.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_tabular_datasets.csv", index=False)
+
 
 # ### Get datasets for each KPI
 dataset_dict = {}
 for kpi_num, kpi in enumerate(kpi_attrs.keys()):
     logger.info(f"Filtering datasets for ({kpi_num}/{len(kpi_attrs.keys())}): {kpi}")
-    dataset_dict[kpi] = df_tabular_datasets[df_tabular_datasets['variable'].isin(kpi_attrs[kpi])]
+    df_ = df_tabular_datasets[df_tabular_datasets['variable'].isin(kpi_attrs[kpi])]
+    df_ = df_[df_['variable'].notnull() & df_['value'].notnull() & (df_['value'] != '')].reset_index(drop=True)
+    dataset_kpi = df_.pivot(
+        index=[
+            'doc_org', 'doc_org_std', 'doc_year', 'num_pages', 'doc_name', 'pagenum', 'tablenum',
+            'file', 'orig_table_file', 'context', 'row_num',
+        ],
+        columns=['variable'],
+        values='value'
+    ).reset_index()
+    dataset_dict[kpi] = dataset_kpi
 
-# ### pivot df_tabular_datasets
-df_tabular_datasets = df_tabular_datasets.pivot(
-    index=['file', 'context', 'row_num'],
-    columns=['variable'],
-    values='value'
-).reset_index()
+# ### define non-null columns for each KPI to remove irrelevant rows
 """
-df_tabular_datasets.columns
+We can now define a dictionary of non-null columns for each KPI, so that that the rows where the column is empty, 
+can be dropped. For example, for 'hazardous waste', we are only interested in rows that provide a 'hazardous waste amount', 
+and if this column is null, the rest of the details are largely irrelevant, so we will drop such rows. 
+"""
+kpi_attrs_nonnull = {
+    '% of female representation on the board': ['% of female representation on the board'],
+    'hazardous waste': ['hazardous waste amount'],
+    'gender pay gap': ['gender pay gap'],
+    'GHG Scope 1 emissions': ['amount of emissions'],
+    'GHG Scope 2 emissions': ['amount of emissions'],
+    'GHG Scope 3 emissions': ['amount of emissions'],
+    'Non-renewable energy consumption': ['amount of energy consumption'],
+    'Emissions to water': ['amount of emissions to water'],
+    'Percentage of non-renewable energy production': ['amount of energy production'],
+    'anti-corruption policies': ['summary of anti-corruption policies'],
+    'anti-bribery policies': ['summary of anti-bribery policies'],
+}
+for kpi_num, kpi in enumerate(kpi_attrs.keys()):
+    logger.info(f"Filtering datasets for ({kpi_num}/{len(kpi_attrs.keys())}): {kpi}")
+    for col in kpi_attrs_nonnull[kpi]:
+        df_ = dataset_dict[kpi].copy()
+        df_ = df_[(df_[col].notnull()) & (df_[col] != '') & (df_[col] != 'nan')]
+        df_ = df_.fillna('')
+        dataset_dict[kpi] = df_
+
+# ### check dataset for a few KPIs
+"""
+Available KPIs, `list(dataset_dict.keys())`
+[
+    '% of female representation on the board', 
+    'hazardous waste', 
+    'gender pay gap', 
+    'GHG Scope 1 emissions', 
+    'GHG Scope 2 emissions', 
+    'GHG Scope 3 emissions', 
+    'Non-renewable energy consumption', 
+    'Emissions to water', 
+    'Percentage of non-renewable energy production', 
+    'anti-corruption policies', 
+    'anti-bribery policies'
+]
+Dataset columns for 'hazardous waste', `list(dataset_dict['hazardous waste'].columns)`
+['doc_org', 'doc_org_std', 'doc_year', 'num_pages', 'doc_name', 'pagenum', 'tablenum', 'file', 'orig_table_file', 'context', 'row_num', 'any details of hazardous waste', 'company name', 'date', 'hazardous waste amount', 'unit of measurement']
+dataset_dict['hazardous waste'][['doc_org_std', 'company name', 'date', 'hazardous waste amount', 'unit of measurement', 'any details of hazardous waste', 'context']].head().to_dict('records')
+[
+    {'company name': nan, 'date': nan, 'hazardous waste amount': '30,099', 'unit of measurement': 'tCO2e/year*', 'any details of hazardous waste': nan, 'context': '[["2022; UK", "2022; Total", "2021; UK", "2021; Total", "nan", "nan_2"], ["Scope 1", "tCO2e/year*", "30,099", "302,843", "30,610", "288,438"], ["Scope 2", "tCO2e/year*", "357", "26,977", "2,409", "30,532"], ["Total", "tCO2e/year*", "30,456", "329,820", "33,019", "318,970"], [NaN, NaN, NaN, NaN, NaN, NaN], ["Energy consumption used to calculate emissions", "mWh", "131,148", "1,317,129", "139,912", "1,266,179"]]'}, 
+    {'company name': nan, 'date': nan, 'hazardous waste amount': '357', 'unit of measurement': 'tCO2e/year*', 'any details of hazardous waste': nan, 'context': '[["2022; UK", "2022; Total", "2021; UK", "2021; Total", "nan", "nan_2"], ["Scope 1", "tCO2e/year*", "30,099", "302,843", "30,610", "288,438"], ["Scope 2", "tCO2e/year*", "357", "26,977", "2,409", "30,532"], ["Total", "tCO2e/year*", "30,456", "329,820", "33,019", "318,970"], [NaN, NaN, NaN, NaN, NaN, NaN], ["Energy consumption used to calculate emissions", "mWh", "131,148", "1,317,129", "139,912", "1,266,179"]]'}, 
+    {'company name': 'US', 'date': 'Recordable accidents', 'hazardous waste amount': '190.0', 'unit of measurement': nan, 'any details of hazardous waste': nan, 'context': '[["2022; OSHA", "2022; RIDDOR", "2021; OSHA", "2021; RIDDOR", "nan"], ["US Recordable accidents", 190.0, 74.0, 194.0, 114.0], ["Incident rate", 0.9, 0.17, 1.07, 0.31], ["Canada Recordable accidents", 25.0, 5.0, 29.0, 8.0], ["Incident rate", 1.49, 0.15, 2.12, 0.29], ["UK Recordable accidents", NaN, 18.0, NaN, 21.0], ["Incident rate", NaN, 0.22, NaN, 0.27], [NaN, NaN, NaN, NaN, NaN]]'}, 
+    {'company name': 'US', 'date': 'Incident rate', 'hazardous waste amount': '0.9', 'unit of measurement': nan, 'any details of hazardous waste': nan, 'context': '[["2022; OSHA", "2022; RIDDOR", "2021; OSHA", "2021; RIDDOR", "nan"], ["US Recordable accidents", 190.0, 74.0, 194.0, 114.0], ["Incident rate", 0.9, 0.17, 1.07, 0.31], ["Canada Recordable accidents", 25.0, 5.0, 29.0, 8.0], ["Incident rate", 1.49, 0.15, 2.12, 0.29], ["UK Recordable accidents", NaN, 18.0, NaN, 21.0], ["Incident rate", NaN, 0.22, NaN, 0.27], [NaN, NaN, NaN, NaN, NaN]]'}, 
+    {'company name': 'Canada', 'date': 'Recordable accidents', 'hazardous waste amount': '25.0', 'unit of measurement': nan, 'any details of hazardous waste': nan, 'context': '[["2022; OSHA", "2022; RIDDOR", "2021; OSHA", "2021; RIDDOR", "nan"], ["US Recordable accidents", 190.0, 74.0, 194.0, 114.0], ["Incident rate", 0.9, 0.17, 1.07, 0.31], ["Canada Recordable accidents", 25.0, 5.0, 29.0, 8.0], ["Incident rate", 1.49, 0.15, 2.12, 0.29], ["UK Recordable accidents", NaN, 18.0, NaN, 21.0], ["Incident rate", NaN, 0.22, NaN, 0.27], [NaN, NaN, NaN, NaN, NaN]]'}
+]
 """
 
 # ## filter most relevant text files
