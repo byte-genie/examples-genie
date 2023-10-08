@@ -251,10 +251,6 @@ tasks = [
 ]
 text_segment_files = utils.async_utils.run_async_tasks(tasks)
 text_segment_files = [resp.get_data() for resp in text_segment_files if resp.get_data() is not None]
-missing_text_segment_files = [
-    resp.response['payload']['task_1']['task']['args']['doc_name']
-    for resp in text_segment_files if resp.get_data() is None
-]
 """
 Number of documents with text segment files available, len(text_segment_files): 45
 First 5 text segment files for first document, text_segment_files[0][:5]
@@ -713,8 +709,8 @@ for file_num, file in enumerate(files_to_process):
     ]
     ## run tasks
     attr_extraction_responses = utils.async_utils.run_async_tasks(tasks)
-    # ## wait for 15 sec to avoid rate limits
-    # time.sleep(30)
+    ## wait for 15 sec to avoid rate limits
+    time.sleep(30)
 """
 `/create_dataset` will write dataset file with extracted attributes in files with path `.../data_type=dataset/...csv`
 """
@@ -728,18 +724,57 @@ tasks = [
     for doc_name in doc_names
 ]
 tabular_dataset_files = utils.async_utils.run_async_tasks(tasks)
-tabular_dataset_files = [resp.get_output() for resp in tabular_dataset_files]
-missing_tabular_dataset_files = [
-    resp.get_response_attr('doc_name')
-    for resp in tabular_dataset_files if resp.get_output() is None
-]
+tabular_dataset_files = [resp.get_output() for resp in tabular_dataset_files if resp.get_output() is not None]
 """
-Number of documents for which dataset files are available, `len(dataset_files)`: 
-Dataset files for the first document, `dataset_files[0]`
+Number of documents for which dataset files are available, `len(tabular_dataset_files)`: 48
+Dataset files for the first document, `tabular_dataset_files[0]`
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=dataset/format=csv/variable_desc=orig-table/source=0ce43925c073c45c71d798c13d00d781/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-0.csv', 
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=dataset/format=csv/variable_desc=orig-table/source=2bbdd7d5532b826b7542438b805b1b7a/jason_08_gpgpdf_pagenum-7_table-cells_orig-table_tablenum-0.csv'
 ]
+"""
+# ### Flatten tabular_dataset_files
+tabular_dataset_files = [file for files in tabular_dataset_files for file in files]
+tabular_dataset_files = list(set(tabular_dataset_files))
+tabular_dataset_docnames = [file.split('entity=')[-1].split('/')[0] for file in tabular_dataset_files]
+df_tabular_dataset_files = pd.DataFrame()
+df_tabular_dataset_files['file'] = tabular_dataset_files
+df_tabular_dataset_files['doc_name'] = tabular_dataset_docnames
+
+
+# ## Read structured datasets extracted from table files
+tasks = [
+    bg_async.async_read_files(
+        files=df_tabular_dataset_files[df_tabular_dataset_files['doc_name'] == doc_name]['file'].unique().tolist(), # tabular_dataset_files,
+        add_file_path=1,
+    )
+    for doc_name in doc_names
+]
+df_tabular_datasets = utils.async_utils.run_async_tasks(tasks)
+df_tabular_datasets = [resp.get_output() for resp in df_tabular_datasets]
+df_tabular_datasets = [pd.DataFrame(df) for df in df_tabular_datasets]
+df_tabular_datasets = pd.concat(df_tabular_datasets)
+## add doc_name to df_tabular_datasets
+df_tabular_datasets['doc_name'] = [file.split('entity=')[-1].split('/')[0] for file in df_tabular_datasets['file']]
+"""
+Number of documents for which tabular datasets are available, `len(df_tabular_datasets['doc_name'].unique())`:
+df_tabular_datasets columns, `df_tabular_datasets.columns`  
+"""
+
+# ### Get datasets for each KPI
+dataset_dict = {}
+for kpi_num, kpi in enumerate(kpi_attrs.keys()):
+    logger.info(f"Filtering datasets for ({kpi_num}/{len(kpi_attrs.keys())}): {kpi}")
+    dataset_dict[kpi] = df_tabular_datasets[df_tabular_datasets['variable'].isin(kpi_attrs[kpi])]
+
+# ### pivot df_tabular_datasets
+df_tabular_datasets = df_tabular_datasets.pivot(
+    index=['file', 'context', 'row_num'],
+    columns=['variable'],
+    values='value'
+).reset_index()
+"""
+df_tabular_datasets.columns
 """
 
 # ## filter most relevant text files

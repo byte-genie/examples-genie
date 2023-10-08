@@ -535,6 +535,7 @@ class ByteGenie:
     def read_file(
             self,
             file: str,
+            add_file_path: str = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -546,6 +547,7 @@ class ByteGenie:
         func = 'read_file'
         args = {
             'file': file,
+            'add_file_path': add_file_path,
         }
         payload = self.create_api_payload(
             func=func,
@@ -561,6 +563,7 @@ class ByteGenie:
     def async_read_file(
             self,
             file: str,
+            add_file_path: str = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -572,6 +575,7 @@ class ByteGenie:
         try:
             resp = self.read_file(
                 file=file,
+                add_file_path=add_file_path,
                 timeout=timeout,
             )
             return resp
@@ -581,21 +585,27 @@ class ByteGenie:
 
     def read_files(
             self,
-            doc_name: str,
-            file_pattern: str,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            add_file_path: int = None,
             timeout: int = 15 * 60,
     ):
         """
         Read files
+        :param files: files to read
         :param doc_name: document name
         :param file_pattern: file pattern to match when listing files
+        :param add_file_path: whether to add file path in the returned data
         :param timeout: time out for the api call
         :return:
         """
         func = 'read_files'
         args = {
+            'files': files,
             'doc_name': doc_name,
             'file_pattern': file_pattern,
+            'add_file_path': add_file_path,
         }
         payload = self.create_api_payload(
             func=func,
@@ -610,14 +620,18 @@ class ByteGenie:
     @to_async
     def async_read_files(
             self,
-            doc_name: str,
-            file_pattern: str,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            add_file_path: int = None,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.read_files(
+                files=files,
                 doc_name=doc_name,
                 file_pattern=file_pattern,
+                add_file_path=add_file_path,
                 timeout=timeout,
             )
             return resp
