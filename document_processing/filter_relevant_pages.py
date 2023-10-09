@@ -652,7 +652,7 @@ df_doc_info.head().to_dict('records')
 """
 
 # ### Merge document info onto filtered tabular files
-df_filtered_table_sim_files = pd.merge(
+df_filtered_sim_files = pd.merge(
     left=df_filtered_sim_files,
     right=df_doc_info,
     on=['doc_name'],
@@ -660,7 +660,7 @@ df_filtered_table_sim_files = pd.merge(
 )
 """
 Check `doc_org`, i.e. organisation name that published the documents 
-df_filtered_table_sim_files['doc_org'].unique().tolist()
+df_filtered_sim_files['doc_org'].unique().tolist()
 ['American Express', 'BillerudKorsnäs', 'UPM', 'Air New Zealand', 'American International Group, Inc.', 'Aviva plc', 'CHINA EDUCATION GROUP HOLDINGS LIMITED', 'AIG', 'RAVEN PROPERTY GROUP LIMITED', 'ACCOR', 'Admiral Group plc', 'DEG Deutsche EuroShop', 'Ledlenser', 'Albioma', 'AKER CARBON CAPTURE', 'ABB', '3M', 'Webuild S.p.A.', 'VINCI', 'Allianz Group', 'Arch Capital Group Ltd.', 'Air New Zealand Limited', 'ECOLAB', 'Samsung SDS', 'Bayer', 'WEBUILD', 'Aggreko plc', 'Ashtead Group plc', 'Kier Group plc', 'Adani Ports and Special Economic Zone Limited', 'KIN +CARTA', 'SCGG', 'Lenzing', 'adesso SE', 'Mondi Group', 'ARKEMA', 'Responsible Business Report', 'COMPASS GROUP', 'Aviva', 'WEBUILD S.p.A.', 'THE a2 MILK COMPANY LIMITED', 'Arch Insurance Group Inc.', 'Savills plc']
 Since different documents may state the same company's name somewhat differently, we see small variations in doc_org values, 
 e.g. ('Air New Zealand', 'Air New Zealand Limited'). Such as variations can be standardized to make downstream processing easier.
@@ -670,7 +670,7 @@ e.g. ('Air New Zealand', 'Air New Zealand Limited'). Such as variations can be s
 
 # ### Trigger standardisation
 name_std_resp = bg_async.standardise_names(
-    data=df_filtered_table_sim_files[['doc_org']].drop_duplicates().to_dict('records'),
+    data=df_filtered_sim_files[['doc_org']].drop_duplicates().to_dict('records'),
     text_col='doc_org',
     name_keyword='company name',
 )
@@ -729,9 +729,9 @@ Number of unique standardised company names: `len(df_std_doc_org['std_name'].uni
 As we can see, number of company names have gone down from 43 in the original names to 40 in the standardised names, so we have removed a few duplicates.
 """
 
-# ### merge standardise doc_org into df_filtered_table_sim_files
-df_filtered_table_sim_files = pd.merge(
-    left=df_filtered_table_sim_files,
+# ### merge standardise doc_org into df_filtered_sim_files
+df_filtered_sim_files = pd.merge(
+    left=df_filtered_sim_files,
     right=df_std_doc_org.rename(
         columns={
             'orig_name': 'doc_org',
@@ -742,8 +742,8 @@ df_filtered_table_sim_files = pd.merge(
     how='left'
 )
 """
-Sample of standardised document organisation names in `df_filtered_table_sim_files`
-df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'doc_org_std']].head().to_dict('records')
+Sample of standardised document organisation names in `df_filtered_sim_files`
+df_filtered_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'doc_org_std']].head().to_dict('records')
 [
     {'query': 'hazardous waste', 'score': 0.6973772931528301, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-3_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}, 
     {'query': 'hazardous waste', 'score': 0.690958398363218, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'orig_table_file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=orig-table/source=api-genie/jason_08_gpgpdf_pagenum-5_table-cells_orig-table_tablenum-0.csv', 'doc_org_std': 'American Express'}, 
@@ -753,12 +753,29 @@ df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'd
 ]
 """
 # ### save df_filtered_table_sim_files locally
-df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
-# df_filtered_table_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_table_sim_files.csv", index=False)
+df_filtered_sim_files.to_csv(f"/tmp/df_filtered_sim_files.csv", index=False)
+# df_filtered_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_sim_files.csv", index=False)
 
 
 # ### calc max score by (query, doc_nanme) for each query
-df_filtered_table_sim_files['max_score'] = \
-    df_filtered_table_sim_files.groupby(
-        by=['query', 'doc_name']
-    )['score'].transform(lambda x: np.nanmax(x))
+df_filtered_sim_files['page_rank'] = \
+    df_filtered_sim_files.groupby(
+        by=['doc_org_std', 'query']
+    )['score'].rank('dense', ascending=False)
+
+# ### sort df_filtered_sim_files by company name, query, page_rank
+df_filtered_sim_files = df_filtered_sim_files.sort_values(
+    by=['query', 'page_rank', 'doc_org_std', 'doc_name']
+).reset_index(drop=True)
+"""
+Top ranked pages, 
+df_filtered_sim_files[df_filtered_sim_files['page_rank'] <=2][['query', 'score', 'page_rank', 'doc_org_std', 'doc_name', 'pagenum', 'file']].head().to_dict('records')
+[
+    {'query': '% of female representation on the board', 'score': 0.885834557694716, 'page_rank': 1.0, 'doc_org_std': '3M', 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf', 'pagenum': '0', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_01_3m-company_sustainability-report_2021pdf_pagenum-0_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8688483983019661, 'page_rank': 1.0, 'doc_org_std': 'ABB', 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf', 'pagenum': '94', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_08_abb_sustainability-report_2021pdf_pagenum-94_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8520371452852017, 'page_rank': 1.0, 'doc_org_std': 'ACCOR', 'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 'pagenum': '73', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/1_accor_mrpdf_pagenum-73_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.831945273415326, 'page_rank': 1.0, 'doc_org_std': 'AIG', 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf', 'pagenum': '2', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_09_gpgpdf_pagenum-2_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8651149368646915, 'page_rank': 1.0, 'doc_org_std': 'AKER CARBON CAPTURE', 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf', 'pagenum': '107', 'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_21_aker-carbon-capture_annual-report_2021pdf_pagenum-107_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv'}
+]
+Now that we have the most relevant pages for each query and company, we will read the top 2 pages, and extract the relevant KPIs
+"""
