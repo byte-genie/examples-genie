@@ -639,6 +639,52 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in read_files(): {e}")
 
+    def read_page_data(
+            self,
+            doc_name: str,
+            page_numbers: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Read page data
+        :param doc_name: document name
+        :param page_numbers: page numbers
+        :param timeout: time out for the api call
+        :return:
+        """
+        func = 'read_page_data'
+        args = {
+            'doc_name': doc_name,
+            'page_numbers': page_numbers,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_read_page_data(
+            self,
+            doc_name: str,
+            page_numbers: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.read_page_data(
+                doc_name=doc_name,
+                page_numbers=page_numbers,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in read_page_data(): {e}")
+
     def read_quants(
             self,
             doc_name: str,
@@ -1660,6 +1706,77 @@ class ByteGenie:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in structure_tabular_quants: {e}")
+
+    def structure_page_quants(
+            self,
+            files: list = None,
+            doc_name: str = None,
+            page_numbers: list = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Structure quants contained in tables extracted from documents
+        :param files:
+        :param doc_name:
+        :param page_numbers:
+        :param base_attrs:
+        :param base_attr_names:
+        :param custom_attrs:
+        :param custom_attr_names:
+        :param timeout:
+        :return:
+        """
+        func = 'structure_tabular_quants'
+        args = {
+            'files': files,
+            'doc_name': doc_name,
+            'page_numbers': page_numbers,
+            'base_attrs': base_attrs,
+            'base_attr_names': base_attr_names,
+            'custom_attrs': custom_attrs,
+            'custom_attr_names': custom_attr_names,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_structure_page_quants(
+            self,
+            files: list = None,
+            doc_name: str = None,
+            page_numbers: str = None,
+            base_attrs: list = None,
+            base_attr_names: list = None,
+            custom_attrs: list = None,
+            custom_attr_names: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.structure_page_quants(
+                files=files,
+                doc_name=doc_name,
+                page_numbers=page_numbers,
+                base_attrs=base_attrs,
+                base_attr_names=base_attr_names,
+                custom_attrs=custom_attrs,
+                custom_attr_names=custom_attr_names,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in structure_page_quants: {e}")
 
     def structure_quants_pipeline(
             self,

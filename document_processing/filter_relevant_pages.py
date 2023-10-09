@@ -779,3 +779,69 @@ df_filtered_sim_files[df_filtered_sim_files['page_rank'] <=2][['query', 'score',
 ]
 Now that we have the most relevant pages for each query and company, we will read the top 2 pages, and extract the relevant KPIs
 """
+
+# ### save df_filtered_table_sim_files locally
+df_filtered_sim_files.to_csv(f"/tmp/df_filtered_sim_files.csv", index=False)
+# df_filtered_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_sim_files.csv", index=False)
+
+
+# ## Get page data for most relevant pages
+"""
+To get the full page content content that contains tables as well as page text in a structured format, 
+we will use `/read_page_data` endpoint.
+"""
+
+# ### convert pagenum to int
+df_filtered_sim_files['pagenum'] = [
+    int(p) for p in df_filtered_sim_files['pagenum']
+]
+
+# ### define page reading tasks
+tasks = [
+    bg_async.async_read_page_data(
+        doc_name=doc_name,
+        page_numbers=df_filtered_sim_files[
+            (df_filtered_sim_files['doc_name'] == doc_name) &
+            (df_filtered_sim_files['page_rank'] <= 2)
+            ]['pagenum'].unique().tolist()
+    )
+    for doc_name in doc_names
+]
+
+# ### run tasks
+page_data_responses = utils.async_utils.run_async_tasks(tasks)
+page_data_files = [resp.get_output() for resp in page_data_responses]
+## flatten page_data_files
+page_data_files = [file for files in page_data_files for file in files]
+"""
+Number of documents for which page data is available, `len(page_data_files)`: 
+First 5 page data files, `page_data_files[:5]` 
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-0_page-data.pickle', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-1_page-data.pickle', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-2_page-data.pickle', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-3_page-data.pickle', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-4_page-data.pickle'
+]
+"""
+
+# ## Structure quants from page data files
+"""
+Now that we have the page data files for all the pages of interest, we can extract and structure all the quants 
+from these pages, and finally filter the ones most relevant to the KPIs of interest.
+"""
+
+tasks = [
+    bg_async.async_structure_page_quants(
+        doc_name=doc_name,
+        page_numbers=df_filtered_sim_files[
+            (df_filtered_sim_files['doc_name'] == doc_name) &
+            (df_filtered_sim_files['page_rank'] <= 2)
+            ]['pagenum'].unique().tolist()
+    )
+    for doc_name in doc_names[:1]
+]
+structured_quants_responses = utils.async_utils.run_async_tasks(tasks)
+structured_quants_files = [resp.get_output() for resp in structured_quants_responses]
+
+# ### Read structured quants files
