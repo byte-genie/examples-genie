@@ -1,4 +1,4 @@
-# # Filter company disclosure pages most relevant to KPIs of interest
+# # Filter pages from company disclosures most relevant to KPIs of interest (UNDER DEVELOPMENT)
 """
 In this example, we will identify the most relevant text and table files extracted from a few company disclosures,
 by:
@@ -346,7 +346,7 @@ for task_num, task in enumerate(tasks):
 
 # ## Rank tables by relevance to keyphrases
 """
-Once we have the tables extracted and structured, we can rank them by relevance to the KPIs to filter out the most relevant data.
+Once we have the tables extracted, we can rank them by relevance to the KPIs to filter out the most relevant data.
 """
 
 # ### set attributes to extract
@@ -460,6 +460,11 @@ df_filtered_table_sim_files['doc_name'] = [
     file.split('entity=')[-1].split('/')[0]
     for file in df_filtered_table_sim_files['file']
 ]
+## add page number
+df_filtered_table_sim_files['pagenum'] = [
+    os.path.splitext(file)[0].split('pagenum-')[-1].split('_')[0]
+    for file in df_filtered_table_sim_files['file']
+]
 ## check filtered table similarity files for 1st document, for a specific KPI
 mask = (df_filtered_table_sim_files['doc_name'] == doc_names[0]) & \
        (df_filtered_table_sim_files['query'] == kpis[0])
@@ -525,7 +530,99 @@ df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", inde
 # df_filtered_table_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_table_sim_files.csv", index=False)
 
 
+# ## filter most relevant text files
+"""
+Once, the text segments are scored by similarity to relevant KPIs, we can filter out the most relevant text files
+"""
+
+## create tasks
+tasks = [
+    bg_async.async_filter_similarity_scored_data(
+        doc_name=doc_name,
+        file_pattern='data_type=similarity/**/variable_desc=text-segments/**.csv',
+        filter_what='files',
+        groupby_cols=['query'],
+        max_rows_to_keep=5,
+        filename_sfx='filtered-text',
+    )
+    for doc_name in doc_names
+]
+## run tasks
+filtered_text_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### get filtered text files
+filtered_text_sim_files = [resp.get_output() for resp in filtered_text_responses]
+filtered_text_sim_files = [file for file in filtered_text_sim_files if file is not None]
+"""
+Number of documents with filtered text similarity files, `len(filtered_text_sim_files)`: 49
+First 5 filtered text similarity files, `filtered_text_sim_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf_filtered-text.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf/data_type=similarity/format=csv/variable_desc=filtered-files/source=data_typesimilarityvariable_desctext-segmentscsv/userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf_filtered-text.csv'
+]
+We have one filtered text similarity file for each document that contains the paths to all the most relevant similarity files for that document.
+"""
+
+# ## Read most similar text files
+"""
+Once, we read the filtered text files, it will give us the file paths for text similarity files 
+for each of our KPIs.
+"""
+
+# ### Read filtered text similarity files
+tasks = [
+    bg_sync.async_read_file(
+        file=file
+    )
+    for file in filtered_text_sim_files
+]
+df_filtered_text_sim_files = utils.async_utils.run_async_tasks(tasks)
+df_filtered_text_sim_files = [resp.get_output() for resp in df_filtered_text_sim_files]
+df_filtered_text_sim_files = [pd.DataFrame(df) for df in df_filtered_text_sim_files]
+df_filtered_text_sim_files = pd.concat(df_filtered_text_sim_files)
+## add doc_name to df
+df_filtered_text_sim_files['doc_name'] = [
+    file.split('entity=')[-1].split('/')[0]
+    for file in df_filtered_text_sim_files['file']
+]
+## add pagenum to df
+df_filtered_text_sim_files['pagenum'] = [
+    os.path.splitext(file)[0].split('pagenum-')[-1].split('_')[0]
+    for file in df_filtered_text_sim_files['file']
+]
+"""
+Number of documents in filtered text similarity dataframe, `len(df_filtered_text_sim_files['doc_name'].unique())`: 49
+First 5 similarity files, `df_filtered_text_sim_files['file'].tolist()[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-3_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-2_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-7_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-1_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_08_gpgpdf_pagenum-4_text-blocks_text-segments_embeddings_similarity_query-hazardous-waste.csv'
+]
+As we can see, these files contain the page numbers that are the most relevant for each KPI. 
+"""
+
+# ## Find most relevant pages
+"""
+Now that we have both relevnt table and text files, we can extract the page numbers to identify pages that are most relevant to our KPIs.
+"""
+
+# ### append df_filtered_table_sim_files and df_filtered_text_sim_files
+df_filtered_sim_files = pd.concat([df_filtered_table_sim_files, df_filtered_text_sim_files])
+
+## save df_filtered_sim_files locally
+df_filtered_sim_files.to_csv(f"/tmp/df_filtered_sim_files.csv", index=False)
+# df_filtered_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_sim_files.csv", index=False)
+
 # ## Add document info (meta-data)
+"""
+Since, we may have multiple documents for each company, and we only need the most relevant pages across all company documents, 
+we will now merge the document meta-data onto filtered files, to be able to rank pages by company.
+"""
 
 # ### trigger doc info extraction
 tasks = [
@@ -556,7 +653,7 @@ df_doc_info.head().to_dict('records')
 
 # ### Merge document info onto filtered tabular files
 df_filtered_table_sim_files = pd.merge(
-    left=df_filtered_table_sim_files,
+    left=df_filtered_sim_files,
     right=df_doc_info,
     on=['doc_name'],
     how='left'
@@ -658,3 +755,10 @@ df_filtered_table_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'd
 # ### save df_filtered_table_sim_files locally
 df_filtered_table_sim_files.to_csv(f"/tmp/df_filtered_table_sim_files.csv", index=False)
 # df_filtered_table_sim_files.to_csv(f"~/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/data/df_filtered_table_sim_files.csv", index=False)
+
+
+# ### calc max score by (query, doc_nanme) for each query
+df_filtered_table_sim_files['max_score'] = \
+    df_filtered_table_sim_files.groupby(
+        by=['query', 'doc_name']
+    )['score'].transform(lambda x: np.nanmax(x))
