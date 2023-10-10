@@ -68,12 +68,13 @@ for doc_num, doc_name in enumerate(doc_names):
     ]
     structured_quants_responses_ = utils.async_utils.run_async_tasks(tasks)
     structured_quants_responses = structured_quants_responses + structured_quants_responses_
-    time.sleep(5 * 60)
+    ## wait a little to avoid rate limit errors
+    time.sleep(15)
 structured_quants_files = [resp.get_output() for resp in structured_quants_responses]
 # missing_structured_quants_docnames = [doc_names[file_num] for file_num, file in enumerate(structured_quants_files) if file is None]
 structured_quants_files = [file for file in structured_quants_files if file is not None]
 """
-Number of documents for which structured page quants files are available, `len(structured_quants_files)`: 47
+Number of documents for which structured page quants files are available, `len(structured_quants_files)`: 48
 Structured quants files for first document, structured_quants_files[0]
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-2_page-quants_structured-quant-summary.csv', 
@@ -86,7 +87,7 @@ Structured quants files for first document, structured_quants_files[0]
 structured_quants_files = [file for files in structured_quants_files for file in files]
 logger.info(f"Number of structured page quants files across all documents: {len(structured_quants_files)}")
 """
-Number of structured page quants files across all documents, `len(structured_quants_files)`: 510
+Number of structured page quants files across all documents, `len(structured_quants_files)`: 526
 """
 
 # ### Read structured quants files
