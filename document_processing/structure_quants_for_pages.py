@@ -269,3 +269,33 @@ for kpi_num, kpi in enumerate(kpis):
 ## get ranked quant files
 quants_ranking_files = [resp.get_output() for resp in quants_ranking_responses]
 quants_ranking_files = [file for file in quants_ranking_files if file is not None]
+## flatten quants_ranking_files
+quants_ranking_files = [file for files in quants_ranking_files for file in files]
+## take unique files
+quants_ranking_files = list(set(quants_ranking_files))
+# ## Read ranked quants data
+tasks = [
+    bg_sync.async_read_files(
+        files=quants_ranking_files[:5],
+        add_file_path=1
+    )
+]
+df_quants_ranked = utils.async_utils.run_async_tasks(tasks)
+df_quants_ranked = [resp.get_output() for resp in df_quants_ranked]
+df_quants_ranked = [pd.DataFrame(df) for df in df_quants_ranked]
+df_quants_ranked = pd.concat(df_quants_ranked)
+## get KPI
+df_quants_ranked['kpi'] = [
+    os.path.splitext(file)[0].split('_query-')[-1] for file in df_quants_ranked['file']
+]
+## sort data by rank
+df_quants_ranked = df_quants_ranked.sort_values(['kpi', 'rank'], ascending=False).reset_index(drop=True)
+## ToDo: check some ranked quant datasets
+## ToDo: keep score in df_quants_ranked
+"""
+Columns of df_quants_ranked, `list(df_quants_ranked.columns)`
+A sample of top ranked data (top 2 rows) for each company and query
+df_quants_ranked[df_quants_ranked['rank'] <= 1][['kpi', 'rank', 'company name', 'variable description', 'category', 'variable', 'value', 'unit', 'date', 'pagenum', 'doc_name']].tail().to_dict('records')
+[
+{'kpi': 'anti-bribery-policies', 'rank': 2, 'company name': 'Sunbelt UK', 'variable description': "22% of staff turnover is voluntary, with over half of voluntary turnover arising from people with less than 2 years' experience", 'category': 'Staff Turnover', 'variable': 'Voluntary Turnover', 'value': '22%', 'unit': '', 'date': '', 'pagenum': 6, 'doc_name': 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf'}, {'kpi': 'anti-bribery-policies', 'rank': 1, 'company name': 'Sunbelt US', 'variable description': "Voluntary staff turnover is 18%, with 70% of this turnover arising from people with less than 2 years' service", 'category': 'Staff Turnover', 'variable': 'Voluntary Turnover', 'value': '18%', 'unit': '', 'date': '', 'pagenum': 6, 'doc_name': 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf'}, {'kpi': 'of-female-representation-on-the-board', 'rank': 2, 'company name': '', 'variable description': '', 'category': 'Board Gender Diversity', 'variable': 'Male', 'value': '50%', 'unit': '', 'date': '', 'pagenum': 161, 'doc_name': 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf'}, {'kpi': 'of-female-representation-on-the-board', 'rank': 1, 'company name': '', 'variable description': 'Mike Brierley Karen Green JP Rangaswami Evelyn Bourke Bill Roberts', 'category': 'Board Gender Diversity', 'variable': 'Female', 'value': '50%', 'unit': '', 'date': '', 'pagenum': 161, 'doc_name': 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf'}, {'kpi': 'ghg-scope-3-emissions', 'rank': 1, 'company name': 'Deutsche EuroShop', 'variable description': '100%', 'category': 'Type and number of assets certified', 'variable': '% of portfolio certified OR number of certified assets', 'value': '100%', 'unit': '', 'date': '', 'pagenum': 9, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-01-des-esg-2021-e-spdf'}]
+"""
