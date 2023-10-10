@@ -563,7 +563,7 @@ class ByteGenie:
     def async_read_file(
             self,
             file: str,
-            add_file_path: str = None,
+            add_file_path: int = None,
             timeout: int = 15 * 60,
     ):
         """
