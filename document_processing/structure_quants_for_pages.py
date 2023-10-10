@@ -34,7 +34,75 @@ bg_sync = ByteGenie(
 # ## Set inputs
 
 # ### Set documents
-doc_names = ['userid_stuartcullinan_uploadfilename_jason_08_gpgpdf', 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf', 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf', 'userid_stuartcullinan_uploadfilename_jason_09_srpdf', 'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf', 'userid_stuartcullinan_uploadfilename_anastasia_19_china_east_education_ltd_20211228164502_62371643_enpdf', 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf', 'userid_stuartcullinan_uploadfilename_28_kim_cartapdf', 'userid_stuartcullinan_uploadfilename_karishma-03-lse_rav_2020pdf', 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf', 'userid_stuartcullinan_uploadfilename_karishma-01-des-esg-2021-e-spdf', 'userid_stuartcullinan_uploadfilename_karishma-03-environmental-and-social-report-extracted-from-2020-annual-reportpdf', 'userid_stuartcullinan_uploadfilename_jeon_22_boliden_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_anastasia_5_albioma_urd_20201231_vdef_engpdf', 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf', 'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf', 'userid_stuartcullinan_uploadfilename_jaime_allianz-group_sustainability-reportpdf', 'userid_stuartcullinan_uploadfilename_jason_14_srpdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-annual-financial-resultspdf', 'userid_stuartcullinan_uploadfilename_jeon_27_ecolab_corporate-responsibility-report_2021pdf', 'userid_stuartcullinan_uploadfilename_16_samsung_sdspdf', 'userid_stuartcullinan_uploadfilename_jeon_26_bayer_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_al_9_webuild_ethics_code_1pdf', 'userid_stuartcullinan_uploadfilename_anastasia_4_-2020-aggreko-annual-reportpdf', 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf', 'userid_stuartcullinan_uploadfilename_al_6_kier-2021-ara-finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf', 'userid_stuartcullinan_uploadfilename_4_kim_cartapdfpdf', 'userid_stuartcullinan_uploadfilename_3_cgcpdf', 'userid_stuartcullinan_uploadfilename_jeon_23_lenzing_sustainability-report_2021pdf', 'userid_stuartcullinan_uploadfilename_1_adesso_sepdfpdf', 'userid_stuartcullinan_uploadfilename_jason_08_srpdf', 'userid_stuartcullinan_uploadfilename_jeon_24_mondi_integrated-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf', 'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf', 'userid_stuartcullinan_uploadfilename_13_capita_mrpdf', 'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf', 'userid_stuartcullinan_uploadfilename_5_compass-group_mrpdf', 'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_uk-pay-gap-reportpdf', 'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf', 'userid_stuartcullinan_uploadfilename_al_9_relazione-governance-2021-final_eng-con-tabellepdf', 'userid_stuartcullinan_uploadfilename_jeon_07_a2-milk-company_annual-report_2021pdf', 'userid_stuartcullinan_uploadfilename_jason_14_gpgpdf', 'userid_stuartcullinan_uploadfilename_karishma-04-savills-plc-ar21pdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-greenhouse-gas-inventory-report_finalpdf', 'userid_stuartcullinan_uploadfilename_karishma-13-air-new-zealand-sustainability-report-2020pdf']
+doc_names = [
+    'userid_stuartcullinan_uploadfilename_jason_08_gpgpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_karishma-13-2021-air-new-zealand-gender-pay-reportpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_karishma-13-anti-bribery-and-corruption-policy-august-2021pdf',
+    'userid_stuartcullinan_uploadfilename_jason_09_srpdf',
+    'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf',
+    'userid_stuartcullinan_uploadfilename_anastasia_19_china_east_education_ltd_20211228164502_62371643_enpdf',
+    'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf',
+    'userid_stuartcullinan_uploadfilename_28_kim_cartapdf',
+    'userid_stuartcullinan_uploadfilename_karishma-03-lse_rav_2020pdf',
+    'userid_stuartcullinan_uploadfilename_1_accor_mrpdf',
+    'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-01-des-esg-2021-e-spdf',
+    'userid_stuartcullinan_uploadfilename_karishma-03-environmental-and-social-report-extracted-from-2020-annual-reportpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_22_boliden_annual-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_anastasia_5_albioma_urd_20201231_vdef_engpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf',
+    'userid_stuartcullinan_uploadfilename_al_8_vinci-2021-universal-registration-documentpdf',
+    'userid_stuartcullinan_uploadfilename_jaime_allianz-group_sustainability-reportpdf',
+    'userid_stuartcullinan_uploadfilename_jason_14_srpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-annual-financial-resultspdf',
+    'userid_stuartcullinan_uploadfilename_jeon_27_ecolab_corporate-responsibility-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_16_samsung_sdspdf',
+    'userid_stuartcullinan_uploadfilename_jeon_26_bayer_sustainability-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_al_9_webuild_ethics_code_1pdf',
+    'userid_stuartcullinan_uploadfilename_anastasia_4_-2020-aggreko-annual-reportpdf',
+    'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf',
+    'userid_stuartcullinan_uploadfilename_al_6_kier-2021-ara-finalpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-12-apsez-sustainability-report-fy19pdf',
+    'userid_stuartcullinan_uploadfilename_4_kim_cartapdfpdf', 'userid_stuartcullinan_uploadfilename_3_cgcpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_23_lenzing_sustainability-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_1_adesso_sepdfpdf',
+    'userid_stuartcullinan_uploadfilename_jason_08_srpdf',
+    'userid_stuartcullinan_uploadfilename_jeon_24_mondi_integrated-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf',
+    'userid_stuartcullinan_uploadfilename_12_argo_blockchainpdfpdf',
+    'userid_stuartcullinan_uploadfilename_13_capita_mrpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-12-adani-port-special-economic-zone-ir21pdf',
+    'userid_stuartcullinan_uploadfilename_5_compass-group_mrpdf',
+    'userid_stuartcullinan_uploadfilename_jaime_aviva-plc_uk-pay-gap-reportpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-04-sustainability-highlights-report-2021-19-finalpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-01-des-annualreport-2021-e-spdf',
+    'userid_stuartcullinan_uploadfilename_al_9_relazione-governance-2021-final_eng-con-tabellepdf',
+    'userid_stuartcullinan_uploadfilename_jeon_07_a2-milk-company_annual-report_2021pdf',
+    'userid_stuartcullinan_uploadfilename_jason_14_gpgpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-04-savills-plc-ar21pdf',
+    'userid_stuartcullinan_uploadfilename_karishma-13-air-nz-2022-greenhouse-gas-inventory-report_finalpdf',
+    'userid_stuartcullinan_uploadfilename_karishma-13-air-new-zealand-sustainability-report-2020pdf'
+]
+
+# ### Set KPIs
+kpis = [
+    '% of female representation on the board',
+    'hazardous waste',
+    'gender pay gap',
+    'GHG Scope 1 emissions',
+    'GHG Scope 2 emissions',
+    'GHG Scope 3 emissions',
+    'Non-renewable energy consumption',
+    'Emissions to water',
+    'Percentage of non-renewable energy production',
+    'anti-corruption policies',
+    'anti-bribery policies',
+]
 
 # ### Set filtered page file
 """
@@ -43,11 +111,9 @@ See `document_processing/filter_relevant_pages.py` to see how these pages were f
 filtered_pages_file = 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_df_filtered_sim_filescsv/data_type=unstructured/format=csv/variable_desc=uploaded-document/source=stuartcullinan/df_filtered_sim_filescsv.csv'
 
 # ### Read filtered pages
-df_filtered_pages = bg_sync.read_file(filtered_pages_file).get_output()
+df_filtered_pages = bg_sync.read_file(filtered_pages_file)
+df_filtered_pages = df_filtered_pages.get_output()
 df_filtered_pages = pd.DataFrame(df_filtered_pages)
-
-# ### convert page_rank to int
-df_filtered_pages = []
 
 # ## Structure quants from page data files
 """
@@ -68,8 +134,8 @@ for doc_num, doc_name in enumerate(doc_names):
     ]
     structured_quants_responses_ = utils.async_utils.run_async_tasks(tasks)
     structured_quants_responses = structured_quants_responses + structured_quants_responses_
-    ## wait a little to avoid rate limit errors
-    time.sleep(15)
+    # ## wait a little to avoid rate limit errors
+    # time.sleep(15)
 structured_quants_files = [resp.get_output() for resp in structured_quants_responses]
 # missing_structured_quants_docnames = [doc_names[file_num] for file_num, file in enumerate(structured_quants_files) if file is None]
 structured_quants_files = [file for file in structured_quants_files if file is not None]
@@ -88,6 +154,44 @@ structured_quants_files = [file for files in structured_quants_files for file in
 logger.info(f"Number of structured page quants files across all documents: {len(structured_quants_files)}")
 """
 Number of structured page quants files across all documents, `len(structured_quants_files)`: 526
+"""
+
+# ### Combine document name, page number, and structured quant files in one dataframe
+
+## initalise a data frame
+df_structured_quants_files = pd.DataFrame()
+## store quant files in the df
+df_structured_quants_files['file'] = structured_quants_files
+## add doc_name
+df_structured_quants_files['doc_name'] = [
+    file.split('entity=')[-1].split('/')[0]
+    for file in df_structured_quants_files['file']
+]
+## add page number
+df_structured_quants_files['pagenum'] = [
+    os.path.splitext(file)[0].split('_pagenum-')[-1].split('_')[0]
+    for file in df_structured_quants_files['file']
+]
+## convert pagenum to int
+df_structured_quants_files['pagenum'] = [int(p) for p in df_structured_quants_files['pagenum']]
+## merge df_structured_quants_files with df_filtered_pages
+df_filtered_pages = pd.merge(
+    left=df_filtered_pages,
+    right=df_structured_quants_files.drop_duplicates(),
+    on=['doc_name', 'pagenum'],
+    how='left',
+    suffixes=('_page', '_quants')
+)
+"""
+Now, we have the relevant structured quant files for each document and page number in the same dataframe,
+df_filtered_pages[['query', 'score', 'pagenum', 'doc_name', 'file_page', 'file_quants']].head().to_dict('records')
+[
+    {'query': '% of female representation on the board', 'score': 0.885834557694716, 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_01_3m-company_sustainability-report_2021pdf_pagenum-0_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf_pagenum-0_page-quants_structured-quant-summary.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8688483983019661, 'pagenum': 94, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_08_abb_sustainability-report_2021pdf_pagenum-94_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf_pagenum-94_page-quants_structured-quant-summary.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8520371452852017, 'pagenum': 73, 'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/1_accor_mrpdf_pagenum-73_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_1_accor_mrpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_1_accor_mrpdf_pagenum-73_page-quants_structured-quant-summary.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.831945273415326, 'pagenum': 2, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_gpgpdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jason_09_gpgpdf_pagenum-2_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_09_gpgpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jason_09_gpgpdf_pagenum-2_page-quants_structured-quant-summary.csv'}, 
+    {'query': '% of female representation on the board', 'score': 0.8651149368646915, 'pagenum': 107, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_21_aker-carbon-capture_annual-report_2021pdf_pagenum-107_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf_pagenum-107_page-quants_structured-quant-summary.csv'}
+]
 """
 
 # ### Read structured quants files
@@ -136,3 +240,32 @@ For example, `## tablenum-0` corresponds to the first table on the page,
 `## tablenum-1` corresponds to the second table on the page, 
 and `## text-segments` corresponds to the remaining text segments (passages) on the page.
 """
+
+# ## Rank data rows by relevance to KPIs
+"""
+Now that we have all the quants extracted and structured from the most relevant pages, 
+we can do one more layer of ranking to rank quants by relevance to our KPIs.
+"""
+## identify the relevant quant files for each kpi, so we can rank them according to that kpi
+quants_ranking_responses = []
+for kpi_num, kpi in enumerate(kpis):
+    logger.info(f"Ranking quants for ({kpi_num}/{len(kpis)}): {kpi}")
+    tasks = [
+        bg_async.async_rank_data(
+            attr=kpi,
+            files=df_filtered_pages[
+                (df_filtered_pages['query'] == kpi) &
+                (df_filtered_pages['page_rank'] <= 2)
+                ]['file_quants'].unique().tolist(),
+            method='llm-ranking',
+            non_null_cols=['value'],
+            cols_not_use=['context', 'relevant quote from text', 'pagenum', 'doc_name'],
+        )
+    ]
+    quants_ranking_responses_ = utils.async_utils.run_async_tasks(tasks)
+    quants_ranking_responses = quants_ranking_responses + quants_ranking_responses_
+    ## wait for some time to avoid rate limit errors
+    time.sleep(15 * 60)
+## get ranked quant files
+quants_ranking_files = [resp.get_output() for resp in quants_ranking_responses]
+quants_ranking_files = [file for file in quants_ranking_files if file is not None]

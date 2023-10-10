@@ -1966,10 +1966,16 @@ class ByteGenie:
 
     def rank_data(
             self,
-            doc_name: str,
             attr: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             attr_type: str = None,
+            method: str = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            groupby_cols: list = None,
             frac_rows_to_keep: float = 0.1,
             timeout: int = 15 * 60,
     ):
@@ -1984,10 +1990,16 @@ class ByteGenie:
         """
         func = 'rank_data'
         args = {
+            'attr': attr,
+            'files': files,
             'doc_name': doc_name,
             'file_pattern': file_pattern,
-            'attr': attr,
             'attr_type': attr_type,
+            'method': method,
+            'cols_to_use': cols_to_use,
+            'cols_not_use': cols_not_use,
+            'non_null_cols': non_null_cols,
+            'groupby_cols': groupby_cols,
             'frac_rows_to_keep': frac_rows_to_keep,
         }
         payload = self.create_api_payload(
@@ -2003,19 +2015,31 @@ class ByteGenie:
     @to_async
     def async_rank_data(
             self,
-            doc_name: str,
             attr: str,
+            files: list = None,
+            doc_name: str = None,
             file_pattern: str = None,
             attr_type: str = None,
+            method: str = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            groupby_cols: list = None,
             frac_rows_to_keep: float = 0.1,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.rank_data(
+                attr=attr,
+                files=files,
                 doc_name=doc_name,
                 file_pattern=file_pattern,
-                attr=attr,
                 attr_type=attr_type,
+                method=method,
+                cols_to_use=cols_to_use,
+                cols_not_use=cols_not_use,
+                non_null_cols=non_null_cols,
+                groupby_cols=groupby_cols,
                 frac_rows_to_keep=frac_rows_to_keep,
                 timeout=timeout,
             )

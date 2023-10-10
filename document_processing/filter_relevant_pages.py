@@ -833,6 +833,8 @@ First 5 page data files, `page_data_files[:5]`
 
 ## remove NA with empty strings
 df_filtered_sim_files = df_filtered_sim_files.fillna('')
+## drop unnecessary columns
+df_filtered_sim_files = df_filtered_sim_files.drop(columns=['context'])
 ## write the data locally first
 os.makedirs("/tmp/filtered_files", exist_ok=True)
 df_filtered_sim_files.to_csv(f"/tmp/filtered_files/df_filtered_sim_files.csv", index=False)
