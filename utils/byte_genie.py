@@ -535,7 +535,7 @@ class ByteGenie:
     def read_file(
             self,
             file: str,
-            add_file_path: str = None,
+            add_file_path: int = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -1730,7 +1730,7 @@ class ByteGenie:
         :param timeout:
         :return:
         """
-        func = 'structure_tabular_quants'
+        func = 'structure_page_quants'
         args = {
             'files': files,
             'doc_name': doc_name,
@@ -1755,7 +1755,7 @@ class ByteGenie:
             self,
             files: list = None,
             doc_name: str = None,
-            page_numbers: str = None,
+            page_numbers: list = None,
             base_attrs: list = None,
             base_attr_names: list = None,
             custom_attrs: list = None,
