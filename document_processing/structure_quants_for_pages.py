@@ -264,8 +264,8 @@ for kpi_num, kpi in enumerate(kpis):
     ]
     quants_ranking_responses_ = utils.async_utils.run_async_tasks(tasks)
     quants_ranking_responses = quants_ranking_responses + quants_ranking_responses_
-    ## wait for some time to avoid rate limit errors
-    time.sleep(15 * 60)
+    # ## wait for some time to avoid rate limit errors
+    # time.sleep(2 * 60)
 ## get ranked quant files
 quants_ranking_files = [resp.get_output() for resp in quants_ranking_responses]
 quants_ranking_files = [file for file in quants_ranking_files if file is not None]
@@ -273,10 +273,24 @@ quants_ranking_files = [file for file in quants_ranking_files if file is not Non
 quants_ranking_files = [file for files in quants_ranking_files for file in files]
 ## take unique files
 quants_ranking_files = list(set(quants_ranking_files))
+"""
+Number of ranked quants files, `len(quants_ranking_files)`: 836
+First 5 ranked quants files:
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-116_page-quants_structured-quant-summary_llm-scoring_query-anti-bribery-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf_pagenum-113_page-quants_structured-quant-summary_llm-scoring_query-anti-corruption-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_anastasia_5_albioma_urd_20201231_vdef_engpdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_anastasia_5_albioma_urd_20201231_vdef_engpdf_pagenum-45_page-quants_structured-quant-summary_llm-scoring_query-hazardous-waste.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_jaime_aviva-plc_annual-reportpdf_pagenum-282_page-quants_structured-quant-summary_llm-scoring_query-percentage-of-non-renewable-energy-production.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf_pagenum-113_page-quants_structured-quant-summary_llm-scoring_query-ghg-scope-2-emissions.csv'
+]
+"""
 # ## Read ranked quants data
+"""
+Let's read a few ranked quants files, to understand the data format
+"""
 tasks = [
     bg_sync.async_read_files(
-        files=quants_ranking_files[:5],
+        files=quants_ranking_files[:10],
         add_file_path=1
     )
 ]
@@ -289,13 +303,47 @@ df_quants_ranked['kpi'] = [
     os.path.splitext(file)[0].split('_query-')[-1] for file in df_quants_ranked['file']
 ]
 ## sort data by rank
-df_quants_ranked = df_quants_ranked.sort_values(['kpi', 'rank'], ascending=False).reset_index(drop=True)
-## ToDo: check some ranked quant datasets
-## ToDo: keep score in df_quants_ranked
+df_quants_ranked = df_quants_ranked.sort_values(['kpi', 'score'], ascending=False).reset_index(drop=True)
+## filter over rows with non-empty values
+df_quants_ranked = df_quants_ranked[df_quants_ranked['value'] != ''].reset_index(drop=True)
+
 """
-Columns of df_quants_ranked, `list(df_quants_ranked.columns)`
-A sample of top ranked data (top 2 rows) for each company and query
-df_quants_ranked[df_quants_ranked['rank'] <= 1][['kpi', 'rank', 'company name', 'variable description', 'category', 'variable', 'value', 'unit', 'date', 'pagenum', 'doc_name']].tail().to_dict('records')
+df_quants_ranked columns, `list(df_quants_ranked.columns)`
+['category', 'company name', 'context', 'date', 'doc_name', 'file', 'pagenum', 'relevant quote from text', 'row_id', 'score', 'unit', 'value', 'variable', 'variable description']
+First few rows of df_quants_ranked, `df_quants_ranked[['company name', 'variable description', 'variable', 'value', 'score']].head().to_dict('records')`
 [
-{'kpi': 'anti-bribery-policies', 'rank': 2, 'company name': 'Sunbelt UK', 'variable description': "22% of staff turnover is voluntary, with over half of voluntary turnover arising from people with less than 2 years' experience", 'category': 'Staff Turnover', 'variable': 'Voluntary Turnover', 'value': '22%', 'unit': '', 'date': '', 'pagenum': 6, 'doc_name': 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf'}, {'kpi': 'anti-bribery-policies', 'rank': 1, 'company name': 'Sunbelt US', 'variable description': "Voluntary staff turnover is 18%, with 70% of this turnover arising from people with less than 2 years' service", 'category': 'Staff Turnover', 'variable': 'Voluntary Turnover', 'value': '18%', 'unit': '', 'date': '', 'pagenum': 6, 'doc_name': 'userid_stuartcullinan_uploadfilename_12_ashteadgroup_mrpdf'}, {'kpi': 'of-female-representation-on-the-board', 'rank': 2, 'company name': '', 'variable description': '', 'category': 'Board Gender Diversity', 'variable': 'Male', 'value': '50%', 'unit': '', 'date': '', 'pagenum': 161, 'doc_name': 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf'}, {'kpi': 'of-female-representation-on-the-board', 'rank': 1, 'company name': '', 'variable description': 'Mike Brierley Karen Green JP Rangaswami Evelyn Bourke Bill Roberts', 'category': 'Board Gender Diversity', 'variable': 'Female', 'value': '50%', 'unit': '', 'date': '', 'pagenum': 161, 'doc_name': 'userid_stuartcullinan_uploadfilename_jaime_admiral-group_annual-reportpdf'}, {'kpi': 'ghg-scope-3-emissions', 'rank': 1, 'company name': 'Deutsche EuroShop', 'variable description': '100%', 'category': 'Type and number of assets certified', 'variable': '% of portfolio certified OR number of certified assets', 'value': '100%', 'unit': '', 'date': '', 'pagenum': 9, 'doc_name': 'userid_stuartcullinan_uploadfilename_karishma-01-des-esg-2021-e-spdf'}]
+    {'company name': '', 'variable description': 'The mean gender pay gap is 14.7% for the year 2021.', 'variable': 'MEAN', 'value': '14.7%', 'score': 1.0}, 
+    {'company name': '', 'variable description': 'The median gender pay gap is 16.7% for the year 2021.', 'variable': 'MEDIAN', 'value': '16.7%', 'score': 1.0}, 
+    {'company name': '', 'variable description': '97.5% of women are receiving a bonus.', 'variable': 'WOMEN', 'value': '97.5%', 'score': 0.5}, 
+    {'company name': '', 'variable description': '98.6% of men are receiving a bonus.', 'variable': 'MEN', 'value': '98.6%', 'score': 0.5}, 
+    {'company name': '', 'variable description': 'The mean bonus pay gap is 43.7% for the year 2021.', 'variable': 'MEAN', 'value': '43.7%', 'score': 0.5}
+]
+"""
+
+# ### Add document info to ranked quants from filtered pages dataframe
+df_quants_ranked = pd.merge(
+    left=df_quants_ranked,
+    right=df_filtered_pages[['doc_name', 'doc_org_std', 'doc_year', 'doc_type', 'num_pages']].drop_duplicates(),
+    on=['doc_name'],
+    how='left',
+    suffixes=('_pages', '_quants'),
+)
+
+
+# ### Add rank based on the score
+df_quants_ranked['rank'] = df_quants_ranked.groupby(
+    by=['kpi'],
+    group_keys=False
+)['score'].rank('dense', ascending=False)
+
+"""
+First few rows of df_quants_ranked for 'gender-pay-gap', 
+`df_quants_ranked[df_quants_ranked['kpi'] == 'gender-pay-gap'][['kpi', 'score', 'rank', 'doc_org_std', 'doc_year', 'company name', 'variable description', 'variable', 'value', 'date']].head().to_dict('records')`
+[
+    {'kpi': 'gender-pay-gap', 'score': 1.0, 'rank': 1.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': 'The mean gender pay gap is 14.7% for the year 2021.', 'variable': 'MEAN', 'value': '14.7%', 'date': ''}, 
+    {'kpi': 'gender-pay-gap', 'score': 1.0, 'rank': 1.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': 'The median gender pay gap is 16.7% for the year 2021.', 'variable': 'MEDIAN', 'value': '16.7%', 'date': ''}, 
+    {'kpi': 'gender-pay-gap', 'score': 0.5, 'rank': 2.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': '97.5% of women are receiving a bonus.', 'variable': 'WOMEN', 'value': '97.5%', 'date': ''}, 
+    {'kpi': 'gender-pay-gap', 'score': 0.5, 'rank': 2.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': '98.6% of men are receiving a bonus.', 'variable': 'MEN', 'value': '98.6%', 'date': ''}, 
+    {'kpi': 'gender-pay-gap', 'score': 0.5, 'rank': 2.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': 'The mean bonus pay gap is 43.7% for the year 2021.', 'variable': 'MEAN', 'value': '43.7%', 'date': ''}
+]
 """
