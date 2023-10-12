@@ -347,3 +347,108 @@ First few rows of df_quants_ranked for 'gender-pay-gap',
     {'kpi': 'gender-pay-gap', 'score': 0.5, 'rank': 2.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': 'The mean bonus pay gap is 43.7% for the year 2021.', 'variable': 'MEAN', 'value': '43.7%', 'date': ''}
 ]
 """
+
+# ## Summarise data for qualitative KPIs
+
+# ### Set qualitative KPIs
+qual_kpis = ['anti-corruption policies', 'anti-bribery policies']
+
+# ### Summarise data by qualitative KPIs
+"""
+Since, both KPIs are quite similar, we will summarise each page that is relevant to either KPI, both both KPIs.
+"""
+text_summary_responses = []
+for doc_num, doc_name in enumerate(doc_names):
+    logger.info(f"Summarising pages for ({doc_num}/{len(doc_names)}): {doc_name}")
+    ## get top 2 page numbers for the document that are most relevant to these KPIs
+    page_numbers = df_filtered_pages[
+        (df_filtered_pages['doc_name'] == doc_name) &
+        (df_filtered_pages['query'].isin(qual_kpis)) &
+        (df_filtered_pages['page_rank'] <= 2)
+        ]['pagenum'].unique().tolist()
+    ## if no relevant pages in this document, move to next one
+    if len(page_numbers) <= 0:
+        logger.info(f'No pages in the document, {doc_name}, that are ranked in top 2 for {qual_kpis}')
+        continue
+    ## define tasks
+    tasks = [
+        bg_async.async_summarise_pages(
+            doc_name=doc_name,
+            page_numbers=page_numbers,
+            summary_type='summarise by topics',
+            summary_topics=qual_kpis,
+        )
+    ]
+    ## run tasks
+    text_summary_responses_ = utils.async_utils.run_async_tasks(tasks)
+    text_summary_responses = text_summary_responses + text_summary_responses_
+    ## wait for some time to avoid rate limit errors
+    time.sleep(2 * 60)
+
+# ### Read text summary output
+text_summary_files = [resp.get_output() for resp in text_summary_responses]
+text_summary_files = [file for file in text_summary_files if file is not None]
+"""
+Number of documents with text summary files, `len(text_summary_files)`: 43
+text summary files for first document, `text_summary_files[0]`
+[
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=structured/format=csv/variable_desc=summary-by-topics/source=summarise_text/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-116_page-data_summary-by-topics_topics-anti-corruption-policies_anti-bribery-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=structured/format=csv/variable_desc=summary-by-topics/source=summarise_text/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-41_page-data_summary-by-topics_topics-anti-corruption-policies_anti-bribery-policies.csv', 
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=structured/format=csv/variable_desc=summary-by-topics/source=summarise_text/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-42_page-data_summary-by-topics_topics-anti-corruption-policies_anti-bribery-policies.csv'
+]
+"""
+## flatten text summary files
+text_summary_files = [file for files in text_summary_files for file in files]
+"""
+Total number of text summary files: `len(text_summary_files)`: 103
+"""
+
+# ### Read text summary files
+tasks = [
+    bg_sync.async_read_files(
+        files=text_summary_files,
+        add_file_path=1,
+    )
+]
+df_text_summary = utils.async_utils.run_async_tasks(tasks)
+df_text_summary = [resp.get_output() for resp in df_text_summary]
+df_text_summary = [pd.DataFrame(df) for df in df_text_summary]
+df_text_summary = pd.concat(df_text_summary)
+## drop rows with empty summary
+df_text_summary = df_text_summary[df_text_summary['summary'] != ''].reset_index(drop=True)
+"""
+Columns in df_text_summary_files, `list(df_text_summary_files.columns)`:
+['context', 'file', 'relevant quote from text', 'summary', 'topic']
+"""
+## re-order columns
+df_text_summary = df_text_summary[['topic', 'summary', 'relevant quote from text', 'context', 'file']]
+## add pagenum
+df_text_summary['pagenum'] = [
+    int(file.split('_pagenum-')[-1].split('_')[0])
+    for file in df_text_summary['file']
+]
+## add doc_name
+df_text_summary['doc_name'] = [
+    file.split('entity=')[-1].split('/')[0]
+    for file in df_text_summary['file']
+]
+
+# ### Merge document info onto `df_text_summary_files`
+df_text_summary = pd.merge(
+    left=df_text_summary,
+    right=df_filtered_pages[['doc_org_std', 'doc_org', 'doc_type', 'doc_year', 'pagenum', 'doc_name']].drop_duplicates(),
+    on=['pagenum', 'doc_name'],
+    how='left'
+)
+## drop duplicate summaries for the same company
+df_text_summary = df_text_summary.drop_duplicates(['doc_org_std', 'summary']).reset_index(drop=True)
+"""
+A sample of df_text_summary_files, `df_text_summary[['doc_org_std', 'topic', 'summary', 'relevant quote from text', 'pagenum', 'doc_name']].head().to_dict('records')`
+[
+    {'doc_org_std': 'BillerudKorsnäs', 'topic': 'Anti-corruption Policies', 'summary': 'Policies and management systems', 'relevant quote from text': 'Policies and management systems', 'pagenum': 116, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf'}, 
+    {'doc_org_std': 'BillerudKorsnäs', 'topic': 'Anti-corruption policies', 'summary': "BillerudKorsnäs has a Group-wide Code of Conduct based on international standards regarding human rights, working conditions, environment, and anti-corruption. The Code of Conduct is integrated into the company's policy framework and provides basic guidelines on responsible business practices. The company conducts risk assessments and implements measures to address corruption risks.", 'relevant quote from text': "['Responsible business', 'BillerudKorsnäs seeks to act responsibly...', 'Target 2021 Outcome...', 'Our Code of Conduct is partly based on international standards...', 'Responsible Business Compliance programme...', 'Follow-up of risk assessment and action plans...']", 'pagenum': 41, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf'}, 
+    {'doc_org_std': 'BillerudKorsnäs', 'topic': 'Anti-corruption Policies', 'summary': 'BillerudKorsnäs conducts continuous training initiatives on responsible business with a set training plan. E-learning in anti-corruption was completed by about 130 persons in 2021. Classroom training on responsible business was carried out for more than 220 employees.', 'relevant quote from text': 'Employees and sales agents are trained regularly in line with a set training plan to mitigate higher risks in responsible business areas. In 2021, about 130 persons completed e-learning in anti-corruption. Adapted classroom training on responsible business was carried out for more than 220 employees.', 'pagenum': 42, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf'}, 
+    {'doc_org_std': 'BillerudKorsnäs', 'topic': 'Anti-bribery Policies', 'summary': 'No specific information provided.', 'relevant quote from text': '', 'pagenum': 42, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf'}, 
+    {'doc_org_std': 'UPM', 'topic': 'Anti-corruption Policies', 'summary': 'UPM has a zero-tolerance attitude towards corruption and bribery. It has an Anti-Corruption Code of Conduct and conducts regular risk assessments.', 'relevant quote from text': 'UPM Code of Conduct, UPM Anti-Corruption Rules, due diligence procedures for suppliers and third parties, risk assessments', 'pagenum': 68, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_25_upm_annual-report_2021pdf'}
+]
+"""

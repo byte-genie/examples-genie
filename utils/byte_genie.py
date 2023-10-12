@@ -52,6 +52,14 @@ class ByteGenieResponse:
                             attr_val = resp[attr]
                             return attr_val
 
+    def set_response_attr(self, attr: str, attr_val):
+        try:
+            self.response['response']['task_1'][attr] = attr_val
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in set_response_attr: {e}")
+
+
     def get_status(self):
         """
         Get the status of the task.
@@ -146,7 +154,9 @@ class ByteGenieResponse:
         if self.get_data() is not None:
             return self.get_data()
         else:
-            return self.read_output_data()
+            output_data = self.read_output_data()
+            self.set_response_attr(attr='data', attr_val=output_data)
+            return output_data
 
 
 class ByteGenie:
@@ -1559,6 +1569,82 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    def summarise_pages(
+            self,
+            doc_name: str = None,
+            page_numbers: list = None,
+            summary_type: str = None,
+            summary_topics: list = None,
+            text_col: str = None,
+            groupby_cols: list = None,
+            context_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Summarise pages
+        :param doc_name:
+        :param page_numbers:
+        :param summary_type:
+        :param summary_topics:
+        :param text_col:
+        :param groupby_cols:
+        :param context_cols:
+        :param timeout:
+        :return:
+        """
+        func = 'summarise_pages'
+        args = {
+            'doc_name': doc_name,
+            'page_numbers': page_numbers,
+            'summary_type': summary_type,
+            'summary_topics': summary_topics,
+            'text_col': text_col,
+            'groupby_cols': groupby_cols,
+            'context_cols': context_cols,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_summarise_pages(
+            self,
+            doc_name: str = None,
+            page_numbers: list = None,
+            summary_type: str = None,
+            summary_topics: list = None,
+            text_col: str = None,
+            groupby_cols: list = None,
+            context_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Summarise pages (asynchronous)
+        See `summarise_pages` for available arguments
+        :return:
+        """
+        try:
+            resp = self.summarise_pages(
+                doc_name=doc_name,
+                page_numbers=page_numbers,
+                summary_type=summary_type,
+                summary_topics=summary_topics,
+                text_col=text_col,
+                groupby_cols=groupby_cols,
+                context_cols=context_cols,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in summarise_pages: {e}")
 
     def structure_passage_quants(
             self,
