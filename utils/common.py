@@ -6,7 +6,7 @@ import re
 import os
 import json
 import base64
-
+import unicodedata
 import pandas as pd
 
 
@@ -25,6 +25,23 @@ def convert_file_content_to_bytes(file_path: str):
         data = base64.b64encode(content)
         data_with_prefix = "data:;base64," + data.decode('utf-8')
     return data_with_prefix
+
+
+def slugify(value, allow_unicode=False):
+    """
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 
 def extract_nested_brackets(s, bracket='()'):
@@ -95,3 +112,5 @@ def get_doc_name(file: str):
     else:
         doc_name = file.split('entity=')[-1].split('/')[0]
         return doc_name
+
+
