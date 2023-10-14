@@ -856,5 +856,5 @@ Uploaded data
 # ## Next Steps
 """
 Now that we have the most relevant pages filtered and saved, we can move on to extracting and structuring quantitative info 
-from these pages. See `document_processing/structure_quants_for_pages.py` for such an example. 
+from these pages. See `document_processing/extract_and_filter_quants_from_pages.py` for such an example. 
 """
