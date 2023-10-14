@@ -204,7 +204,7 @@ and will give us all the quants available on a page in a structured from.
 tasks = [
     bg_sync.async_read_file(
         file=file,
-        add_file_path=1,
+        add_file=1,
     )
     for file in structured_quants_files[:5]
 ]
@@ -275,7 +275,7 @@ quants_ranking_files = [file for files in quants_ranking_files for file in files
 quants_ranking_files = list(set(quants_ranking_files))
 """
 Number of ranked quants files, `len(quants_ranking_files)`: 836
-First 5 ranked quants files:
+First 5 ranked quants files, `quants_ranking_files[:5]`
 [
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_jeon_20_billerudkorsnas_annual-report_2021pdf_pagenum-116_page-quants_structured-quant-summary_llm-scoring_query-anti-bribery-policies.csv', 
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf/data_type=similarity/format=csv/variable_desc=llm-scoring/source=rank_data/userid_stuartcullinan_uploadfilename_al_9_2021-annual-report_compressedpdf_pagenum-113_page-quants_structured-quant-summary_llm-scoring_query-anti-corruption-policies.csv', 
@@ -289,9 +289,9 @@ First 5 ranked quants files:
 Let's read a few ranked quants files, to understand the data format
 """
 tasks = [
-    bg_sync.async_read_files(
+    bg_sync.async_read_quants(
         files=quants_ranking_files[:10],
-        add_file_path=1
+        add_file=1
     )
 ]
 df_quants_ranked = utils.async_utils.run_async_tasks(tasks)
@@ -347,3 +347,25 @@ First few rows of df_quants_ranked for 'gender-pay-gap',
     {'kpi': 'gender-pay-gap', 'score': 0.5, 'rank': 2.0, 'doc_org_std': 'American Express', 'doc_year': '2021', 'company name': '', 'variable description': 'The mean bonus pay gap is 43.7% for the year 2021.', 'variable': 'MEAN', 'value': '43.7%', 'date': ''}
 ]
 """
+
+# ## Rank values by recency
+"""
+Now that we have relevant values extracted and scored, we can further rank these values by recency, 
+to be able to pick the most recent value for each KPI. To do so, we will follow the following steps:
+- combine doc_year and value date;
+- standardise dates;
+- sort data by dates;
+- add a recency rank.
+"""
+
+# ### Combine doc_year and date
+"""
+Some values, especially tabular values, are assigned a date directly to them in the disclosures, 
+e.g. when a company reports its revenues for multiple years in a table for different years in different columns. 
+But some values are reported without mentioning any specific date, 
+in which case the value likely belongs to the document year. 
+Any specific date for the value will be getting picked up in `date` column, 
+and the document year is present in the `doc_year` column. 
+So whenever the `date` is missing, we will set it to `doc_year`
+"""
+mask = df_quants_ranked['date'].unique()

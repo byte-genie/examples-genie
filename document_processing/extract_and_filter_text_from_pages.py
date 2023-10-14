@@ -176,7 +176,7 @@ Total number of text summary files: `len(text_summary_files)`: 103
 tasks = [
     bg_sync.async_read_files(
         files=text_summary_files,
-        add_file_path=1,
+        add_file=1,
     )
 ]
 df_text_summary = utils.async_utils.run_async_tasks(tasks)
@@ -264,7 +264,7 @@ First 5 ranked text files, `text_ranking_files[:5]`
 tasks = [
     bg_sync.async_read_files(
         files=text_ranking_files,
-        add_file_path=1,
+        add_file=1,
     )
 ]
 df_text_ranked = utils.async_utils.run_async_tasks(tasks)

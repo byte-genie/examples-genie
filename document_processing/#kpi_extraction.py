@@ -224,7 +224,7 @@ tasks = [
     bg_async.async_read_files(
         files=df_tabular_dataset_files[df_tabular_dataset_files['doc_name'] == doc_name]['file'].unique().tolist(),
         # tabular_dataset_files,
-        add_file_path=1,  ## this will add file path in the returned dataframe
+        add_file=1,  ## this will add file path in the returned dataframe
     )
     for doc_name in doc_names
 ]
