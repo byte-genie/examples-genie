@@ -54,7 +54,12 @@ class ByteGenieResponse:
 
     def set_response_attr(self, attr: str, attr_val):
         try:
-            self.response['response']['task_1'][attr] = attr_val
+            if isinstance(self.response, dict):
+                if 'response' in self.response.keys():
+                    if isinstance(self.response['response'], dict):
+                        if 'task_1' in self.response['response'].keys():
+                            if isinstance(self.response['response']['task_1'], dict):
+                                self.response['response']['task_1'][attr] = attr_val
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in set_response_attr: {e}")
@@ -155,7 +160,8 @@ class ByteGenieResponse:
             return self.get_data()
         else:
             output_data = self.read_output_data()
-            self.set_response_attr(attr='data', attr_val=output_data)
+            if output_data is not None:
+                self.set_response_attr(attr='data', attr_val=output_data)
             return output_data
 
 
@@ -1156,6 +1162,37 @@ class ByteGenie:
             'text_col': text_col,
             'groupby_cols': groupby_cols,
             'name_keyword': name_keyword,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def standardise_years(
+            self,
+            data: list,
+            time_cols: list,
+            groupby_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Standardise years
+        :param data:
+        :param time_cols:
+        :param groupby_cols:
+        :param timeout:
+        :return:
+        """
+        func = 'standardise_years'
+        args = {
+            'data': data,
+            'time_cols': time_cols,
+            'groupby_cols': groupby_cols,
         }
         payload = self.create_api_payload(
             func=func,

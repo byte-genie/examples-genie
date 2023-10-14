@@ -184,7 +184,7 @@ df_filtered_pages = pd.merge(
 )
 """
 Now, we have the relevant structured quant files for each document and page number in the same dataframe,
-df_filtered_pages[['query', 'score', 'pagenum', 'doc_name', 'file_page', 'file_quants']].head().to_dict('records')
+`df_filtered_pages[['query', 'score', 'pagenum', 'doc_name', 'file_page', 'file_quants']].head().to_dict('records')`
 [
     {'query': '% of female representation on the board', 'score': 0.885834557694716, 'pagenum': 0, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_01_3m-company_sustainability-report_2021pdf_pagenum-0_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jeon_01_3m-company_sustainability-report_2021pdf_pagenum-0_page-quants_structured-quant-summary.csv'}, 
     {'query': '% of female representation on the board', 'score': 0.8688483983019661, 'pagenum': 94, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf', 'file_page': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf/data_type=similarity/format=csv/variable_desc=text-segments/source=layout-genie/jeon_08_abb_sustainability-report_2021pdf_pagenum-94_text-blocks_text-segments_embeddings_similarity_query-of-female-representation-on-the-board.csv', 'file_quants': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf_pagenum-94_page-quants_structured-quant-summary.csv'}, 
@@ -206,7 +206,7 @@ tasks = [
         file=file,
         add_file=1,
     )
-    for file in structured_quants_files[:5]
+    for file in structured_quants_files[:10]
 ]
 df_structured_quants_sample = utils.async_utils.run_async_tasks(tasks)
 df_structured_quants_sample = [resp.get_output() for resp in df_structured_quants_sample]
@@ -216,7 +216,7 @@ df_structured_quants_sample = pd.concat(df_structured_quants_sample)
 df_structured_quants_sample = df_structured_quants_sample[df_structured_quants_sample['value'] != '']
 df_structured_quants_sample = df_structured_quants_sample.reset_index(drop=True)
 """
-Length of df_structured_quants_sample, `len(df_structured_quants_sample)`: 80
+Length of df_structured_quants_sample, `len(df_structured_quants_sample)`: 4293
 Columns of structured quants data, `list(df_structured_quants_sample.columns)`
 ['category', 'company name', 'context', 'date', 'doc_name', 'pagenum', 'relevant quote from text', 'unit', 'value', 'variable', 'variable description']
 Sample of structured quants data
@@ -289,8 +289,8 @@ First 5 ranked quants files, `quants_ranking_files[:5]`
 Let's read a few ranked quants files, to understand the data format
 """
 tasks = [
-    bg_sync.async_read_quants(
-        files=quants_ranking_files[:10],
+    bg_sync.async_read_files(
+        files=quants_ranking_files,
         add_file=1
     )
 ]
@@ -298,6 +298,11 @@ df_quants_ranked = utils.async_utils.run_async_tasks(tasks)
 df_quants_ranked = [resp.get_output() for resp in df_quants_ranked]
 df_quants_ranked = [pd.DataFrame(df) for df in df_quants_ranked]
 df_quants_ranked = pd.concat(df_quants_ranked)
+## keep only relevant cols
+cols = ['row_id', 'company name', 'category', 'value', 'variable', 'unit', 'date', 'variable description',
+        'score', 'relevant quote from text', 'context', 'doc_name', 'file']
+df_quants_ranked = df_quants_ranked[[col for col in df_quants_ranked.columns if col in cols]]
+df_quants_ranked = df_quants_ranked.drop_duplicates().reset_index(drop=True)
 ## get KPI
 df_quants_ranked['kpi'] = [
     os.path.splitext(file)[0].split('_query-')[-1] for file in df_quants_ranked['file']
@@ -306,17 +311,16 @@ df_quants_ranked['kpi'] = [
 df_quants_ranked = df_quants_ranked.sort_values(['kpi', 'score'], ascending=False).reset_index(drop=True)
 ## filter over rows with non-empty values
 df_quants_ranked = df_quants_ranked[df_quants_ranked['value'] != ''].reset_index(drop=True)
-
 """
 df_quants_ranked columns, `list(df_quants_ranked.columns)`
 ['category', 'company name', 'context', 'date', 'doc_name', 'file', 'pagenum', 'relevant quote from text', 'row_id', 'score', 'unit', 'value', 'variable', 'variable description']
-First few rows of df_quants_ranked, `df_quants_ranked[['company name', 'variable description', 'variable', 'value', 'score']].head().to_dict('records')`
+First few rows of df_quants_ranked, `df_quants_ranked[['kpi', 'score', 'company name', 'variable description', 'variable', 'value', 'relevant quote from text']].head().to_dict('records')`
 [
-    {'company name': '', 'variable description': 'The mean gender pay gap is 14.7% for the year 2021.', 'variable': 'MEAN', 'value': '14.7%', 'score': 1.0}, 
-    {'company name': '', 'variable description': 'The median gender pay gap is 16.7% for the year 2021.', 'variable': 'MEDIAN', 'value': '16.7%', 'score': 1.0}, 
-    {'company name': '', 'variable description': '97.5% of women are receiving a bonus.', 'variable': 'WOMEN', 'value': '97.5%', 'score': 0.5}, 
-    {'company name': '', 'variable description': '98.6% of men are receiving a bonus.', 'variable': 'MEN', 'value': '98.6%', 'score': 0.5}, 
-    {'company name': '', 'variable description': 'The mean bonus pay gap is 43.7% for the year 2021.', 'variable': 'MEAN', 'value': '43.7%', 'score': 0.5}
+    {'kpi': 'percentage-of-non-renewable-energy-production', 'score': '', 'company name': 'Mondi', 'variable description': "Nine of Mondi's 13 pulp and paper mills fall under the EU Emissions Trading Scheme (EU ETS)...", 'variable': 'GHG regulatory changes', 'value': '25-65', 'relevant quote from text': '5. GHG regulatory changes (net impact), Timeframe: Medium-term'}, 
+    {'kpi': 'percentage-of-non-renewable-energy-production', 'score': 1.0, 'company name': '', 'variable description': 'RusHydro supplies at least 25% of the electricity consumed at the Noginsk warehouse, resulting in a significant positive impact on net carbon emissions.', 'variable': '', 'value': 'at least 25%', 'relevant quote from text': 'Hydro Electricity-Noginsk, Moscow'}, 
+    {'kpi': 'percentage-of-non-renewable-energy-production', 'score': 1.0, 'company name': '', 'variable description': '', 'variable': 'Intensity ratio, tonnes COe / m²', 'value': '0.056', 'relevant quote from text': 'GHG emissions Scope 1 and 2'}, 
+    {'kpi': 'percentage-of-non-renewable-energy-production', 'score': 1.0, 'company name': '', 'variable description': '', 'variable': 'Intensity ratio, tonnes COe / m²', 'value': '0.042', 'relevant quote from text': 'GHG emissions Scope 1 and 2'}, 
+    {'kpi': 'percentage-of-non-renewable-energy-production', 'score': 1.0, 'company name': '', 'variable description': '', 'variable': 'Intensity ratio, tonnes COe / m²', 'value': '0.033', 'relevant quote from text': 'GHG emissions Scope 1 and 2'}
 ]
 """
 
@@ -331,6 +335,10 @@ df_quants_ranked = pd.merge(
 
 
 # ### Add rank based on the score
+
+## convert score to float
+df_quants_ranked.loc[df_quants_ranked['score'] == '', 'score'] = np.nan
+## calculate rank
 df_quants_ranked['rank'] = df_quants_ranked.groupby(
     by=['kpi'],
     group_keys=False
@@ -355,7 +363,7 @@ to be able to pick the most recent value for each KPI. To do so, we will follow 
 - combine doc_year and value date;
 - standardise dates;
 - sort data by dates;
-- add a recency rank.
+- add a recency rank, grouping data by company and KPI.
 """
 
 # ### Combine doc_year and date
@@ -368,4 +376,39 @@ Any specific date for the value will be getting picked up in `date` column,
 and the document year is present in the `doc_year` column. 
 So whenever the `date` is missing, we will set it to `doc_year`
 """
-mask = df_quants_ranked['date'].unique()
+mask = df_quants_ranked['date'].isin([''])
+df_quants_ranked.loc[mask, 'date'] = df_quants_ranked.loc[mask, 'doc_year']
+
+# ### Extract standardised 4-digit years from dates
+date_std_resp = bg_async.standardise_years(
+    data=df_quants_ranked[['date', 'doc_year']].drop_duplicates().to_dict('records'),
+    time_cols=['date', 'doc_year'],
+)
+df_date_std = date_std_resp.get_output()
+df_date_std = pd.DataFrame(df_date_std)
+
+## Merge standardised dates onto ranked quants data
+df_quants_ranked = pd.merge(
+    left=df_quants_ranked,
+    right=df_date_std[['date', 'doc_year', 'std_year']].drop_duplicates(),
+    on=['date', 'doc_year'],
+    how='left',
+    suffixes=('', '_std')
+)
+
+# ### Sort data by standardised year
+df_quants_ranked = df_quants_ranked.sort_values(
+    by=['kpi', 'rank', 'std_year'],
+    ascending=[True, True, False]
+).reset_index(drop=True)
+"""
+A sample of sorted data
+`df_quants_ranked[['kpi', 'score', 'doc_org_std', 'variable description', 'variable', 'value', 'unit', 'std_year', 'relevant quote from text']].head().to_dict('records')`
+[
+    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'Disclosure of business principle guidelines, anti-corruption policy, and fair competition policy on the website Disclosure of the status of regular training for compliance and anti-corruption Sharing compliance terms, cases, and countermeasures through Compliance Management System(CPMS) Conducted regular audits on corruption and compliance Initiation of Declaration of Compliance', 'variable': 'Business Ethics', 'value': 'Bribery & Corruption Policy Bribery & Corruption Programs Business Ethics Programs', 'unit': '', 'std_year': '2022', 'relevant quote from text': "[Areas of, Areas of_2, Improvements Made, ['Business Ethics', 'Bribery & Corruption Policy Bribery & Corruption Programs Business Ethics Programs', 'Disclosure of business principle guidelines, anti-corruption policy, and fair competition policy on the website Disclosure of the status of regular training for compliance and anti-corruption Sharing compliance terms, cases, and countermeasures through Compliance Management System(CPMS) Conducted regular audits on corruption and compliance Initiation of Declaration of Compliance']]"}, 
+    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'Operation of 24/7 whistle-blowing channel on the website in the languages of major countries where business is conducted Disclosure of whistle-blowing process Disclosure of the number of reports received through whistle-blowing channels and compliance/corruption guidelines violation cases', 'variable': 'Business Ethics', 'value': 'Whistleblower Programs', 'unit': '', 'std_year': '2022', 'relevant quote from text': "[Areas of, Areas of_2, Improvements Made, ['Business Ethics', 'Whistleblower Programs', 'Operation of 24/7 whistle-blowing channel on the website in the languages of major countries where business is conducted Disclosure of whistle-blowing process Disclosure of the number of reports received through whistle-blowing channels and compliance/corruption guidelines violation cases']]"}, 
+    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'ECOLAB', 'variable description': '6 anti-corruption specific audits completed in 2021', 'variable': 'Anti-corruption Specific Audits', 'value': '6', 'unit': '', 'std_year': '2021', 'relevant quote from text': ''}, 
+    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'In 2021, 25,320 employees participated in ethics management trainings.', 'variable': 'Ethics Management Trainings', 'value': '25,320', 'unit': '', 'std_year': '2021', 'relevant quote from text': 'Improved Employee Awareness on Ethics Through the Code of Conduct Guidelines, Samsung SDS discloses the regulation violation cases of suppliers, public funds and assets, working discipline, and information leaks. The company conducts promotional activities and provides ethics management trainings on a regular basis for employees. In 2021, 25,320 employees participated in the training.'}, 
+    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'American Express', 'variable description': 'Operations assessed for risks related to corruption', 'variable': 'GRI 205', 'value': '205-1', 'unit': '', 'std_year': '2021', 'relevant quote from text': '2020-2021 ESG Report: Business Ethics pages 70-72'}
+]
+"""
