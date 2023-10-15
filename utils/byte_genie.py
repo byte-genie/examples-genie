@@ -2705,6 +2705,57 @@ class ByteGenie:
         )
         return resp
 
+    def classify_text(
+            self,
+            text: str,
+            labels: list = None,
+            multi_class: int = 0,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Classify text into a set of labels
+        :param text:
+        :param lables:
+        :param multi_class:
+        :param timeout:
+        :return:
+        """
+        func = 'classify_text'
+        args = {
+            'text': text,
+            'labels': labels,
+            'multi_class': multi_class,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_classify_text(
+            self,
+            text: str,
+            labels: list = None,
+            multi_class: int = 0,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.classify_text(
+                text=text,
+                labels=labels,
+                multi_class=multi_class,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                print(f"Error in classify_text(): {e}")
+
 
 
 

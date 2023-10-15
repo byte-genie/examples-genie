@@ -34,7 +34,7 @@ bg_async = ByteGenie(
 
 # ### init byte-genie in sync mode (tasks will run in the foreground)
 bg_sync = ByteGenie(
-    secrets_file='secrets_mcp.json',
+    secrets_file='secrets.json',
     task_mode='sync',
     overwrite=0,
     verbose=1,
@@ -512,6 +512,23 @@ A sample of sorted data
 ]
 """
 
+# ## Standardise entity name
+"""
+Since the quantity names for the estimated KPI might show some variation, 
+we can standardise these names by classifying them into one of our KPIs 
+"""
+
+tasks = [
+    bg_async.async_classify_text(
+        text=text,
+        labels=kpis,
+        multi_class=0
+    )
+    for text in df_estimated_kpi['quantity name'].unique().tolist()
+]
+df_name_std = utils.async_utils.run_async_tasks(tasks)
+df_name_std = [pd.DataFrame(df) for df in df_name_std]
+df_name_std = pd.concat(df_name_std)
 
 # ## Save ranked data to the cloud
 
