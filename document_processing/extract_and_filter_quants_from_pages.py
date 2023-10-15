@@ -1290,3 +1290,10 @@ df_kpi = df_quants_ranked[kpi_mask & score_mask & var_mask].groupby(
   'relevant quote from text': "['2', 'Heating (district heating)', 'kWh', '1,203,253', '327', '359,773', '98', '348,685'], ['2-3', 'Total', '-', '-', '-', '7,470,352', '2,093', '4,130,624']"}
   ]
 """
+
+# ## Next steps
+"""
+Here, we have seen one example of filtering quantitative info relevant to KPIs of interest. 
+However, the relevant quants can be filtered in other ways. 
+Another example can be found in `document_processing/extract_quants_and_estimate_kpis.py` 
+"""

@@ -1,4 +1,4 @@
-# # Filter pages from company disclosures most relevant to KPIs of interest (UNDER DEVELOPMENT)
+# # Filter pages from company disclosures most relevant to KPIs of interest
 """
 In this example, we will identify the most relevant text and table files extracted from a few company disclosures,
 by:
@@ -746,7 +746,6 @@ df_filtered_sim_files = pd.merge(
 ## fill NA std_name values with orig_name
 mask = df_filtered_sim_files['doc_org_std'].isnull()
 df_filtered_sim_files.loc[mask, 'doc_org_std'] = df_filtered_sim_files.loc[mask, 'doc_org']
-
 """
 Sample of standardised document organisation names in `df_filtered_sim_files`
 df_filtered_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'doc_org_std']].head().to_dict('records')
