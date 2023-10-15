@@ -2585,30 +2585,45 @@ class ByteGenie:
 
     def estimate_values(
             self,
-            text_data: list,
+            metrics_to_estimate: list,
+            attrs_to_estimate: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
             cols_to_use: list = None,
-            metrics_to_estimate: list = None,
+            cols_not_use: list = None,
             groupby_cols: list = None,
             context_cols: list = None,
+            non_null_cols: list = None,
             timeout: int = 15 * 60,
     ):
         """
         Estimate values for a set of metrics
-        :param text_data:
-        :param cols_to_use:
         :param metrics_to_estimate:
+        :param attrs_to_estimate:
+        :param files:
+        :param doc_name:
+        :param file_pattern:
+        :param cols_to_use:
+        :param cols_not_use:
         :param groupby_cols:
         :param context_cols:
+        :param non_null_cols:
         :param timeout:
         :return:
         """
         func = 'estimate_values'
         args = {
-            'text_data': text_data,
-            'cols_to_use': cols_to_use,
             'metrics_to_estimate': metrics_to_estimate,
+            'attrs_to_estimate': attrs_to_estimate,
+            'files': files,
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'cols_to_use': cols_to_use,
+            'cols_not_use': cols_not_use,
             'groupby_cols': groupby_cols,
             'context_cols': context_cols,
+            'non_null_cols': non_null_cols,
         }
         payload = self.create_api_payload(
             func=func,
@@ -2623,20 +2638,30 @@ class ByteGenie:
     @to_async
     def async_estimate_values(
             self,
-            text_data: list,
+            metrics_to_estimate: list,
+            attrs_to_estimate: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
             cols_to_use: list = None,
-            metrics_to_estimate: list = None,
+            cols_not_use: list = None,
             groupby_cols: list = None,
             context_cols: list = None,
+            non_null_cols: list = None,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.estimate_values(
-                text_data=text_data,
-                cols_to_use=cols_to_use,
                 metrics_to_estimate=metrics_to_estimate,
+                attrs_to_estimate=attrs_to_estimate,
+                files=files,
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                cols_to_use=cols_to_use,
+                cols_not_use=cols_not_use,
                 groupby_cols=groupby_cols,
                 context_cols=context_cols,
+                non_null_cols=non_null_cols,
                 timeout=timeout,
             )
             return resp
