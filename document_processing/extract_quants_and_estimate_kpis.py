@@ -1,4 +1,13 @@
 # # Extract quants from pages, and estimate KPI values
+"""
+In this example, we will use previously filtered document pages (see `document_processing/filter_relevant_pages.py`)
+to estimate values for our KPIs of interest. We will do so in the following steps:
+- Extract and structure all quant metrics from filtered pages;
+- Estimate values for specific KPIs, using structured quant data as input;
+- Merge document meta-data onto estimate KPI values;
+- Standardise company names and dates;
+- Sort values by standardised company names and dates.
+"""
 
 
 # ## import necessary libraries
@@ -109,6 +118,13 @@ quant_kpis = [
     kpi for kpi in kpis
     if kpi not in ['anti-corruption policies', 'anti-bribery policies']
 ]
+"""
+Quant KPIs, `quant_kpis`
+['% of female representation on the board', 'hazardous waste', 'gender pay gap', 'GHG Scope 1 emissions',
+ 'GHG Scope 2 emissions', 'GHG Scope 3 emissions', 'Non-renewable energy consumption', 'Emissions to water',
+ 'Percentage of non-renewable energy production'
+]
+"""
 
 # ### Set page rank threshold to ignore pages below that rank
 page_rank_threshold = 2
@@ -240,7 +256,6 @@ Sample of structured quants data
 As we can see, the structured quants data contains a structured dataset of extracted quants, as well as a `relevant quote from text` column, and a `context` column.  
 `context` column contains the details of the page, from which the data was extracted, and 
 `relevant quote from text` column contains the most relevant part of the context relevant to the extract value in that row. 
-
 If we look into one of the context in more details, `df_structured_quants_sample['context'].tolist()[0]`
 '## tablenum-0\n\n[\'GENDER; MEAN\', \'GENDER; MEDIAN\', \'% W/M; WOMEN\', \'% W/M; MEN\', [\'14.7%\', \'16.7%\', \'55%\', \'45%\']]\n---\n## tablenum-1\n\n[\'% RECEIVING; WOMEN\', \'% RECEIVING; MEN\', \'nan\', \'BONUS; MEAN\', \'BONUS; MEDIAN\', [\'97.5%\', \'98.6%\', nan, \'43.7%\', \'45.2%\']]\n---\n## tablenum-2\n\n[\'WOMEN\', \'UPPER\', \'UPPER_2\', \'UPPER_3\', \'MEN\', [\'45%\', \'45%\', nan, nan, \'55%\'], [\'UPPER\', \'UPPER\', \'UPPER\', \'UPPER\', \'UPPER\'], [\'51%\', nan, nan, nan, \'49%\'], [\'LOWER\', \'LOWER\', \'LOWER\', \'LOWER\', \'LOWER\'], [\'56%\', nan, nan, nan, \'44%\'], [\'LOWER\', \'LOWER\', \'LOWER\', \'LOWER\', \'LOWER\'], [\'63%\', nan, nan, nan, \'37%\']]\n---\n## text-segments\n\n[\'Our 2021 Gender Pay Gap Results\', \'Our gender pay gap has seen a 1.7 percentage point improvement year-on-year, moving to 14.7% from a mean hourly pay gap of 16.4% in 2020. Our median hourly is 16.7% compared to 18.1% in 2020. pay gap The composition of our workforce remains the primary reason for our 2021 gender pay gap, as we continue to have more women in our more junior roles (lower quartiles) and more men in our senior leadership roles (upper quartiles).\', "We see this impact follow through to our bonus gap figures where, under the company\'s annual incentive programme, senior positions have a bigger proportion of their total compensation made up of performance-driven pay. The bonus pay gap reflects the higher proportion of men in senior positions than women, meaning they have higher potential bonus pay. Similarly, there is a greater proportion of men than women in roles eligible for sales incentive programmes.", \'% OF EMPLOYEES IN EACH PAY QUARTILE\', \'4\', \'HOURLY GENDER PAY GAP\', \'% RECEIVING A BONUS\', \'MEAN\', \'WOMEN\', \'WOMEN\', \'MEDIAN\', \'MEN\', \'UPPER MIDDLE\', \'LOWER MIDDLE\', \'% W/M IN THE WORKFORCE\', \'BONUS PAY GAP\', \'MEN\', \'WOMEN\', \'MEAN\', \'MEN\', \'MEDIAN\', \'DEFINITIONS AND METHODOLOGY\', \'The Gender Pay Gap and Equal Pay The gender pay gap is the difference between the average hourly pay for men and hourly pay for women across the company without comparing role, band, or seniority. Equal pay deals with the pay received by men and women who carry out the same or similar jobs - American Express has 100% equal pay globally and the gender pay gap cannot be interpreted to mean that any individual is paid more or less than colleague in the similar role. a same or\', "The Bonus Pay Gap The bonus pay gap is the difference in the average bonuses given to men and women over a 12-month period. It is influenced by the composition of a company\'s workforce in that more senior positions attract the possibility of higher bonus payments which represent a bigger proportion of the total pay an individual receives.", \'Calculating the Mean and Median The mean is determined by adding together the hourly pay rate or annual bonus amounts of all colleagues and then dividing by the number of colleagues. The median is the mid-point, or the amount paid to the individual in the middle of the list if colleagues are listed in ascending order of hourly pay or bonus.\']\n---\n'
 We can see that a context has different sections, like `## tablenum-0`, `## tablenum-1`, `## text-segments`, etc. 
@@ -296,8 +311,8 @@ for doc_num, doc_name in enumerate(doc_names):
     ## run tasks
     value_estimation_responses_ = utils.async_utils.run_async_tasks(tasks)
     value_estimation_responses = value_estimation_responses + value_estimation_responses_
-    ## wait for 30 sec for each file to avoid rate limits
-    time.sleep(len(quant_files) * 15)
+    # ## wait for 30 sec for each file to avoid rate limits
+    # time.sleep(len(quant_files) * 15)
 
 # ### Get estimated value files
 value_estimation_files = [resp.get_output() for resp in value_estimation_responses]
@@ -337,7 +352,6 @@ df_estimated_kpi = df_estimated_kpi[cols_to_keep]
 Number of rows in df_estimated_kpi, `len(df_estimated_kpi)`: 1584
 Columns of df_estimated_kpi, `list(df_estimated_kpi.columns)`
 ['company name', 'quantity description', 'quantity name', 'quantitative value', 'unit or currency of value', 'date', 'context', 'file']
-
 First few rows of df_estimated_kpi, `df_estimated_kpi.head().to_dict('records')`
 [{'company name': 'American Express',
   'quantity description': '50:50 gender balance at senior level by 2024, nearly equal gender representation at first level senior leadership roles',
@@ -365,6 +379,7 @@ First few rows of df_estimated_kpi, `df_estimated_kpi.head().to_dict('records')`
   'file': 'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=estimation/format=csv/variable_desc=structured-quant-summary/source=estimate_values/userid_stuartcullinan_uploadfilename_jason_08_gpgpdf_pagenum-7_page-quants_structured-quant-summary_estimated-values_metrics-gender-pay-gap.csv'}
 ]
 """
+
 # ### Filter rows with non-empty values
 df_estimated_kpi = df_estimated_kpi[df_estimated_kpi['quantitative value'] != ''].reset_index(drop=True)
 ## add pagenum
@@ -533,14 +548,13 @@ Check that saved KPI data has the same number of rows as the data before saving,
 
 # ## Check estimated KPI data
 
-# ### Re-arrange columns
+# ### set columns to print
 cols_to_print = [
     'doc_org_std', 'company name',
     'quantity description', 'quantity name', 'quantitative value',
     'std_year', 'unit or currency of value',
     'pagenum', 'doc_name'
 ]
-
 """
 Sample of df_estimated_kpi, `df_estimated_kpi[cols_to_print].head(50).to_dict('records')`
 [{'doc_org_std': 'ABB', 'company name': 'Sweden', 'quantity description': 'Women in Board (percentage)',

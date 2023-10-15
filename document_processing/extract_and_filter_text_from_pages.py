@@ -1,5 +1,13 @@
-# # Structure quants from document pages
-
+# # Summarise text from document pages
+"""
+In this example, we will use previously filtered document pages (see `document_processing/filter_relevant_pages.py`)
+to summarise page text by KPIs of interest. We will do so in the following steps:
+- Summarise text from filtered pages;
+- Score summarised text by relevance to KPIs;
+- Merge document meta-data onto estimate KPI values;
+- Standardise company names;
+- Sort values by standardised company names, and score.
+"""
 
 # ## import necessary libraries
 
