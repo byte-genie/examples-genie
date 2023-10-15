@@ -25,7 +25,7 @@ from utils.byte_genie import ByteGenie
 
 # ### init byte-genie in async mode (tasks will run in the background)
 bg_async = ByteGenie(
-    secrets_file='secrets_mcp.json',
+    secrets_file='secrets.json',
     task_mode='async',
     overwrite=0,
     verbose=1,
