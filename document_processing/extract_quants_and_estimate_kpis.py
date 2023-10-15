@@ -455,6 +455,9 @@ date_std_resp = bg_async.standardise_years(
 )
 df_date_std = date_std_resp.get_output()
 df_date_std = pd.DataFrame(df_date_std)
+## set empty std_year to doc_year
+mask = (df_date_std['std_year'] == '') & (df_date_std['doc_year'] != '')
+df_date_std.loc[mask, 'std_year'] = df_date_std.loc[mask, 'doc_year']
 
 ## Merge standardised dates onto ranked quants data
 df_estimated_kpi = pd.merge(
@@ -467,20 +470,33 @@ df_estimated_kpi = pd.merge(
 
 # ### Sort data by standardised year
 df_estimated_kpi = df_estimated_kpi.sort_values(
-    by=['kpi', 'rank', 'std_year'],
-    ascending=[True, True, False]
+    by=['doc_org_std', 'std_year'],
+    ascending=[True, False]
 ).reset_index(drop=True)
 """
 A sample of sorted data
-`df_estimated_kpi[['kpi', 'score', 'doc_org_std', 'variable description', 'variable', 'value', 'unit', 'std_year', 'relevant quote from text']].head().to_dict('records')`
-[
-    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'Disclosure of business principle guidelines, anti-corruption policy, and fair competition policy on the website Disclosure of the status of regular training for compliance and anti-corruption Sharing compliance terms, cases, and countermeasures through Compliance Management System(CPMS) Conducted regular audits on corruption and compliance Initiation of Declaration of Compliance', 'variable': 'Business Ethics', 'value': 'Bribery & Corruption Policy Bribery & Corruption Programs Business Ethics Programs', 'unit': '', 'std_year': '2022', 'relevant quote from text': "[Areas of, Areas of_2, Improvements Made, ['Business Ethics', 'Bribery & Corruption Policy Bribery & Corruption Programs Business Ethics Programs', 'Disclosure of business principle guidelines, anti-corruption policy, and fair competition policy on the website Disclosure of the status of regular training for compliance and anti-corruption Sharing compliance terms, cases, and countermeasures through Compliance Management System(CPMS) Conducted regular audits on corruption and compliance Initiation of Declaration of Compliance']]"}, 
-    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'Operation of 24/7 whistle-blowing channel on the website in the languages of major countries where business is conducted Disclosure of whistle-blowing process Disclosure of the number of reports received through whistle-blowing channels and compliance/corruption guidelines violation cases', 'variable': 'Business Ethics', 'value': 'Whistleblower Programs', 'unit': '', 'std_year': '2022', 'relevant quote from text': "[Areas of, Areas of_2, Improvements Made, ['Business Ethics', 'Whistleblower Programs', 'Operation of 24/7 whistle-blowing channel on the website in the languages of major countries where business is conducted Disclosure of whistle-blowing process Disclosure of the number of reports received through whistle-blowing channels and compliance/corruption guidelines violation cases']]"}, 
-    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'ECOLAB', 'variable description': '6 anti-corruption specific audits completed in 2021', 'variable': 'Anti-corruption Specific Audits', 'value': '6', 'unit': '', 'std_year': '2021', 'relevant quote from text': ''}, 
-    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'Samsung SDS', 'variable description': 'In 2021, 25,320 employees participated in ethics management trainings.', 'variable': 'Ethics Management Trainings', 'value': '25,320', 'unit': '', 'std_year': '2021', 'relevant quote from text': 'Improved Employee Awareness on Ethics Through the Code of Conduct Guidelines, Samsung SDS discloses the regulation violation cases of suppliers, public funds and assets, working discipline, and information leaks. The company conducts promotional activities and provides ethics management trainings on a regular basis for employees. In 2021, 25,320 employees participated in the training.'}, 
-    {'kpi': 'anti-bribery-policies', 'score': 1.0, 'doc_org_std': 'American Express', 'variable description': 'Operations assessed for risks related to corruption', 'variable': 'GRI 205', 'value': '205-1', 'unit': '', 'std_year': '2021', 'relevant quote from text': '2020-2021 ESG Report: Business Ethics pages 70-72'}
+`df_estimated_kpi[['doc_org_std', 'quantity description', 'quantity name', 'quantitative value', 'unit or currency of value', 'std_year', 'pagenum', 'doc_name']].head().to_dict('records')`
+[{'doc_org_std': 'ABB', 'quantity description': 'Women in Board (percentage)',
+  'quantity name': '% of female representation on the board', 'quantitative value': '20%',
+  'unit or currency of value': 'percentage', 'std_year': '2021', 'pagenum': 94,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'quantity description': 'NOx from burning gas', 'quantity name': 'Emissions to water',
+  'quantitative value': 93, 'unit or currency of value': '-', 'std_year': '2021', 'pagenum': 89,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'quantity description': 'Hazardous waste sent for disposal¹',
+  'quantity name': 'Hazardous waste', 'quantitative value': 7, 'unit or currency of value': '-', 'std_year': '2021',
+  'pagenum': 89, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'quantity description': 'Scope 2 GHG emissions from electricity (Market-based)',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 195.0, 'unit or currency of value': 'Kilotons CO2e',
+  'std_year': '2021', 'pagenum': 17,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'quantity description': 'Scope 2 GHG emissions from electricity (Location-based)',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 351.0, 'unit or currency of value': 'Kilotons CO2e',
+  'std_year': '2021', 'pagenum': 17,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'}
 ]
 """
+
 
 # ## Save ranked data to the cloud
 
@@ -503,13 +519,14 @@ df_estimated_kpi_uploaded = pd.DataFrame(df_estimated_kpi_uploaded)
 estimated_kpi_file_path = df_estimated_kpi_uploaded['href'].tolist()[0]
 """
 Now, we can access estimated KPI data from, `estimated_kpi_file_path`
+'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_df_estimated_kpicsv/data_type=unstructured/format=csv/variable_desc=uploaded-document/source=stuartcullinan/df_estimated_kpicsv.csv'
 """
 
 # ### Test reading data from quants_ranked_file_path
 saved_estimated_kpis = bg_sync.read_file(estimated_kpi_file_path).get_output()
 saved_estimated_kpis = pd.DataFrame(saved_estimated_kpis)
 """
-Number of rows in saved_estimated_kpis, `len(saved_estimated_kpis)`: 7485
+Number of rows in saved_estimated_kpis, `len(saved_estimated_kpis)`: 752
 Check that saved KPI data has the same number of rows as the data before saving, 
 `len(saved_estimated_kpis) == len(df_estimated_kpi)`: True
 """
@@ -518,10 +535,221 @@ Check that saved KPI data has the same number of rows as the data before saving,
 
 # ### Re-arrange columns
 cols_to_print = [
-    'doc_org_std', 'variable description', 'variable', 'value',
-    'date', 'unit', 'pagenum', 'doc_name'
+    'doc_org_std', 'company name',
+    'quantity description', 'quantity name', 'quantitative value',
+    'std_year', 'unit or currency of value',
+    'pagenum', 'doc_name'
 ]
 
 """
-df_estimated_kpi.to_dict('recoreds')
+Sample of df_estimated_kpi, `df_estimated_kpi[cols_to_print].head(50).to_dict('records')`
+[{'doc_org_std': 'ABB', 'company name': 'Sweden', 'quantity description': 'Women in Board (percentage)',
+  'quantity name': '% of female representation on the board', 'quantitative value': '20%', 'std_year': '2021',
+  'unit or currency of value': 'percentage', 'pagenum': 94,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'LOW-CARBON SOCIETY', 'quantity description': 'NOx from burning gas',
+  'quantity name': 'Emissions to water', 'quantitative value': 93, 'std_year': '2021', 'unit or currency of value': '-',
+  'pagenum': 89, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'SELECTED', 'quantity description': 'Hazardous waste sent for disposal¹',
+  'quantity name': 'Hazardous waste', 'quantitative value': 7, 'std_year': '2021', 'unit or currency of value': '-',
+  'pagenum': 89, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '',
+  'quantity description': 'Scope 2 GHG emissions from electricity (Market-based)',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 195.0, 'std_year': '2021',
+  'unit or currency of value': 'Kilotons CO2e', 'pagenum': 17,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '',
+  'quantity description': 'Scope 2 GHG emissions from electricity (Location-based)',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 351.0, 'std_year': '2021',
+  'unit or currency of value': 'Kilotons CO2e', 'pagenum': 17,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Total Scope 1 and 2 GHG emissions',
+  'quantity name': 'GHG Scope 1 emissions', 'quantitative value': 405, 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 87,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Total Scope 1 and 2 GHG emissions',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 405, 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 87,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '',
+  'quantity description': 'Fuel and energy-related activities not in Scope 1/2',
+  'quantity name': 'GHG Scope 1 emissions', 'quantitative value': 44, 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 87,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '',
+  'quantity description': 'Fuel and energy-related activities not in Scope 1/2',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 44, 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 87,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB',
+  'quantity description': 'Identified areas where we can reduce our Scope 1 and 2...',
+  'quantity name': 'GHG Scope 1 emissions', 'quantitative value': '80%', 'std_year': '2021',
+  'unit or currency of value': 'percent', 'pagenum': 24,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Business travel',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '71', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Employee commuting',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '175', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Up-and downstream leased assets',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '233', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Use of sold products',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '118,000', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'End-of-life treatment of sold products',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '148', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Investments',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '54', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Volatile organic compounds (VOC)',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '592', 'std_year': '2021',
+  'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'pagenum': 88,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB', 'quantity description': 'Upstream Scope 3 emissions',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '6400 kilotons', 'std_year': '2021',
+  'unit or currency of value': 'CO2e', 'pagenum': 18,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '', 'quantity description': 'Total energy used',
+  'quantity name': 'Non-renewable energy consumption', 'quantitative value': '1,553', 'std_year': '2021',
+  'unit or currency of value': 'GWh', 'pagenum': 84,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': '',
+  'quantity description': '(Total energy used-Total energy from renewable sources) / Total energy used * 100',
+  'quantity name': 'Percentage of non-renewable energy production', 'quantitative value': '67.8', 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 84,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB', 'quantity description': 'Amount of hazardous waste generated',
+  'quantity name': 'Hazardous Waste Generated', 'quantitative value': '11 kilotons', 'std_year': '2021',
+  'unit or currency of value': 'Metric tons', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB', 'quantity description': 'Percentage of hazardous waste that is recycled',
+  'quantity name': 'Hazardous Waste Recycled', 'quantitative value': '36%', 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB', 'quantity description': 'Number of reportable spills',
+  'quantity name': 'Reportable Spills', 'quantitative value': '8 spills', 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'company name': 'ABB',
+  'quantity description': 'Quantity of hazardous substance recovered from reportable spills',
+  'quantity name': 'Quantity Recovered from Spills', 'quantitative value': '438 kg', 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ACCOR', 'company name': 'Accor',
+  'quantity description': 'Reduction goal of absolute Scope 1 emissions by 46% by 2030',
+  'quantity name': 'GHG Scope 1 emissions', 'quantitative value': '46%', 'std_year': '2030',
+  'unit or currency of value': '', 'pagenum': 66, 'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf'},
+ {'doc_org_std': 'ACCOR', 'company name': 'Accor',
+  'quantity description': 'Reduction goal of absolute Scope 2 emissions by 46% by 2030',
+  'quantity name': 'GHG Scope 2 emissions', 'quantitative value': '46%', 'std_year': '2030',
+  'unit or currency of value': '', 'pagenum': 66, 'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf'},
+ {'doc_org_std': 'ACCOR', 'company name': 'Accor',
+  'quantity description': 'Reduction goal of absolute Scope 3 emissions by 28% by 2030',
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '28%', 'std_year': '2030',
+  'unit or currency of value': '', 'pagenum': 66, 'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf'},
+ {'doc_org_std': 'ACCOR', 'company name': '',
+  'quantity description': 'Estimated percentage of female representation on the board',
+  'quantity name': '% of female representation on the board', 'quantitative value': 76.0, 'std_year': '2021',
+  'unit or currency of value': 'percentage', 'pagenum': 75,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf'},
+ {'doc_org_std': 'ACCOR', 'company name': 'ACCOR', 'quantity description': 'Total emissions to water',
+  'quantity name': 'Emissions to water', 'quantitative value': 11, 'std_year': '2021',
+  'unit or currency of value': 'Thousand', 'pagenum': 10,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_1_accor_mrpdf'},
+ {'doc_org_std': 'AIG', 'company name': 'Company A', 'quantity description': 'Proportion of women analysts',
+  'quantity name': '% of female representation on the board', 'quantitative value': '67%', 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 2, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf'},
+ {'doc_org_std': 'AIG', 'company name': 'Company B', 'quantity description': 'Proportion of women summer interns',
+  'quantity name': '% of female representation on the board', 'quantitative value': '62%', 'std_year': '2021',
+  'unit or currency of value': '', 'pagenum': 2, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf'},
+ {'doc_org_std': 'AIG', 'company name': 'Company H', 'quantity description': 'Proportion of women promoted (2020)',
+  'quantity name': 'gender pay gap', 'quantitative value': '39.8%', 'std_year': '2021', 'unit or currency of value': '',
+  'pagenum': 2, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf'},
+ {'doc_org_std': 'AIG', 'company name': 'Company I', 'quantity description': 'Proportion of women promoted (2021)',
+  'quantity name': 'gender pay gap', 'quantitative value': '43.8%', 'std_year': '2021', 'unit or currency of value': '',
+  'pagenum': 2, 'doc_name': 'userid_stuartcullinan_uploadfilename_jason_09_gpgpdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Company X',
+  'quantity description': 'Female representation on the board',
+  'quantity name': '% of female representation on the board', 'quantitative value': 43.0, 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 107,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Company Y',
+  'quantity description': 'Female representation on the board',
+  'quantity name': '% of female representation on the board', 'quantitative value': 20.0, 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 107,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon',
+  'quantity description': 'Female (or other gender minority) board members',
+  'quantity name': '% of female representation on the board', 'quantitative value': 43.0, 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 110,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Emissions to water in tons', 'quantity name': 'Emissions to water',
+  'quantitative value': 0.0, 'std_year': '2021', 'unit or currency of value': 'tons', 'pagenum': 111,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Share of non-renewable energy consumption and production¹',
+  'quantity name': 'Non-renewable energy consumption', 'quantitative value': 1.44, 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 111,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Share of non-renewable energy consumption and production¹',
+  'quantity name': 'Percentage of non-renewable energy', 'quantitative value': 1.44, 'std_year': '2021',
+  'unit or currency of value': '%', 'pagenum': 111,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Unadjusted gender pay gap21', 'quantity name': 'Gender pay gap', 'quantitative value': 0.94,
+  'std_year': '2021', 'unit or currency of value': 'Ratio', 'pagenum': 111,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Hazardous waste in tons', 'quantity name': 'Hazardous waste', 'quantitative value': 0.002,
+  'std_year': '2021', 'unit or currency of value': 'tons', 'pagenum': 111,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Direct greenhouse gas emissions.', 'quantity name': 'GHG Scope 1 emissions',
+  'quantitative value': '0 tCO2e', 'std_year': '2021', 'unit or currency of value': 'tCO2e', 'pagenum': 37,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': 'Indirect emissions from purchased electricity.', 'quantity name': 'GHG Scope 2 emissions',
+  'quantitative value': '3.2 tCO2e', 'std_year': '2021', 'unit or currency of value': 'tCO2e', 'pagenum': 37,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': 'Aker Carbon Capture',
+  'quantity description': "All other indirect emissions in company's value chain.",
+  'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '81.1 tCO2e', 'std_year': '2021',
+  'unit or currency of value': 'tCO2e', 'pagenum': 37,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'AKER CARBON CAPTURE', 'company name': '', 'quantity description': 'Tons',
+  'quantity name': 'hazardous waste', 'quantitative value': 0.002, 'std_year': '2021', 'unit or currency of value': '-',
+  'pagenum': 104, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_21_aker-carbon-capture_annual-report_2021pdf'},
+ {'doc_org_std': 'ARKEMA', 'company name': 'company name', 'quantity description': 'After annual general meeting',
+  'quantity name': '% of female representation on the board', 'quantitative value': '45%', 'std_year': '2022',
+  'unit or currency of value': '', 'pagenum': 94,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf'},
+ {'doc_org_std': 'ARKEMA', 'company name': '', 'quantity description': 'Gender balance on the Board of Directors',
+  'quantity name': '', 'quantitative value': 45, 'std_year': '2021', 'unit or currency of value': 'Percent',
+  'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf'},
+ {'doc_org_std': 'ARKEMA', 'company name': '', 'quantity description': 'Diversity-international profiles',
+  'quantity name': '', 'quantitative value': 50, 'std_year': '2021', 'unit or currency of value': 'Percent',
+  'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf'},
+ {'doc_org_std': 'ARKEMA', 'company name': '',
+  'quantity description': 'Representation of employees and shareholder employees', 'quantity name': '',
+  'quantitative value': 1, 'std_year': '2021', 'unit or currency of value': '', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf'},
+ {'doc_org_std': 'ARKEMA', 'company name': '',
+  'quantity description': 'Representation of employees and shareholder employees', 'quantity name': '',
+  'quantitative value': 2, 'std_year': '2021', 'unit or currency of value': '', 'pagenum': 97,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_19_arkema_universal-registration-document_2021pdf'}
+]
 """
+
