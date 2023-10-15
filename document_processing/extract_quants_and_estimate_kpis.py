@@ -527,12 +527,11 @@ df_estimated_kpi['full_description'] = [
 
 ## define tasks
 tasks = [
-    bg_async.async_classify_text(
-        text=desc,
+    bg_async.async_classify_texts(
+        texts=df_estimated_kpi['full_description'].unique().tolist(),
         labels=kpis,
         multi_class=0
     )
-    for desc in df_estimated_kpi['full_description'].unique().tolist()
 ]
 ## run tasks
 df_name_std = utils.async_utils.run_async_tasks(tasks)
@@ -550,7 +549,9 @@ df_name_std = df_name_std.groupby(
 ).reset_index(drop=True)
 ## rename sequence to full_description
 df_name_std = df_name_std.rename(
-    columns={'sequence': 'full_description'}
+    columns={'sequence': 'full_description',
+             'labels': 'kpi',
+             'scores': 'score'}
 )
 ## merge df_name_std on df_estimated_kpi
 df_estimated_kpi = pd.merge(
@@ -561,100 +562,100 @@ df_estimated_kpi = pd.merge(
     suffixes=('', '_name_std')
 )
 """
-A sample of estimated values mapped to KPIs
+A sample of estimated values mapped to KPIs (labels)
 df_estimated_kpi[
-    ['doc_org_std', 'labels', 'scores', 'company name', 
+    ['doc_org_std', 'kpi', 'score', 'company name', 
      'quantity description', 'quantity name', 'quantitative value',
      'unit or currency of value', 'std_year',
      'pagenum', 'doc_name']
 ].head(20).to_dict('records')
-[{'doc_org_std': 'ABB', 'labels': '% of female representation on the board', 'scores': 0.874489955122798,
+[{'doc_org_std': 'ABB', 'kpi': '% of female representation on the board', 'score': 0.874489955122798,
   'company name': 'Sweden', 'quantity description': 'Women in Board (percentage)',
   'quantity name': '% of female representation on the board', 'quantitative value': '20%',
   'unit or currency of value': 'percentage', 'std_year': '2021', 'pagenum': 94,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'Emissions to water', 'scores': 0.8403939093854543,
-  'company name': 'LOW-CARBON SOCIETY', 'quantity description': 'NOx from burning gas',
-  'quantity name': 'Emissions to water', 'quantitative value': 93, 'unit or currency of value': '-', 'std_year': '2021',
-  'pagenum': 89, 'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'hazardous waste', 'scores': 0.8449586096663877, 'company name': 'SELECTED',
+ {'doc_org_std': 'ABB', 'kpi': 'Emissions to water', 'score': 0.8403939093854543, 'company name': 'LOW-CARBON SOCIETY',
+  'quantity description': 'NOx from burning gas', 'quantity name': 'Emissions to water', 'quantitative value': 93,
+  'unit or currency of value': '-', 'std_year': '2021', 'pagenum': 89,
+  'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
+ {'doc_org_std': 'ABB', 'kpi': 'hazardous waste', 'score': 0.8449586096663877, 'company name': 'SELECTED',
   'quantity description': 'Hazardous waste sent for disposal¹', 'quantity name': 'Hazardous waste',
   'quantitative value': 7, 'unit or currency of value': '-', 'std_year': '2021', 'pagenum': 89,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 2 emissions', 'scores': 0.8557544318456374, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 2 emissions', 'score': 0.8557544318456374, 'company name': '',
   'quantity description': 'Scope 2 GHG emissions from electricity (Market-based)',
   'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 195.0, 'unit or currency of value': 'Kilotons CO2e',
   'std_year': '2021', 'pagenum': 17,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 2 emissions', 'scores': 0.8541048979131535, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 2 emissions', 'score': 0.8541048979131535, 'company name': '',
   'quantity description': 'Scope 2 GHG emissions from electricity (Location-based)',
   'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 351.0, 'unit or currency of value': 'Kilotons CO2e',
   'std_year': '2021', 'pagenum': 17,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 1 emissions', 'scores': 0.8568772108121, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 1 emissions', 'score': 0.8568772108121, 'company name': '',
   'quantity description': 'Total Scope 1 and 2 GHG emissions', 'quantity name': 'GHG Scope 1 emissions',
   'quantitative value': 405, 'unit or currency of value': '', 'std_year': '2021', 'pagenum': 87,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 2 emissions', 'scores': 0.8619879290319659, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 2 emissions', 'score': 0.8619879290319659, 'company name': '',
   'quantity description': 'Total Scope 1 and 2 GHG emissions', 'quantity name': 'GHG Scope 2 emissions',
   'quantitative value': 405, 'unit or currency of value': '', 'std_year': '2021', 'pagenum': 87,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 1 emissions', 'scores': 0.8533898561452785, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 1 emissions', 'score': 0.8533898561452785, 'company name': '',
   'quantity description': 'Fuel and energy-related activities not in Scope 1/2',
   'quantity name': 'GHG Scope 1 emissions', 'quantitative value': 44, 'unit or currency of value': '',
   'std_year': '2021', 'pagenum': 87,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 2 emissions', 'scores': 0.8516897560550244, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 2 emissions', 'score': 0.8516897560550244, 'company name': '',
   'quantity description': 'Fuel and energy-related activities not in Scope 1/2',
   'quantity name': 'GHG Scope 2 emissions', 'quantitative value': 44, 'unit or currency of value': '',
   'std_year': '2021', 'pagenum': 87,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 1 emissions', 'scores': 0.8450975832174665, 'company name': 'ABB',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 1 emissions', 'score': 0.8450975832174665, 'company name': 'ABB',
   'quantity description': 'Identified areas where we can reduce our Scope 1 and 2...',
   'quantity name': 'GHG Scope 1 emissions', 'quantitative value': '80%', 'unit or currency of value': 'percent',
   'std_year': '2021', 'pagenum': 24,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8540063139069153, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8540063139069153, 'company name': '',
   'quantity description': 'Business travel', 'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '71',
   'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.852220332327289, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.852220332327289, 'company name': '',
   'quantity description': 'Employee commuting', 'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '175',
   'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8441526793877081, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8441526793877081, 'company name': '',
   'quantity description': 'Up-and downstream leased assets', 'quantity name': 'GHG Scope 3 emissions',
   'quantitative value': '233', 'unit or currency of value': 'tonnes CO2 equivalent per million $ sales',
   'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8528297341191784, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8528297341191784, 'company name': '',
   'quantity description': 'Use of sold products', 'quantity name': 'GHG Scope 3 emissions',
   'quantitative value': '118,000', 'unit or currency of value': 'tonnes CO2 equivalent per million $ sales',
   'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8416204625547709, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8416204625547709, 'company name': '',
   'quantity description': 'End-of-life treatment of sold products', 'quantity name': 'GHG Scope 3 emissions',
   'quantitative value': '148', 'unit or currency of value': 'tonnes CO2 equivalent per million $ sales',
   'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8472867955373774, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8472867955373774, 'company name': '',
   'quantity description': 'Investments', 'quantity name': 'GHG Scope 3 emissions', 'quantitative value': '54',
   'unit or currency of value': 'tonnes CO2 equivalent per million $ sales', 'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8502036422063545, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8502036422063545, 'company name': '',
   'quantity description': 'Volatile organic compounds (VOC)', 'quantity name': 'GHG Scope 3 emissions',
   'quantitative value': '592', 'unit or currency of value': 'tonnes CO2 equivalent per million $ sales',
   'std_year': '2021', 'pagenum': 88,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'GHG Scope 3 emissions', 'scores': 0.8582365599722109, 'company name': 'ABB',
+ {'doc_org_std': 'ABB', 'kpi': 'GHG Scope 3 emissions', 'score': 0.8582365599722109, 'company name': 'ABB',
   'quantity description': 'Upstream Scope 3 emissions', 'quantity name': 'GHG Scope 3 emissions',
   'quantitative value': '6400 kilotons', 'unit or currency of value': 'CO2e', 'std_year': '2021', 'pagenum': 18,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'Non-renewable energy consumption', 'scores': 0.847065332960854, 'company name': '',
+ {'doc_org_std': 'ABB', 'kpi': 'Non-renewable energy consumption', 'score': 0.847065332960854, 'company name': '',
   'quantity description': 'Total energy used', 'quantity name': 'Non-renewable energy consumption',
   'quantitative value': '1,553', 'unit or currency of value': 'GWh', 'std_year': '2021', 'pagenum': 84,
   'doc_name': 'userid_stuartcullinan_uploadfilename_jeon_08_abb_sustainability-report_2021pdf'},
- {'doc_org_std': 'ABB', 'labels': 'Percentage of non-renewable energy production', 'scores': 0.8581515613475517,
+ {'doc_org_std': 'ABB', 'kpi': 'Percentage of non-renewable energy production', 'score': 0.8581515613475517,
   'company name': '',
   'quantity description': '(Total energy used-Total energy from renewable sources) / Total energy used * 100',
   'quantity name': 'Percentage of non-renewable energy production', 'quantitative value': '67.8',

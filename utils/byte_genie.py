@@ -2705,9 +2705,9 @@ class ByteGenie:
         )
         return resp
 
-    def classify_text(
+    def classify_texts(
             self,
-            text: str,
+            texts: list,
             labels: list = None,
             multi_class: int = 0,
             timeout: int = 15 * 60,
@@ -2720,9 +2720,9 @@ class ByteGenie:
         :param timeout:
         :return:
         """
-        func = 'classify_text'
+        func = 'classify_texts'
         args = {
-            'text': text,
+            'texts': texts,
             'labels': labels,
             'multi_class': multi_class,
         }
@@ -2737,16 +2737,16 @@ class ByteGenie:
         return resp
 
     @to_async
-    def async_classify_text(
+    def async_classify_texts(
             self,
-            text: str,
+            texts: list,
             labels: list = None,
             multi_class: int = 0,
             timeout: int = 15 * 60,
     ):
         try:
-            resp = self.classify_text(
-                text=text,
+            resp = self.classify_texts(
+                texts=texts,
                 labels=labels,
                 multi_class=multi_class,
                 timeout=timeout,
