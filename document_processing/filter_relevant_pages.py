@@ -180,7 +180,7 @@ First 5 OCR text files for one document: ocr_text_files[0][:5]
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-1_text-blocks.csv', 
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-2_text-blocks.csv', 
     'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-3_text-blocks.csv', 
-'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-4_text-blocks.csv'
+    'gs://db-genie/entity_type=url/entity=userid_stuartcullinan_uploadfilename_jason_08_gpgpdf/data_type=semi-structured/format=csv/variable_desc=text-blocks/source=esgnie.com/jason_08_gpgpdf_pagenum-4_text-blocks.csv'
 ]
 Extracted text files contain page number from which the text was extracted, so tables belonging to a specific page can be filtered, if needed.
 """
@@ -761,7 +761,7 @@ df_filtered_sim_files[['query', 'score', 'doc_name', 'orig_table_file', 'doc_org
 df_filtered_sim_files.to_csv(f"/tmp/df_filtered_sim_files.csv", index=False)
 
 
-# ### calc max score by (query, doc_nanme) for each query
+# ### calc max score by (query, doc_name) for each query
 df_filtered_sim_files['page_rank'] = \
     df_filtered_sim_files.groupby(
         by=['doc_org_std', 'query']
