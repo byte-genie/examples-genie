@@ -42,7 +42,7 @@ bg_sync = ByteGenie(
 # ## Upload PDF files
 
 # ### set folder containing PDF files
-pdf_folder = f"/Users/majid/Dropbox/startup/ESGenie/PoCs/MainStreetPartners/PDF"
+pdf_folder = f"/tmp/PDF"
 
 # ### get file contents
 df_contents = utils.common.read_file_contents(directory=pdf_folder)
