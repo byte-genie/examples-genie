@@ -266,6 +266,24 @@ For example, `## tablenum-0` corresponds to the first table on the page,
 and `## text-segments` corresponds to the remaining text segments (passages) on the page.
 """
 
+# ## Verify quant files
+"""
+At this point, we could run one layer of automated verification on extracted quants, to filter out any incorrectly extracted quants. 
+We can use `/verify_data` endpoint for this purpose. `/verify_data` takes a pair of (variable, value) column names, 
+and a context column name, from which (variable, value) pair was extracted, 
+and verifies whether the (variable, value) is correctly extracted based on the context.
+Here is a sample call to `/verify_data`
+verify_data_responses = bg_async.verify_data(
+    files=input_files,
+    var_col='variable',
+    val_col='value',   
+    context_col='context',
+) 
+To keep this code relatively simple, we will skip the verification at this stage, as it can also be run at a later stage.
+"""
+
+
+
 # ## Estimate values for KPIs
 """
 Now that we have extracted quants from relevant pages, we can use these quant data files to estimate the values for our specific KPIs. 
