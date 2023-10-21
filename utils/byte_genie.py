@@ -2057,7 +2057,8 @@ class ByteGenie:
     def structure_quants_pipeline(
             self,
             doc_name: str,
-            queries: list = None,
+            keyphrases: list = None,
+            attrs_to_estimate: list = None,
             file_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
@@ -2071,6 +2072,9 @@ class ByteGenie:
         func = 'structure_quants_pipeline'
         args = {
             'doc_name': doc_name,
+            'keyphrases': keyphrases,
+            'attrs_to_estimate': attrs_to_estimate,
+            'file_rank_max': file_rank_max,
         }
         payload = self.create_api_payload(
             func=func,
@@ -2086,14 +2090,16 @@ class ByteGenie:
     def async_structure_quants_pipeline(
             self,
             doc_name: str,
-            queries: list = None,
+            keyphrases: list = None,
+            attrs_to_estimate: list = None,
             file_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.structure_quants_pipeline(
                 doc_name=doc_name,
-                queries=queries,
+                keyphrases=keyphrases,
+                attrs_to_estimate=attrs_to_estimate,
                 file_rank_max=file_rank_max,
                 timeout=timeout,
             )
