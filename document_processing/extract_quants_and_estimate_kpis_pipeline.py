@@ -79,7 +79,6 @@ file_rank_max = 3
 # <p> `file_rank_max=3` will mean that after the files are ranked by relevance to keyphrases,
 # only the top 3 ranked files will be kept for each keyphrase. </p>
 
-
 # <h2> Estimate KPI values </h2>
 
 tasks = [
@@ -92,4 +91,79 @@ tasks = [
     for doc_name in doc_names
 ]
 structure_quants_responses = utils.async_utils.run_async_tasks(tasks)
-structured_quants = [resp.get_output() for resp in structure_quants_responses]
+structured_quants = [resp.get_output(refresh=1) for resp in structure_quants_responses]
+
+
+# <h2> Check structured_quants </h2>
+# <p> Because `structured_quants` is the output of a pipeline, it retains output from all the steps in that pipeline.
+# Its output will be in the form a of dictionary, with each element of the dictionary containing output files
+# from one step of the pipeline. </p>
+
+# <h3> Types of output available in filtered_pages </h3>
+logger.info(f"Output keys: {list(structured_quants[0].keys())}")
+"""
+<div>
+<p> 
+Output keys in `structured_quants` for one of the documents, `list(structured_quants[0].keys())`
+[
+    'estimated_value_files', 
+    'filtered_files', 
+    'filtered_table_files', 
+    'filtered_text_files', 
+    'img_files',
+    'page_data_files', 
+    'page_quants_files', 
+    'table_embedding_files', 
+    'table_files', 
+    'table_similarity_files',
+    'text_embedding_files', 
+    'text_files', 
+    'text_similarity_files'
+]
+Different keys in this dictionary contain outputs from different steps. 
+For example, 
+<ul>
+    <li> 'img_files' contains output from converting PDF document to page images; </li>
+    <li> 'text_files' contains text output files extracted via OCR and layout parsing; </li> 
+    <li> 'text_embedding_files' contains text embedding files; </li>
+    <li> 'page_quants_files' contains structured quants data; </li>
+    <li> 'estimated_value_files' contains estimates for specific keyphrses (KPIs). </li>
+</ul>
+</p>
+<p>
+Sample of image files, `structured_quants[0]['img_files']`
+[
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-0.png',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-1.png',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-2.png',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-3.png',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-4.png'
+]
+</p>
+<p> Sample of text files, `structured_quants[0]['page_quants_files']`
+[
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-0_page-quants_structured-quant-summary.csv',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-1_page-quants_structured-quant-summary.csv',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-2_page-quants_structured-quant-summary.csv',
+    'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=structured/format=csv/variable_desc=structured-quant-summary/source=page-quants/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-3_page-quants_structured-quant-summary.csv'
+]
+</p>
+<p> Sample of estimated values files, `structured_quants[0]['estimated_value_files']`
+[
+    [
+        'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=estimation/format=csv/variable_desc=structured-quant-summary/source=estimate_values/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-0_page-quants_structured-quant-summary_estimated-values_metrics-emission-reductions_emission-targets_emissions-by-scope_renewable-energy-consumption_sustainable-revenue.csv'
+    ],
+    [
+        'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=estimation/format=csv/variable_desc=structured-quant-summary/source=estimate_values/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-1_page-quants_structured-quant-summary_estimated-values_metrics-emission-reductions_emission-targets_emissions-by-scope_gender-diversity_hazardous-waste_renewable-energy-consumption_sustainable-revenue.csv'
+    ],
+    [
+        'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=estimation/format=csv/variable_desc=structured-quant-summary/source=estimate_values/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-2_page-quants_structured-quant-summary_estimated-values_metrics-emission-reductions_emission-targets_emissions-by-scope_gender-diversity_hazardous-waste_renewable-energy-consumption_sustainable-revenue.csv',
+    ],
+    [
+        'gs://db-genie/entity_type=url/entity=httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf/data_type=estimation/format=csv/variable_desc=structured-quant-summary/source=estimate_values/httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf_pagenum-3_page-quants_structured-quant-summary_estimated-values_metrics-gender-diversity_hazardous-waste.csv'
+    ]
+]
+`estimated_value_files` are organised by page number, with each page containing the estimates for keyphrases to which it was sufficiently relevant to.
+</p>
+</div>
+"""

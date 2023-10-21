@@ -76,7 +76,7 @@ filtered_pages = [resp.get_output() for resp in filter_pages_responses]
 
 # <h2> Check filtered_pages </h2>
 # <p> Because `filtered_pages` is the output of a pipeline, it retains output from all the steps in that pipeline.
-# It's output will be in the form a of dictionary, with each element of the dictionary containing output files
+# Its output will be in the form a of dictionary, with each element of the dictionary containing output files
 # from one step of the pipeline. </p>
 
 # <h3> Types of output available in filtered_pages </h3>
