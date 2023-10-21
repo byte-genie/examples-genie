@@ -43,9 +43,9 @@ bg_sync = ByteGenie(
 
 # <h3> Set documents to process <h3>
 doc_names = [
-    # 'httpsmultimedia3mcommwsmedia2006066o2021-sustainability-reportpdf',
-    'httpsmultimedia3mcommwsmedia2053960o3m-pulp-and-paper-sourcing-policy-progress-report-may-2021-finalpdf',
-    'httpsmultimedia3mcommwsmedia2292786o3m-2023-global-impact-reportpdf',
+    'httpswwwcapitalandcomcontentdamcapitaland-newsroominternational2023maycl-gsr-smpcapitaland_investment_elevates_its_esg_efforts_with_refreshed_2030_sustainability_master_planpdf',
+    'httpsinvestorcapitalandcomnewsroom20200528_064125_c31_fr0qtlme4idq6s8c1pdf',
+    'httpsinvestorcapitalandcomnewsroom20190529_171331_c31_yt1rnqd01ipsmsa11pdf',
 ]
 
 # <h3> Set keyphrases by which to filter pages <h3>
@@ -53,9 +53,10 @@ doc_names = [
 keyphrases = [
     'emission targets',
     'emission reductions',
+    'emissions by scope',
     'hazardous waste',
     'gender diversity',
-    'renewable energy',
+    'renewable energy consumption',
     'sustainable revenue'
 ]
 

@@ -4,7 +4,7 @@ import logging
 logging.basicConfig(
     level=logging.DEBUG,  # Set the desired log level
     format='%(asctime)s [%(levelname)s] - %(name)s:%(filename)s:%(lineno)d - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'  # Define the date format if needed
+    datefmt='%Y-%m-%d %H:%M:%S GMT'  # Define the date format if needed
 )
 
 # Create a logger for the current module
