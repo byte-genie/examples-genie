@@ -3,7 +3,7 @@ import logging
 # Configure logging to console with module name
 logging.basicConfig(
     level=logging.DEBUG,  # Set the desired log level
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Define the log format
+    format='%(asctime)s [%(levelname)s] - %(name)s:%(filename)s:%(lineno)d - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'  # Define the date format if needed
 )
 

@@ -1,6 +1,6 @@
-# # Filter pages from company disclosures most relevant to KPIs of interest
+# # Filter pages from documents most relevant to KPIs of interest
 """
-In this example, we will identify the most relevant text and table files extracted from a few company disclosures,
+In this example, we will identify the most relevant text and table files extracted from a few documents,
 by:
 * Extracting text and table files from all the pages;
 * Ranking extracted text and table files by relevant KPIs;

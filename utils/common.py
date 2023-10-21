@@ -8,6 +8,7 @@ import json
 import base64
 import unicodedata
 import pandas as pd
+from utils.logging import logger
 
 
 def read_secrets(secrets_file: str = 'secrets.json') -> dict:
@@ -16,7 +17,7 @@ def read_secrets(secrets_file: str = 'secrets.json') -> dict:
         with open(filename, mode='r') as f:
             return json.loads(f.read())
     except FileNotFoundError:
-        return {}
+        logger.error(f"Secrets file, {secrets_file}, not found")
 
 
 def convert_file_content_to_bytes(file_path: str):
@@ -114,3 +115,24 @@ def get_doc_name(file: str):
         return doc_name
 
 
+def is_convertible_to_df(data, verbose: int = 1):
+    """
+    Whether data is convertible to dataframe
+    :param data:
+    :param verbose:
+    :return:
+    """
+    flag = 0
+    try:
+        if isinstance(data, pd.DataFrame):
+            flag = 1
+        elif isinstance(data, list):
+            if all([isinstance(data_, dict) for data_ in data]):
+                flag = 1
+            elif all([isinstance(data_, list) and (len(data_) > 0)
+                      for data_ in data]):
+                flag = 1
+    except Exception as e:
+        if verbose:
+            logger.error(f"Error in is_convertible_to_df(): {e}")
+    return flag

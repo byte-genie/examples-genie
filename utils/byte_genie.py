@@ -6,8 +6,12 @@ import os
 import json
 import time
 import inspect
+
+import pandas as pd
 import requests
 import numpy as np
+
+import utils.common
 from utils.logging import logger
 from utils.async_utils import to_async
 from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
@@ -63,7 +67,6 @@ class ByteGenieResponse:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in set_response_attr: {e}")
-
 
     def get_status(self):
         """
@@ -163,6 +166,29 @@ class ByteGenieResponse:
             if output_data is not None:
                 self.set_response_attr(attr='data', attr_val=output_data)
             return output_data
+
+    def get_output_attr(self, attr: str):
+        """
+        Get a specific attribute from output, e.g. doc_name
+        :param attr:
+        :return:
+        """
+        output_data = self.get_output()
+        if utils.common.is_convertible_to_df(output_data):
+            output_data = pd.DataFrame(output_data)
+            if attr in output_data.columns:
+                attr_vals = output_data[attr].unique().tolist()
+                return attr_vals
+            else:
+                logger.error(f"Attribute, {attr}, not found in output data; "
+                             f"available attributes are: {list(output_data.columns)}")
+        elif isinstance(output_data, dict):
+            if attr in output_data.keys():
+                attr_vals = output_data[attr]
+                return attr_vals
+            else:
+                logger.error(f"Attribute, {attr}, not found in output data; "
+                             f"available attributes are: {list(output_data.keys())}")
 
 
 class ByteGenie:
@@ -342,7 +368,7 @@ class ByteGenie:
         """
         Slugify text
         :param text: text to slugify
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'slugify'
@@ -371,7 +397,7 @@ class ByteGenie:
         :param contents: file contents to upload
         :param filenames: file names for uploaded file contents
         :param username: user name
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         if username is None:
@@ -422,7 +448,7 @@ class ByteGenie:
         List document files matching a file pattern
         :param doc_name: document name for which to list files
         :param file_pattern: file pattern to match when listing files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'list_doc_files'
@@ -476,7 +502,7 @@ class ByteGenie:
         :param source:
         :param pagenum:
         :param file_format:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'list_corresponding_files'
@@ -531,7 +557,7 @@ class ByteGenie:
         """
         Check if a file exists
         :param file: file to check
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'check_file_exists'
@@ -557,7 +583,7 @@ class ByteGenie:
         """
         Read a file
         :param file: file to read
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'read_file'
@@ -585,7 +611,7 @@ class ByteGenie:
         """
         Read a file (asynchronous)
         :param file: file to read
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -794,7 +820,7 @@ class ByteGenie:
         """
         Find homepages for a set of entity names
         :param entity_names: list of entity names for which to find homepages
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'find_homepage'
@@ -823,7 +849,7 @@ class ByteGenie:
         :param keyphrases: list of keyphrases to search
         :param site: site to search (optional)
         :param max_pagenum: maximum number of pages to keep in search results
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'search_web'
@@ -850,7 +876,7 @@ class ByteGenie:
         """
         Download URL content as file
         :param urls: list of URLs to download
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'download_file'
@@ -877,7 +903,7 @@ class ByteGenie:
         Search and download documents matching given keywords from an entity's homepage
         :param entity_names: list of entities for which to find documents
         :param doc_keywords: list of keywords for which to search documents
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'download_documents'
@@ -895,6 +921,24 @@ class ByteGenie:
         )
         return resp
 
+    @to_async
+    def async_download_documents(
+            self,
+            entity_names: list,
+            doc_keywords: list,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.download_documents(
+                entity_names=entity_names,
+                doc_keywords=doc_keywords,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in download_documents(): {e}")
+
     def extract_doc_year(
             self,
             doc_name: str,
@@ -903,7 +947,7 @@ class ByteGenie:
         """
         Extract document year
         :param doc_name: document name for which to extract info
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'extract_doc_year'
@@ -930,7 +974,7 @@ class ByteGenie:
         Extract document information, including document year, author, organisation, type, number of pages, etc.
         :param doc_name: document name for which to extract info
         :param doc_type_choices: possible document types in which to classify the document
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'extract_doc_info'
@@ -976,7 +1020,7 @@ class ByteGenie:
         Extract years from text
         :param text: text from which to extract years
         :param output_format: if output_format is 'cleaned', the years will be returned in a clean YYYY format
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'extract_text_years'
@@ -1185,7 +1229,7 @@ class ByteGenie:
         :param data:
         :param time_cols:
         :param groupby_cols:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'standardise_years'
@@ -1247,7 +1291,7 @@ class ByteGenie:
         :param data: data to use as context to rank answers
         :param query: input query to answer
         :param answers: candidate answers to rank
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'rank_answers_to_query'
@@ -1269,6 +1313,7 @@ class ByteGenie:
     def create_dataset(
             self,
             attrs: list,
+            attrs_metadata: list = None,
             file: str = None,
             data: list = None,
             cols_to_use: list = None,
@@ -1289,6 +1334,7 @@ class ByteGenie:
             'file': file,
             'data': data,
             'attrs': attrs,
+            'attrs_metadata': attrs_metadata,
             'cols_to_use': cols_to_use,
             'groupby_cols': groupby_cols,
         }
@@ -1306,6 +1352,7 @@ class ByteGenie:
     def async_create_dataset(
             self,
             attrs: list,
+            attrs_metadata: list = None,
             file: str = None,
             data: list = None,
             cols_to_use: list = None,
@@ -1345,7 +1392,7 @@ class ByteGenie:
         Parse numeric string to get numeric value
         :param text: text to parse into numeric value
         :param method: method to use for parsing ('llm-first', or '')
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'parse_numeric_string'
@@ -1373,7 +1420,7 @@ class ByteGenie:
         Take page images from a PDF file
         :param doc_name: document name for which to write mages
         :param dpi: dots per inch
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'write_pdf_img'
@@ -1419,7 +1466,7 @@ class ByteGenie:
         Extract text from images
         :param doc_name: document name for which to extract text
         :param file_pattern: file pattern to match for input files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'extract_text'
@@ -1447,7 +1494,7 @@ class ByteGenie:
         Extract text from images (asynchronous)
         :param doc_name: document name for which to extract text
         :param file_pattern: file pattern to match for input files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -1471,7 +1518,7 @@ class ByteGenie:
         Segment extracted text using OCR
         :param doc_name: document name for which to segment text
         :param file_pattern: file pattern to match for input files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'segment_text'
@@ -1499,7 +1546,7 @@ class ByteGenie:
         Segment extracted text using OCR (asynchronous)
         :param doc_name: document name for which to segment text
         :param file_pattern: file pattern to match for input files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -1523,7 +1570,7 @@ class ByteGenie:
         Convert pdf documents to markdown
         :param doc_name: document name to be converted to latex
         :param cluster_args: cluster specifications
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'convert_pdf_to_markdown'
@@ -1549,7 +1596,7 @@ class ByteGenie:
         """
         Convert pdf documents to markdown
         :param doc_name: document name to be converted to latex
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -1572,7 +1619,7 @@ class ByteGenie:
         Reconstructs original tables form table cells files
         :param doc_name: document name for which to reconstruct original tables
         :param file_pattern: file pattern to seelct input files
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'reconstruct_orig_tables'
@@ -1590,6 +1637,63 @@ class ByteGenie:
         )
         return resp
 
+    def filter_pages_pipeline(
+            self,
+            doc_name: str,
+            keyphrases: list = None,
+            file_rank_max: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger page filtering pipeline
+        :param doc_name: document name
+        :param keyphrases: list of keyphrases
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'filter_pages_pipeline'
+        args = {
+            'doc_name': doc_name,
+            'keyphrases': keyphrases,
+            'file_rank_max': file_rank_max,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_filter_pages_pipeline(
+            self,
+            doc_name: str,
+            keyphrases: list = None,
+            file_rank_max: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger page filtering pipeline (async)
+        :param doc_name: document name
+        :param keyphrases: list of keyphrases
+        :param timeout: timeout value for api call
+        :return:
+        """
+        try:
+            resp = self.filter_pages_pipeline(
+                doc_name=doc_name,
+                keyphrases=keyphrases,
+                file_rank_max=file_rank_max,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in filter_pages_pipeline(): {e}")
+
     def translate_text_pipeline(
             self,
             doc_name: str,
@@ -1598,7 +1702,7 @@ class ByteGenie:
         """
         Trigger text translation pipeline, which extracts text and tables, and translates them
         :param doc_name: document name for which to trigger translation pipeline
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'translate_text_pipeline'
@@ -1635,7 +1739,7 @@ class ByteGenie:
         :param text_col:
         :param groupby_cols:
         :param context_cols:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'summarise_pages'
@@ -1713,7 +1817,7 @@ class ByteGenie:
         :param custom_attrs:
         :param custom_attr_names:
         :param text_col: column of the column containing text
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'structure_passage_quants'
@@ -1787,7 +1891,7 @@ class ByteGenie:
         :param base_attr_names:
         :param custom_attrs:
         :param custom_attr_names:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'structure_tabular_quants'
@@ -1858,7 +1962,7 @@ class ByteGenie:
         :param base_attr_names:
         :param custom_attrs:
         :param custom_attr_names:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'structure_page_quants'
@@ -1909,16 +2013,59 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in structure_page_quants: {e}")
 
+    def extract_text_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger text extraction pipeline, which extracts text and tables from each page of the document
+        :param doc_name: document name
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'extract_text_pipeline'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_extract_text_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.extract_text_pipeline(
+                doc_name=doc_name,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in extract_text_pipeline(): {e}")
+
     def structure_quants_pipeline(
             self,
             doc_name: str,
+            queries: list = None,
+            file_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
         """
         Trigger quant-structuring pipeline, which extracts text and quant metrics, and structures all quant metrics
         from passages and tables
         :param doc_name: document name for which to trigger quant extraction
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'structure_quants_pipeline'
@@ -1934,6 +2081,26 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_structure_quants_pipeline(
+            self,
+            doc_name: str,
+            queries: list = None,
+            file_rank_max: int = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.structure_quants_pipeline(
+                doc_name=doc_name,
+                queries=queries,
+                file_rank_max=file_rank_max,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in structure_quants_pipeline(): {e}")
 
     def verify_data(
             self,
@@ -2052,7 +2219,7 @@ class ByteGenie:
         """
         Synthesize document meta-data with quantitative info extracted from the document
         :param doc_name: document name
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'synthesize_quant_data'
@@ -2078,7 +2245,7 @@ class ByteGenie:
         """
         Synthesize document meta-data with quantitative info extracted from the document (asynchronous)
         :param doc_name: document name
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'synthesize_quant_data'
@@ -2189,7 +2356,7 @@ class ByteGenie:
         Generate training data in a given format
         :param doc_name: document from which to generate training data
         :param data_format: training data format ('masked-structured-data', 'masked-original-tables', 'generative-question-answering')
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'generate_training_data'
@@ -2278,7 +2445,7 @@ class ByteGenie:
         :param cols_to_use: columns to use when creating embeddings
         :param model: model for generating embeddings (optional)
         :param chunk_size: chunk size for creating embeddings in one go (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'add_embeddings_to_data'
@@ -2313,7 +2480,7 @@ class ByteGenie:
         :param cols_to_use: columns to use when creating embeddings
         :param model: model for generating embeddings (optional)
         :param chunk_size: chunk size for creating embeddings in one go (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -2344,7 +2511,7 @@ class ByteGenie:
         :param cols_to_use: columns to use when creating embeddings
         :param model: model for generating embeddings (optional)
         :param chunk_size: chunk size for creating embeddings in one go (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'embed_doc_data'
@@ -2404,7 +2571,7 @@ class ByteGenie:
         :param cols_to_use: columns to use when creating embeddings
         :param model: model for generating embeddings (optional)
         :param chunk_size: chunk size for creating embeddings in one go (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'score_doc_text_similarity'
@@ -2470,7 +2637,7 @@ class ByteGenie:
         :param groupby_cols: group data by these columns when filtering over rows to keep
         :param frac_rows_to_keep: fraction of top rows to keep, sorted by similarity score
         :param filename_sfx: filename suffix to add to output file
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'filter_similarity_scored_data'
@@ -2536,7 +2703,7 @@ class ByteGenie:
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
         :param destination: destination until which to trace evidence (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'trace_evidence'
@@ -2568,7 +2735,7 @@ class ByteGenie:
         :param doc_name: document name
         :param file_pattern: file pattern to select input files
         :param destination: destination until which to trace evidence (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         try:
@@ -2609,7 +2776,7 @@ class ByteGenie:
         :param groupby_cols:
         :param context_cols:
         :param non_null_cols:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'estimate_values'
@@ -2683,7 +2850,7 @@ class ByteGenie:
         :param cols_to_use: columns to use when creating embeddings
         :param model: model for generating embeddings (optional)
         :param chunk_size: chunk size for creating embeddings in one go (optional)
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         if username is None:
@@ -2717,7 +2884,7 @@ class ByteGenie:
         :param text:
         :param lables:
         :param multi_class:
-        :param timeout:
+        :param timeout: timeout value for api call
         :return:
         """
         func = 'classify_texts'
