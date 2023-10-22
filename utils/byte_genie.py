@@ -2849,6 +2849,7 @@ class ByteGenie:
             start_time: str = None,
             end_time: str = None,
             route: str = None,
+            agg_lvl: str = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -2868,6 +2869,7 @@ class ByteGenie:
             'start_time': start_time,
             'end_time': end_time,
             'route': route,
+            'agg_lvl': agg_lvl,
         }
         payload = self.create_api_payload(
             func=func,

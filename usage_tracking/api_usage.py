@@ -11,14 +11,14 @@ from utils.byte_genie import ByteGenie
 
 # ### init byte-genie in async mode (tasks will run in the background, i.e. API call will return a response before completing the task)
 bg_async = ByteGenie(
-    secrets_file='secrets_mcp.json',
+    secrets_file='secrets.json',
     task_mode='async',
     verbose=1,
 )
 
 # ### init byte-genie in sync mode (tasks will run in the foreground, i.e. API call will keep running until the task is finished)
 bg_sync = ByteGenie(
-    secrets_file='secrets_mcp.json',
+    secrets_file='secrets.json',
     task_mode='sync',
     verbose=1,
 )
