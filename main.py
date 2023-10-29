@@ -6,7 +6,7 @@ import pandas as pd
 from utils.byte_genie import ByteGenie
 
 bg = ByteGenie(
-    api_url='https://api.esgnie.com/execute',
+    api_url='https://api.byte-genie.com/execute',
     secrets_file='secrets.json',
     task_mode='sync',
     calc_mode='async',

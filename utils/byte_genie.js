@@ -59,7 +59,7 @@ class ByteGenieResponse {
 
 class ByteGenie {
   constructor({
-    api_url = 'https://api.esgnie.com/execute',
+    api_url = 'https://api.byte-genie.com/execute',
     secrets_file = 'secrets.json',
     task_mode = 'async',
     calc_mode = 'async',

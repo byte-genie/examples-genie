@@ -6,11 +6,9 @@ import os
 import json
 import time
 import inspect
-
 import pandas as pd
 import requests
 import numpy as np
-
 import utils.common
 from utils.logging import logger
 from utils.async_utils import to_async
@@ -196,7 +194,7 @@ class ByteGenie:
 
     def __init__(
             self,
-            api_url: str = 'https://api.esgnie.com/execute',
+            api_url: str = 'https://api.byte-genie.com/execute',
             secrets_file: str = 'secrets.json',
             task_mode: str = 'async',
             calc_mode: str = 'async',
