@@ -1,4 +1,4 @@
-# <h1>Estimate processing times for various API tasks</h1>
+# # Estimate processing times for various API tasks
 # <p>This example shows how to use information from api responses
 # to estimate the amount of time taken by each api call.
 # Each api call tracks the time when the api payload is received at the backend,

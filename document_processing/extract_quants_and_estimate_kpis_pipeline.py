@@ -1,4 +1,4 @@
-# <h1> Extract quants from pages, and estimate KPI values </h1>
+# # Extract quants from pages, and estimate KPI values
 """
 <p> In this example, we will use a quant structuring pipeline to extract quant metrics,
 and estimate values for our KPIs of interest.

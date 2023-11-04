@@ -1,4 +1,4 @@
-# <h1> Filter pages from documents most relevant to KPIs of interest </h1>
+# # Filter pages from documents most relevant to KPIs of interest
 """
 <p>In this example, we will identify the most relevant text and table files extracted from a few documents,
 using the page filtering pipeline, which combines a number of steps into a single API call.
