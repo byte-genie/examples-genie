@@ -76,12 +76,17 @@ selected_urls = df_homepage['url'].unique().tolist()[:1]
 
 # ### trigger search from selected URLs
 tasks = [
-    bg_async.async_search_web(
+    bg_sync.async_search_web(
         keyphrases=keyphrases,
         site=selected_url,
     )
     for selected_url in selected_urls
 ]
+resp = bg_sync.search_web(
+    keyphrases=keyphrases,
+    site=selected_urls[0],
+    timeout=30 * 60
+)
 search_web_responses = utils.async_utils.run_async_tasks(tasks)
 df_search = [pd.DataFrame(resp.get_output()) for resp in search_web_responses]
 df_search = pd.concat(df_search)
@@ -151,17 +156,9 @@ resp = bg_async.download_file(
     urls=urls_to_download
 )
 
-# ### get output file
-output_file = bg_sync.get_response_output_file(resp)
-
-# ### check if output file exists
-output_file_exists = bg_sync.get_response_data(bg_sync.check_file_exists(output_file))
-
 # ### read output file
-if output_file_exists:
-    downloaded_urls = bg_sync.get_response_data(bg_sync.read_file(output_file))
-else:
-    logger.warning('output for downloaded URLs does not yet exist')
+downloaded_urls = resp.get_output()
+
 
 # ## Check data for downloaded URLs
 logger.info(f"downloaded URLs: {downloaded_urls}")

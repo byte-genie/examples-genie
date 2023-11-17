@@ -930,22 +930,25 @@ class ByteGenie:
     def search_web(
             self,
             keyphrases: list,
-            site: str = '',
-            max_pagenum: int = 2,
+            site: str = None,
+            engine: str = None,
+            max_pagenum: int = None,
             timeout: int = 15 * 60,
     ):
         """
         Search web for a given list of keyphrases from a given website
-        :param keyphrases: list of keyphrases to search
-        :param site: site to search (optional)
-        :param max_pagenum: maximum number of pages to keep in search results
-        :param timeout: timeout value for api call
+        :param keyphrases:
+        :param site:
+        :param engine:
+        :param max_pagenum:
+        :param timeout:
         :return:
         """
         func = 'search_web'
         args = {
             'keyphrases': keyphrases,
             'site': site,
+            'engine': engine,
             'max_pagenum': max_pagenum
         }
         payload = self.create_api_payload(
@@ -963,6 +966,7 @@ class ByteGenie:
             self,
             keyphrases: list,
             site: str = '',
+            engine: str = 'google',
             max_pagenum: int = 2,
             timeout: int = 15 * 60,
     ):
@@ -970,6 +974,7 @@ class ByteGenie:
             resp = self.search_web(
                 keyphrases=keyphrases,
                 site=site,
+                engine=engine,
                 max_pagenum=max_pagenum,
                 timeout=timeout,
             )
