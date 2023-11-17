@@ -3,6 +3,7 @@
 import time
 import pandas as pd
 import utils.common
+import utils.async_utils
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
@@ -55,11 +56,14 @@ resp = bg_async.download_documents(
 # ### wait for output to exist
 time.sleep(60 * 60)
 
-# ### check download output status
-resp.check_output_file_exists()
-
-# ### read output file
-df_document_urls = pd.DataFrame(resp.read_output_data())
+# ### get output
+"""
+<p>
+`.get_output()` checks if the `output_file` for the task exists, and if it does it returns the output. 
+If the `output_file` does not yet exist, `.get_output()` will not return anything, and just print a message to wait until output exists.
+</p>
+"""
+df_document_urls = pd.DataFrame(resp.get_output())
 
 # ### Get unique doc_name
 doc_names = df_document_urls['doc_name'].unique().tolist()
@@ -70,29 +74,41 @@ df_document_urls.to_csv(f"/tmp/document-urls_cement-companies.csv", index=False)
 # ## Extract document info for downloaded documents
 
 # ### make api calls
-responses = []
-df_doc_info = pd.DataFrame()
-missing_files = []
-for doc_num, doc_name in enumerate(doc_names):
-    logger.info(f"Extracting document info for ({doc_num}/{len(doc_names)}): {doc_name}")
-    resp_ = bg_async.extract_doc_info(
+tasks = [
+    bg_async.async_extract_doc_info(
         doc_name=doc_name
     )
-    ## if output data is already available
-    if resp_.get_data() is not None:
-        df_doc_info_ = pd.DataFrame(resp_.get_data())
-        df_doc_info = pd.concat([df_doc_info, df_doc_info_])
-    ## if output is not yet availble
-    else:
-        ## add output file to missing files
-        missing_files + resp.get_output_file()
-    responses = responses + [resp_]
+    for doc_name in doc_names
+]
+doc_info_responses = utils.async_utils.run_async_tasks(tasks)
+
+# ### Retrieve output from API responses
+df_doc_info = [resp.get_output() for resp in doc_info_responses]
+
+# responses = []
+# df_doc_info = pd.DataFrame()
+# missing_files = []
+# for doc_num, doc_name in enumerate(doc_names):
+#     logger.info(f"Extracting document info for ({doc_num}/{len(doc_names)}): {doc_name}")
+#     resp_ = bg_async.extract_doc_info(
+#         doc_name=doc_name
+#     )
+#     ## if output data is already available
+#     if resp_.get_data() is not None:
+#         df_doc_info_ = pd.DataFrame(resp_.get_data())
+#         df_doc_info = pd.concat([df_doc_info, df_doc_info_])
+#     ## if output is not yet availble
+#     else:
+#         ## add output file to missing files
+#         missing_files + resp.get_output_file()
+#     responses = responses + [resp_]
 
 # ### check available output
 logger.info(f"{len(df_doc_info)} rows found in doc_info df")
 
-# ### check missing files
-logger.info(f"{len(missing_files)} files with missing doc_info output")
+# ### check documents with missing document info
+missing_doc_names = [doc_name for doc_name in doc_names if doc_name not in df_doc_info['doc_name'].unique().tolist()]
+logger.info(f"{len(missing_doc_names)} documents with missing doc_info output")
 
 # ### read missing files
 missing_files_updated = []
@@ -194,7 +210,6 @@ df_doc_details = df_doc_details[
     (df_doc_details['doc_type'].str.contains('annual report|sustainability report')) &
     (df_doc_details['num_pages'] >= 20)
     ]
-
 
 # ## trigger processing for selected documents
 

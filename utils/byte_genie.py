@@ -6,6 +6,7 @@ import os
 import json
 import time
 import inspect
+
 import pandas as pd
 import requests
 import numpy as np
@@ -19,40 +20,42 @@ class ByteGenieResponse:
 
     def __init__(
             self,
-            response: dict,
+            response: dict = None,
             verbose: int = 1,
     ):
-        if not isinstance(response, dict):
-            raise ValueError('response must be a dictionary')
+        # if not isinstance(response, dict):
+        #     raise ValueError('response must be a dictionary')
         self.response = response
         self.verbose = verbose
 
     def get_task_attr(self, attr: str):
         resp = self.response
-        if 'response' in resp.keys():
-            resp = resp['response']
-            if isinstance(resp, dict):
-                if 'task_1' in resp.keys():
-                    resp = resp['task_1']
-                    if isinstance(resp, dict):
-                        if 'task' in resp:
-                            resp = resp['task']
-                            if isinstance(resp, dict):
-                                if attr in resp:
-                                    attr_val = resp[attr]
-                                    return attr_val
+        if isinstance(resp, dict):
+            if 'response' in resp.keys():
+                resp = resp['response']
+                if isinstance(resp, dict):
+                    if 'task_1' in resp.keys():
+                        resp = resp['task_1']
+                        if isinstance(resp, dict):
+                            if 'task' in resp:
+                                resp = resp['task']
+                                if isinstance(resp, dict):
+                                    if attr in resp:
+                                        attr_val = resp[attr]
+                                        return attr_val
 
     def get_response_attr(self, attr: str):
         resp = self.response
-        if 'response' in resp.keys():
-            resp = resp['response']
-            if isinstance(resp, dict):
-                if 'task_1' in resp.keys():
-                    resp = resp['task_1']
-                    if isinstance(resp, dict):
-                        if attr in resp:
-                            attr_val = resp[attr]
-                            return attr_val
+        if isinstance(resp, dict):
+            if 'response' in resp.keys():
+                resp = resp['response']
+                if isinstance(resp, dict):
+                    if 'task_1' in resp.keys():
+                        resp = resp['task_1']
+                        if isinstance(resp, dict):
+                            if attr in resp:
+                                attr_val = resp[attr]
+                                return attr_val
 
     def set_response_attr(self, attr: str, attr_val):
         try:
@@ -152,13 +155,12 @@ class ByteGenieResponse:
             if self.verbose:
                 logger.warning(f"Error in read_output_data(): {e}")
 
-    def get_output(self, refresh: int = 0):
+    def get_output(self):
         """
         Returns the output data from the response if it is not None, otherwise reads it from the output file
-        :param refresh: ignore currently loaded output, and read from the output file
         :return:
         """
-        if (self.get_data() is not None) and (not refresh):
+        if self.get_data() is not None:
             return self.get_data()
         else:
             output_data = self.read_output_data()
@@ -188,6 +190,88 @@ class ByteGenieResponse:
             else:
                 logger.error(f"Attribute, {attr}, not found in output data; "
                              f"available attributes are: {list(output_data.keys())}")
+
+
+class ByteGenieResponses:
+
+    def __init__(
+            self,
+            responses: list = None,
+    ):
+        if responses is not None:
+            self.responses = [
+                ByteGenieResponse(response=response.response)
+                for response in responses
+            ]
+        else:
+            self.responses = []
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            # Handle slicing if needed
+            return self.responses[index]
+        else:
+            return self.responses[index]
+
+    def __setitem__(self, index, value):
+        if isinstance(index, slice):
+            # Handle slicing if needed
+            self.responses[index] = value
+        else:
+            self.responses[index] = value
+
+    def __len__(self):
+        return len(self.responses)
+
+    @staticmethod
+    def concatenate_dict_output(outputs: list):
+        keys = [list(out.keys()) for out in outputs]
+        keys = [key for keys_ in keys for key in keys_]
+        keys = list(set(keys))
+        concatenated_dict = {}
+        for key in keys:
+            key_output = [out[key] for out in outputs]
+            if all([isinstance(out, list) for out in key_output]):
+                key_output = [out for outs in key_output for out in outs]
+            concatenated_dict[key] = key_output
+        return concatenated_dict
+
+    def append(self, item):
+        self.responses.append(item)
+
+    def extend(self, items):
+        self.responses.extend(items)
+
+    def __repr__(self):
+        return repr(self.responses)
+
+    def __add__(self, other):
+        if isinstance(other, ByteGenieResponses):
+            return [resp for resp in self.responses] + [resp for resp in other.responses]
+        else:
+            logger.error(f"Responses to add are not of type `ByteGenieResponses`")
+            raise TypeError("Unsupported operand type for +: object to add must be of type `ByteGenieResponses`")
+
+    def read_output_data(self):
+        tasks = [resp.async_read_output_data() for resp in self.responses]
+        outputs = utils.async_utils.run_async_tasks(tasks)
+        return outputs
+
+    def get_output(self, concat: int = 0):
+        outputs = [resp.get_output() for resp in self.responses]
+        if concat:
+            outputs = [outs for outs in outputs if outs is not None]
+            if all([isinstance(out, list) for out in outputs]):
+                outputs = [out for outs in outputs for out in outs]
+            elif all([isinstance(out, dict) for out in outputs]):
+                outputs = self.concatenate_dict_output(outputs=outputs)
+        return outputs
+
+    def get_output_attr(self, attr: str, concat: int = 0):
+        attr_vals = [resp.get_output_attr(attr=attr) for resp in self.responses]
+        if concat:
+            attr_vals = [val for vals in attr_vals for val in vals]
+        return attr_vals
 
 
 class ByteGenie:
@@ -358,6 +442,13 @@ class ByteGenie:
             raise ValueError('No output_file found in response')
         else:
             return output_file
+
+    def do_nothing(self):
+        return ByteGenieResponse()
+
+    @to_async
+    def async_do_nothing(self):
+        return self.do_nothing()
 
     def slugify(
             self,
@@ -866,6 +957,26 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @utils.async_utils.to_async
+    def async_search_web(
+            self,
+            keyphrases: list,
+            site: str = '',
+            max_pagenum: int = 2,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.search_web(
+                keyphrases=keyphrases,
+                site=site,
+                max_pagenum=max_pagenum,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in search_web(): {e}")
 
     def download_file(
             self,
@@ -1640,13 +1751,13 @@ class ByteGenie:
             self,
             doc_name: str,
             keyphrases: list = None,
-            file_rank_max: int = None,
+            page_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
         """
         Trigger page filtering pipeline
         :param doc_name: document name
-        :param keyphrases: list of keyphrases
+        :param queries: list of queries
         :param timeout: timeout value for api call
         :return:
         """
@@ -1654,7 +1765,7 @@ class ByteGenie:
         args = {
             'doc_name': doc_name,
             'keyphrases': keyphrases,
-            'file_rank_max': file_rank_max,
+            'page_rank_max': page_rank_max,
         }
         payload = self.create_api_payload(
             func=func,
@@ -1671,13 +1782,13 @@ class ByteGenie:
             self,
             doc_name: str,
             keyphrases: list = None,
-            file_rank_max: int = None,
+            page_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
         """
         Trigger page filtering pipeline (async)
         :param doc_name: document name
-        :param keyphrases: list of keyphrases
+        :param queries: list of queries
         :param timeout: timeout value for api call
         :return:
         """
@@ -1685,7 +1796,7 @@ class ByteGenie:
             resp = self.filter_pages_pipeline(
                 doc_name=doc_name,
                 keyphrases=keyphrases,
-                file_rank_max=file_rank_max,
+                page_rank_max=page_rank_max,
                 timeout=timeout,
             )
             return resp
@@ -2056,8 +2167,7 @@ class ByteGenie:
     def structure_quants_pipeline(
             self,
             doc_name: str,
-            keyphrases: list = None,
-            attrs_to_estimate: list = None,
+            queries: list = None,
             file_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
@@ -2071,9 +2181,6 @@ class ByteGenie:
         func = 'structure_quants_pipeline'
         args = {
             'doc_name': doc_name,
-            'keyphrases': keyphrases,
-            'attrs_to_estimate': attrs_to_estimate,
-            'file_rank_max': file_rank_max,
         }
         payload = self.create_api_payload(
             func=func,
@@ -2089,16 +2196,14 @@ class ByteGenie:
     def async_structure_quants_pipeline(
             self,
             doc_name: str,
-            keyphrases: list = None,
-            attrs_to_estimate: list = None,
+            queries: list = None,
             file_rank_max: int = None,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.structure_quants_pipeline(
                 doc_name=doc_name,
-                keyphrases=keyphrases,
-                attrs_to_estimate=attrs_to_estimate,
+                queries=queries,
                 file_rank_max=file_rank_max,
                 timeout=timeout,
             )
@@ -2503,9 +2608,12 @@ class ByteGenie:
 
     def embed_doc_data(
             self,
-            doc_name: str,
-            file_pattern: str,
+            doc_name: str = None,
+            file_pattern: str = None,
+            page_numbers: list = None,
             cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
             model: str = None,
             chunk_size: int = None,
             timeout: int = 15 * 60,
@@ -2523,7 +2631,10 @@ class ByteGenie:
         args = {
             'doc_name': doc_name,
             'file_pattern': file_pattern,
+            'page_numbers': page_numbers,
             'cols_to_use': cols_to_use,
+            'cols_not_use': cols_not_use,
+            'non_null_cols': non_null_cols,
             'model': model,
             'chunk_size': chunk_size,
         }
@@ -2542,7 +2653,10 @@ class ByteGenie:
             self,
             doc_name: str,
             file_pattern: str,
+            page_numbers: list = None,
             cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
             model: str = None,
             chunk_size: int = None,
             timeout: int = 15 * 60,
@@ -2551,7 +2665,10 @@ class ByteGenie:
             resp = self.embed_doc_data(
                 doc_name=doc_name,
                 file_pattern=file_pattern,
+                page_numbers=page_numbers,
                 cols_to_use=cols_to_use,
+                cols_not_use=cols_not_use,
+                non_null_cols=non_null_cols,
                 model=model,
                 chunk_size=chunk_size,
                 timeout=timeout,
@@ -2847,7 +2964,6 @@ class ByteGenie:
             start_time: str = None,
             end_time: str = None,
             route: str = None,
-            agg_lvl: str = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -2867,7 +2983,6 @@ class ByteGenie:
             'start_time': start_time,
             'end_time': end_time,
             'route': route,
-            'agg_lvl': agg_lvl,
         }
         payload = self.create_api_payload(
             func=func,
@@ -2928,13 +3043,207 @@ class ByteGenie:
             return resp
         except Exception as e:
             if self.verbose:
-                print(f"Error in classify_text(): {e}")
+                logger.error(f"Error in classify_text(): {e}")
 
+    def extract_worldviews(
+            self,
+            data: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            page_numbers: list = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            extraction_format: str = None,
+            min_text_len: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract worldviews augmented question-answers from data
+        :param data:
+        :param files:
+        :param doc_name:
+        :param file_pattern:
+        :param extraction_format:
+        :param min_text_len:
+        :param timeout:
+        :return:
+        """
+        func = 'extract_worldviews'
+        args = {
+            'data': data,
+            'files': files,
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'page_numbers': page_numbers,
+            'extraction_format': extraction_format,
+            'cols_to_use': cols_to_use,
+            'cols_not_use': cols_not_use,
+            'non_null_cols': non_null_cols,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
 
+    @utils.async_utils.to_async
+    def async_extract_worldviews(
+            self,
+            data: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            page_numbers: list = None,
+            extraction_format: str = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.extract_worldviews(
+                data=data,
+                files=files,
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                page_numbers=page_numbers,
+                extraction_format=extraction_format,
+                cols_to_use=cols_to_use,
+                cols_not_use=cols_not_use,
+                non_null_cols=non_null_cols,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in extract_worldviews(): {e}")
 
+    def write_to_sql_table(
+            self,
+            table_name: str,
+            data: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            page_numbers: list = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Write data to sql table
+        :param data:
+        :param files:
+        :param doc_name:
+        :param file_pattern:
+        :param timeout:
+        :return:
+        """
+        func = 'write_to_sql_table'
+        args = {
+            'table_name': table_name,
+            'data': data,
+            'files': files,
+            'doc_name': doc_name,
+            'file_pattern': file_pattern,
+            'page_numbers': page_numbers,
+            'cols_to_use': cols_to_use,
+            'cols_not_use': cols_not_use,
+            'non_null_cols': non_null_cols,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
 
+    @utils.async_utils.to_async
+    def async_write_to_sql_table(
+            self,
+            table_name: str,
+            data: list = None,
+            files: list = None,
+            doc_name: str = None,
+            file_pattern: str = None,
+            page_numbers: list = None,
+            cols_to_use: list = None,
+            cols_not_use: list = None,
+            non_null_cols: list = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.write_to_sql_table(
+                table_name=table_name,
+                data=data,
+                files=files,
+                doc_name=doc_name,
+                file_pattern=file_pattern,
+                page_numbers=page_numbers,
+                cols_to_use=cols_to_use,
+                cols_not_use=cols_not_use,
+                non_null_cols=non_null_cols,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in write_to_sql_table(): {e}")
 
+    def query_model(
+            self,
+            query: str,
+            context: str = None,
+            model: str = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Query model
+        :return:
+        """
+        func = 'query_litellm'
+        args = {
+            'query': query,
+            'context': context,
+            'model': model,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
 
-
-
+    @utils.async_utils.to_async
+    def async_query_model(
+            self,
+            query: str,
+            context: str = None,
+            model: str = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.query_model(
+                query=query,
+                context=context,
+                model=model,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in query_model(): {e}")
 

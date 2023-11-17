@@ -43,20 +43,18 @@ resp = bg_async.find_homepage(
 )
 
 # ### file where output will be written
-output_file = resp['response']['task_1']['task']['output_file']
+output_file = resp.get_output_file()
 """
 output_file
 gs://db-genie/entity_type=api-tasks/entity=22daacbd638ff9c859bc350ba3e48c3b/data_type=structured/format=pickle/variable_desc=find_homepage/source=api-genie/22daacbd638ff9c859bc350ba3e48c3b.pickle
 """
 
 # ### check whether output_file exists or not
-output_file_exists = bg_sync.get_response_data(bg_sync.check_file_exists(output_file))
+output_file_exists = resp.check_output_file_exists()
 
-# ### read output_file
-if output_file_exists:
-    resp = bg_sync.read_file(output_file)
-    df_homepage = bg_sync.get_response_data(resp)
-    df_homepage = pd.DataFrame(df_homepage)
+# ### read output file
+df_homepage = resp.get_output()
+df_homepage = pd.DataFrame(df_homepage)
 """
 df_homepage[['entity_name', 'url']].to_dict('records')
 [{'entity_name': 'Vedanta Limited', 'url': 'www.vedantalimited.com'}, {'entity_name': 'GHG protocol', 'url': 'www.ghgprotocol.org'}, {'entity_name': 'World Bank', 'url': 'www.worldbank.org'}, {'entity_name': 'World Bank', 'url': 'data.worldbank.org'}]
@@ -74,6 +72,11 @@ keyphrases = [
 
 # ### select urls to search from
 selected_urls = df_homepage['url'].unique().tolist()[:1]
+
+# ### trigger search from selected URLs
+tasks = [
+    bg_async.async_sear
+]
 
 # ### trigger search
 responses = []
