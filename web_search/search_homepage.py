@@ -2,6 +2,7 @@
 
 import time
 import pandas as pd
+import utils.async_utils
 from utils.logging import logger
 from utils.byte_genie import ByteGenie
 
@@ -75,45 +76,15 @@ selected_urls = df_homepage['url'].unique().tolist()[:1]
 
 # ### trigger search from selected URLs
 tasks = [
-    bg_async.async_sear
-]
-
-# ### trigger search
-responses = []
-for url_num, selected_url in enumerate(selected_urls):
-    logger.info(f"searching {selected_url} ({url_num}/{len(selected_urls)})")
-    resp = bg_async.search_web(
+    bg_async.async_search_web(
         keyphrases=keyphrases,
-        site=selected_url
+        site=selected_url,
     )
-    responses = responses + [resp]
-
-# ### wait for output to be ready
-time.sleep(15 * 60)
-
-# ### read search results
-df_search = pd.DataFrame()
-missing_files = []
-for resp_num, resp in enumerate(responses):
-    logger.info(f"processing response: {resp_num}/{len(responses)}")
-    ## get output file
-    output_file = bg_sync.get_response_output_file(resp)
-    ## check if output file exists
-    output_file_exists = bg_sync.check_file_exists(output_file)
-    ## if output file already exists
-    if output_file_exists:
-        logger.info(f"{output_file} exists: reading it")
-        ## read output file
-        df_search_ = bg_sync.get_response_data(bg_sync.read_file(output_file))
-        ## convert output to df
-        df_search_ = pd.DataFrame(df_search_)
-        ## add to df_search
-        df_search = pd.concat([df_search, df_search_])
-    ## if output file does not yet exist
-    else:
-        logger.warning(f"{output_file} does not exists: storing it to missing files")
-        ## add it to missing files
-        missing_files = missing_files + [output_file]
+    for selected_url in selected_urls
+]
+search_web_responses = utils.async_utils.run_async_tasks(tasks)
+df_search = [pd.DataFrame(resp.get_output()) for resp in search_web_responses]
+df_search = pd.concat(df_search)
 
 # ### check search data
 logger.info(f"search data columns: {list(df_search.columns)}")

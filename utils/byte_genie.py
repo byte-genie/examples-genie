@@ -1148,6 +1148,23 @@ class ByteGenie:
         )
         return resp
 
+    @utils.async_utils.to_async
+    def async_extract_text_years(
+            self,
+            text: str,
+            output_format: str = 'cleaned',
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.extract_text_years(
+                text=text,
+                output_format=output_format,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            logger.error(f"Error in extract_text_years(): {e}")
+
     def generate_metadata(
             self,
             data: list,
