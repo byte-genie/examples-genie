@@ -82,11 +82,6 @@ tasks = [
     )
     for selected_url in selected_urls
 ]
-resp = bg_sync.search_web(
-    keyphrases=keyphrases,
-    site=selected_urls[0],
-    timeout=30 * 60
-)
 search_web_responses = utils.async_utils.run_async_tasks(tasks)
 df_search = [pd.DataFrame(resp.get_output()) for resp in search_web_responses]
 df_search = pd.concat(df_search)
