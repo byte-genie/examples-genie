@@ -40,7 +40,7 @@ bg_sync = ByteGenie(
 usage_resp = bg_async.get_usage_summary(
     start_time='2023-09-21',
     end_time='2023-10-21',
-    agg_lvl='file',
+    # agg_lvl='file',
     route='api',
 )
 
