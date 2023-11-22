@@ -278,6 +278,8 @@ class ByteGenie:
 
     def __init__(
             self,
+            username: str = 'demo-genie',
+            api_key: str = None,
             api_url: str = 'https://api.byte-genie.com/execute',
             secrets_file: str = 'secrets.json',
             task_mode: str = 'async',
@@ -285,6 +287,7 @@ class ByteGenie:
             return_data: int = 1,
             overwrite: int = 0,
             overwrite_base_output: int = 0,
+            task_id: str = None,
             verbose: int = 1,
     ):
         """
@@ -306,9 +309,16 @@ class ByteGenie:
         self.return_data = return_data
         self.overwrite = overwrite
         self.overwrite_base_output = overwrite_base_output
+        self.task_id = task_id
         self.verbose = verbose
-        self.api_key = self.read_api_key()
-        self.username = self.read_username()
+        if api_key is None:
+            self.api_key = self.read_api_key()
+        else:
+            self.api_key = api_key
+        if username is None:
+            self.username = self.read_username()
+        else:
+            self.username = username
 
     def read_api_key(self):
         filename = os.path.join(self.secrets_file)
