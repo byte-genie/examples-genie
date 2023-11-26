@@ -1,4 +1,4 @@
-# <h1>Spreadsheet processing</h1>
+# # Spreadsheet processing
 # <p>This example covers
 #     <ul>
 #         <li>Extracting data from spreadsheets;</li>
@@ -58,6 +58,10 @@ df_uploads = pd.DataFrame(resp.get_output())
 
 # <h3> Get uploaded document names </h3>
 doc_names = df_uploads['doc_name'].unique().tolist()
+"""
+document names, `doc_names`
+['userid_demo-genie_uploadfilename_energy-consumptionxlsx']
+"""
 
 # <h2> Extract text & tables from spreadsheets </h2>
 
