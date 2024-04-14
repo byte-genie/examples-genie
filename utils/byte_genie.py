@@ -9,11 +9,11 @@ import inspect
 
 import pandas as pd
 import requests
+import tenacity
 import numpy as np
 import utils.common
 from utils.logging import logger
 from utils.async_utils import to_async
-from tenacity import retry, stop_after_attempt, stop_after_delay, wait_random_exponential, wait_fixed, wait_exponential
 
 
 class ByteGenieResponse:
@@ -155,13 +155,27 @@ class ByteGenieResponse:
             if self.verbose:
                 logger.warning(f"Error in read_output_data(): {e}")
 
+    def wait_for_output(self, wait_interval: int = 5, wait_time_max: int = 15 * 60):
+        if wait_time_max is None:
+            wait_time_max = 15 * 60
+        if wait_interval is None:
+            wait_interval = 5
+        wait_time = 0
+        while wait_time <= wait_time_max:
+            if self.check_output_file_exists():
+                return True
+            time.sleep(wait_interval)
+            wait_time = wait_time + wait_interval
+        return False
+
     def get_output(self):
         """
         Returns the output data from the response if it is not None, otherwise reads it from the output file
         :return:
         """
-        if self.get_data() is not None:
-            return self.get_data()
+        output_data = self.get_data()
+        if output_data is not None:
+            return output_data
         else:
             output_data = self.read_output_data()
             if output_data is not None:
@@ -340,11 +354,21 @@ class ByteGenie:
             api_key = ''
         return api_key
 
+    def add_msg_to_logstream(self, message_type: str, msg: str, priority: int = 0):
+        log_stream.put_record({
+            "username": self.username,
+            "task_id": self.task_id,
+            "message_type": message_type,
+            "msg": msg,
+            "priority": 1,
+        })
+
     def create_api_payload(
             self,
             func: str,
             args: dict,
-            cluster_args: dict = None,
+            # cluster_args: dict = None,
+            **kwargs,
     ):
         """
         Create payload for byte-genie API
@@ -353,23 +377,38 @@ class ByteGenie:
         :param cluster_args: arguments for the type of cluster used to run the code
         :return:
         """
-        if cluster_args is None:
-            cluster_args = {}
+        # if cluster_args is None:
+        #     cluster_args = {}
+        if kwargs.get('overwrite') is not None:
+            overwrite = kwargs.get('overwrite')
+        elif self.overwrite is not None:
+            overwrite = self.overwrite
+        else:
+            overwrite = 0
+        if kwargs.get('overwrite_base_output') is not None:
+            overwrite_base_output = kwargs.get('overwrite_base_output')
+        elif self.overwrite_base_output is not None:
+            overwrite_base_output = self.overwrite_base_output
+        else:
+            overwrite_base_output = 0
+        if kwargs.get('task_mode') is not None:
+            task_mode = kwargs.get('task_mode')
+        elif self.task_mode is not None:
+            task_mode = self.task_mode
+        else:
+            task_mode = 'async'
         payload = {
             "api_key": self.api_key,
             "tasks": {
                 'task_1': {
                     'func': func,
                     'args': args,
-                    'overwrite': self.overwrite,
-                    'overwrite_base_output': self.overwrite_base_output,
+                    'overwrite': overwrite,
+                    'overwrite_base_output': overwrite_base_output,
                     'return_data': self.return_data,
                     'verbose': self.verbose,
-                    'task_mode': self.task_mode,
+                    'task_mode': task_mode,
                     'calc_mode': self.calc_mode,
-                    'accelerators': cluster_args.get('accelerators'),
-                    'n_cpu': cluster_args.get('n_cpu'),
-                    'use_spot': cluster_args.get('use_spot'),
                 },
             }
         }
@@ -385,7 +424,10 @@ class ByteGenie:
         }
         return headers
 
-    @retry(wait=wait_exponential(multiplier=1, min=5, max=120), stop=stop_after_attempt(5))
+    @tenacity.retry(
+        wait=tenacity.wait_exponential(multiplier=1, min=5, max=120),
+        stop=tenacity.stop_after_attempt(5)
+    )
     def call_api(self, payload: dict, method: str = 'POST', timeout: int = 15 * 60):
         headers = self.set_headers()
         response = requests.request(
@@ -404,6 +446,23 @@ class ByteGenie:
             ## convert to byte-genie resp
             bg_resp = ByteGenieResponse(json_resp)
         return bg_resp
+
+    @utils.async_utils.to_async
+    def async_call_api(
+            self,
+            **kwargs,
+    ):
+        try:
+            resp = self.call_api(
+                **kwargs,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                log_record = self.add_msg_to_logstream(
+                    message_type='error',
+                    msg=f"Error in call_api(): {e}"
+                )
 
     def get_response_data(
             self,
@@ -538,10 +597,41 @@ class ByteGenie:
             if self.verbose:
                 logger.info(f"Error in upload_data(): {e}")
 
+    def list_files(
+            self,
+            root_dir: str,
+            file_pattern: str,
+            recursive: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        List files from a root dir matching a file pattern
+        :param doc_name: document name for which to list files
+        :param file_pattern: file pattern to match when listing files
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'list_files'
+        args = {
+            'root_dir': root_dir,
+            'file_pattern': file_pattern,
+            'recursive': recursive,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
     def list_doc_files(
             self,
             doc_name: str,
             file_pattern: str,
+            recursive: int = None,
             timeout: int = 15 * 60,
     ):
         """
@@ -555,6 +645,7 @@ class ByteGenie:
         args = {
             'doc_name': doc_name,
             'file_pattern': file_pattern,
+            'recursive': recursive,
         }
         payload = self.create_api_payload(
             func=func,
@@ -571,12 +662,14 @@ class ByteGenie:
             self,
             doc_name: str,
             file_pattern: str,
+            recursive: int = None,
             timeout: int = 15 * 60,
     ):
         try:
             resp = self.list_doc_files(
                 doc_name=doc_name,
                 file_pattern=file_pattern,
+                recursive=recursive,
                 timeout=timeout,
             )
             return resp
@@ -1017,6 +1110,22 @@ class ByteGenie:
             timeout=timeout,
         )
         return resp
+
+    @to_async
+    def async_download_file(
+            self,
+            urls: list,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.download_file(
+                urls=urls,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in download_file(): {e}")
 
     def download_documents(
             self,
@@ -2196,6 +2305,88 @@ class ByteGenie:
             if self.verbose:
                 logger.error(f"Error in extract_text_pipeline(): {e}")
 
+    def embed_text_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger text embedding pipeline, which extracts text, tables from each page of the document, and embeds the extracted text
+        :param doc_name: document name
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'embed_text_pipeline'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_embed_text_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.embed_text_pipeline(
+                doc_name=doc_name,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in embed_text_pipeline(): {e}")
+
+    def embed_keyphrases_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Trigger keyphrase embedding pipeline, which extracts text, tables, keyphrases from each page of the document, and embeds the extracted keyphrases
+        :param doc_name: document name
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'embed_keyphrases_pipeline'
+        args = {
+            'doc_name': doc_name,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_embed_keyphrases_pipeline(
+            self,
+            doc_name: str,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.embed_keyphrases_pipeline(
+                doc_name=doc_name,
+                timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in embed_keyphrases_pipeline(): {e}")
+
     def structure_quants_pipeline(
             self,
             doc_name: str,
@@ -2704,6 +2895,54 @@ class ByteGenie:
                 model=model,
                 chunk_size=chunk_size,
                 timeout=timeout,
+            )
+            return resp
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in embed_doc_data(): {e}")
+
+    def embed_data(
+            self,
+            data_type: str = None,
+            model: str = None,
+            timeout: int = 15 * 60,
+            **kwargs,
+    ):
+        """
+        Embed data
+        :param data: data for which to create embeddings
+        :param cols_to_use: columns to use when creating embeddings
+        :param model: model for generating embeddings (optional)
+        :param chunk_size: chunk size for creating embeddings in one go (optional)
+        :param timeout: timeout value for api call
+        :return:
+        """
+        func = 'embed_data'
+        args = {
+            'data_type': data_type,
+            'model': model,
+        }
+        ## Add the additional keyword arguments to args
+        args.update(kwargs)
+        ## create payload
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    @to_async
+    def async_embed_data(
+            self,
+            **kwargs,
+    ):
+        try:
+            resp = self.embed_data(
+                **kwargs,
             )
             return resp
         except Exception as e:
@@ -3278,4 +3517,71 @@ class ByteGenie:
         except Exception as e:
             if self.verbose:
                 logger.error(f"Error in query_model(): {e}")
+
+    def extract_keyphrases(
+            self,
+            n_keyphrase: int = None,
+            data: list = None,
+            root_dir: str = None,
+            file_pattern: str = None,
+            files: list = None,
+            groupby_cols: list = None,
+            add_row_id: int = None,
+            timeout: int = 15 * 60,
+    ):
+        """
+        Extract keyphrases from data
+        :param data:
+        :param root_dir:
+        :param file_pattern:
+        :param files:
+        :param groupby_cols:
+        :param add_row_id:
+        :return:
+        """
+        func = 'extract_keyphrases'
+        args = {
+            'n_keyphrase': n_keyphrase,
+            'data': data,
+            'root_dir': root_dir,
+            'file_pattern': file_pattern,
+            'files': files,
+            'groupby_cols': groupby_cols,
+            'add_row_id': add_row_id,
+        }
+        payload = self.create_api_payload(
+            func=func,
+            args=args,
+        )
+        resp = self.call_api(
+            payload=payload,
+            timeout=timeout,
+        )
+        return resp
+
+    def async_extract_keyphrases(
+            self,
+            n_keyphrase: int = None,
+            data: list = None,
+            root_dir: str = None,
+            file_pattern: str = None,
+            files: list = None,
+            groupby_cols: list = None,
+            add_row_id: int = None,
+            timeout: int = 15 * 60,
+    ):
+        try:
+            resp = self.extract_keyphrases(
+                n_keyphrase=n_keyphrase,
+                data=data,
+                root_dir=root_dir,
+                file_pattern=file_pattern,
+                files=files,
+                groupby_cols=groupby_cols,
+                add_row_id=add_row_id,
+                timeout=timeout,
+            )
+        except Exception as e:
+            if self.verbose:
+                logger.error(f"Error in (): {e}")
 
