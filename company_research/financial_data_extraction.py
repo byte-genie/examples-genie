@@ -296,3 +296,66 @@ df_classified_metrics = bg.read_file(
 )
 df_classified_metrics = df_classified_metrics.get_output()
 df_classified_metrics = pd.DataFrame(df_classified_metrics)
+"""
+Classified data now has the following columns, `list(df_classified_metrics.columns)`
+[
+    'statement', 'symbol', 'row_num', 'quantity_name', 'variable', 'entity_type', 'year', 'value', 'context',
+    'table_title', 'table_title_context', 'table_num', 'header_0', 'header_1', 'source_type', 'context_source',
+    'quantity_description', 'pagenum', 'file', 'file_path', 'row_id'
+]
+The new columns of interest that have been added by `taxonomise_data` endpoint are `['statement', 'symbol']`. 
+These columns classify the reported metric onto the type of statement a specific symbol from the input taxonomy 
+(`sample-financial-taxonomy` in this case).
+
+Here is a sample of the classified data, Here is a sample of this data, `df_classified_metrics[['statement', 'symbol', 'header_0', 'header_1', 'quantity_name', 'variable', 'year', 'value', 'entity_type']].head().to_dict('records')`
+[
+    {'statement': 'profit-and-loss-statement', 'symbol': 'Sales', 'header_0': '', 'header_1': '',
+     'quantity_name': 'Revenue', 'variable': 'january 31, 2021 ', 'year': 2021, 'value': '$ 16,675',
+     'entity_type': 'company'},
+    {'statement': 'profit-and-loss-statement', 'symbol': 'Cost of Sales', 'header_0': '', 'header_1': '',
+     'quantity_name': 'Cost of revenue', 'variable': 'january 31, 2021 ', 'year': 2021, 'value': '6,279',
+     'entity_type': 'company'},
+    {'statement': 'profit-and-loss-statement', 'symbol': 'Gross Profit', 'header_0': '', 'header_1': '',
+     'quantity_name': 'Gross profit', 'variable': 'january 31, 2021 ', 'year': 2021, 'value': '10,396',
+     'entity_type': 'company'},
+    {'statement': 'profit-and-loss-statement', 'symbol': 'Sales', 'header_0': '', 'header_1': '',
+     'quantity_name': 'Revenue', 'variable': 'year ended ; january 26, 2020 ', 'year': 2020, 'value': '$ 10,918',
+     'entity_type': 'company'},
+    {'statement': 'profit-and-loss-statement', 'symbol': 'Cost of Sales', 'header_0': '', 'header_1': '',
+     'quantity_name': 'Cost of revenue', 'variable': 'year ended ; january 26, 2020 ', 'year': 2020, 'value': '4,150',
+     'entity_type': 'company'}
+]
+As we can see, the reported revenue and cost of revenue have been correctly mapped to `Sales` and `Cost of Sales` within 
+`profit-and-loss-statement`.
+"""
+
+# ## Taxonomy description
+"""
+<p>
+The classified metrics can be specified in a taxonomy. 
+Here is a sample of the taxonomy we used for this example: 
+[
+    {'calc_metric': '(Depreciation for Fixed Assets)', 'symbol': 'DEPFA', 'statement': 'balance-sheet'},
+    {'calc_metric': '(Impairment for Invested Properties)', 'symbol': 'IMPINVP', 'statement': 'balance-sheet'},
+    {'calc_metric': '(Revaluation for Fixed Assets)', 'symbol': 'IMPFA', 'statement': 'balance-sheet'},
+    {'calc_metric': 'Account Payables', 'symbol': 'ACCPY', 'statement': 'balance-sheet'},
+    {'calc_metric': 'Accounts Receivable', 'symbol': 'ACCRV', 'statement': 'balance-sheet'},
+    {'calc_metric': '(Gain) / Loss in disposal of Fixed Assets', 'symbol': 'GOLDFA',
+     'statement': 'profit-and-loss-statement'},
+    {'calc_metric': '(Gain) or Loss From Subsidiaries', 'symbol': 'GNLFSUB', 'statement': 'profit-and-loss-statement'},
+    {'calc_metric': '(Interest Income)', 'symbol': 'INTINC', 'statement': 'profit-and-loss-statement'},
+    {'calc_metric': '(Other Income)', 'symbol': 'OTHINC', 'statement': 'profit-and-loss-statement'},
+    {'calc_metric': 'Bad Debt Written Off / (Written Back)', 'symbol': 'BDWO', 'statement': 'profit-and-loss-statement'}
+]
+
+Creating a new financial taxonomy simply requires creating a dataset with `['calc_metric', 'symbol', 'statement']` columns. 
+Once a new taxonomy is created, it can be saved to ByteGenie database, 
+and then it can be used in `taxonomise_data` endpoint, to map any data onto that taxonomy. 
+`taxonomise_data` first classifies each reported metric into one of the statements specified in the taxonomy under 
+`statement` columns, and then it classifies the metric into one of the metrics specified in `calc_metric` 
+column in the taxonomy.
+
+The thing to note in creating a taxonomy is that it is better to use long, descriptive names in 
+`statement` and `calc_metric` columns, instead of acronyms, to avoid classification errors.  
+<p> 
+"""
