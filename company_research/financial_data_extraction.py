@@ -359,3 +359,12 @@ The thing to note in creating a taxonomy is that it is better to use long, descr
 `statement` and `calc_metric` columns, instead of acronyms, to avoid classification errors.  
 <p> 
 """
+
+# ## Next steps
+"""
+<p>
+Once we have the data extracted and standardised, we can vectorise this data, and
+store this data in a PostgreSQL or graph database, to be able to use this data as part of a 
+retrieval-augmented generation (RAG) solution, which we will cover in a separate example.
+</p>
+"""
