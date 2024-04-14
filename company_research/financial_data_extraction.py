@@ -10,6 +10,7 @@ from utils.byte_genie import ByteGenie
 # ## init byte-genie
 bg = ByteGenie(
     secrets_file='secrets.json',
+    task_mode='sync',
     verbose=1,
 )
 
@@ -118,7 +119,7 @@ Since, page image files will be generated first, let's check if these files are 
 </p>
 """
 list_images_payload = bg.create_api_payload(
-    func='list_files',
+    func='list_doc_files',
     args={
         'doc_name': doc_name,
         'file_pattern': 'data_type=unstructured/**/variable_desc=page-img/**.png',
@@ -126,8 +127,20 @@ list_images_payload = bg.create_api_payload(
     task_mode='sync',
 )
 list_images_resp = bg.call_api(
-    payload=text_extraction_payload,
+    payload=list_images_payload,
 )
+img_files = list_images_resp.get_output()
+"""
+Number of  page image files found, `len(img_files)`: 174
+Sample of page image files, `img_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-0.png',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-1.png',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-10.png',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-100.png',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=unstructured/format=img/variable_desc=page-img/source=pdf-genie/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-101.png'
+]
+"""
 
 # ### Page data files
 """
@@ -137,7 +150,7 @@ If so, that means that `extract_text_pipeline` output is complete, and we can mo
 </p>
 """
 list_page_data_payload = bg.create_api_payload(
-    func='list_files',
+    func='list_doc_files',
     args={
         'doc_name': doc_name,
         'file_pattern': 'data_type=semi-structured/**/variable_desc=page-data/**.pickle',
@@ -145,8 +158,20 @@ list_page_data_payload = bg.create_api_payload(
     task_mode='sync',
 )
 list_page_data_resp = bg.call_api(
-    payload=text_extraction_payload,
+    payload=list_page_data_payload,
 )
+page_data_files = list_page_data_resp.get_output()
+"""
+Number of  page image files found, `len(page_data_files)`: 173
+Sample of page image files, `page_data_files[:5]`
+[
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-0_page-data.pickle',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-100_page-data.pickle',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-101_page-data.pickle',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-102_page-data.pickle',
+    'gs://db-genie/entity_type=url/entity=httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf/data_type=semi-structured/format=pickle/variable_desc=page-data/source=read_page_data/httpss201q4cdncom141608511filesdoc_downloads2021042021-annual-reviewpdf_pagenum-103_page-data.pickle'
+]
+"""
 
 # ## Financial data structuring
 """
@@ -158,7 +183,6 @@ and structuring the reported metrics to a more useful format.
 """
 
 # ### Identify financial statement pages
-
 identify_statement_pages_payload = bg.create_api_payload(
     func='identify_financial_statement_pages',
     args={
@@ -172,25 +196,83 @@ identify_statement_pages_resp = bg.call_api(
 statement_pages = identify_statement_pages_resp.get_output()
 """
 The statement pages found are, `statement_pages`
-
+[
+    135, 136, 137, 138, 139, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 160, 161, 162, 163, 164, 165, 166
+]
+pages 135-139 are financial statement pages, and pages 146 onward are notes to financial statements. 
+Notice that `identify_financial_statement_pages` endpoint aims to pick up only the pages that contain 
+quantitative values, and not the ones that contain commentary, as the main purpose of this endpoint is to 
+identify pages from which we can extract the quantitative financial values reported by the companie.  
 """
 
 # ### Structure reported metrics
+"""
+<p>
+To structured the reported financial metrics, we can use `structure_reported_financial_metrics` endpoint, 
+which takes a dictionary of document names, and associated page numbers for each 
+document for which to structure quantitative metrics. 
+
+In this example, we will the first financial statement page to structure data. 
+</p>
+"""
 structure_metrics_payload = bg.create_api_payload(
     func='structure_reported_financial_metrics',
     args={
-        'doc_name': doc_name,
+        'data': {
+            doc_name: [135]
+        },
     },
     task_mode='sync',
 )
 structure_metrics_resp = bg.call_api(
     payload=structure_metrics_payload,
 )
+structured_metrics_files = structure_metrics_resp.get_output()
+"""
+`structure_reported_financial_metrics` response will return files that contains the structured metrics. 
+We can read this file to get the actual data.
+"""
+df_structured_metrics = bg.read_file(
+    file=structured_metrics_files[0],
+)
+df_structured_metrics = df_structured_metrics.get_output()
+df_structured_metrics = pd.DataFrame(df_structured_metrics)
+"""
+Structured metrics data contains `len(df_structured_metrics)=73` rows, 
+and following columns: `list(df_structured_metrics.columns)` 
+[
+    'row_num', 'quantity_name', 'variable', 'entity_type', 'year', 'value', 'context', 'table_title',
+    'table_title_context', 'table_num', 'header_0', 'header_1', 'header_2', 'source_type', 'context_source',
+    'quantity_description', 'pagenum'
+]
+The most relevant columns in the data include 
+['header_0', 'header_1', 'header_2', 'quantity_name', 'variable', 'year', 'value', 'entity_type'].
+These columns contain information directly related to the extracted value:
+- `header_0` is the main header for the value (if any);
+- `header_1`, `header_2` are the subsequent headers/subheaders for the value (if any);
+- `quantity_name` is the line-item associated with the value;
+- `variable` is the column name associated with the value;
+- `year` is any year associated with the value; 
+- `entity_type` is the type of entity associcated with the value, e.g. 'company', 'group', etc.
+Here is a sample of this data, `df_structured_metrics[['header_0', 'header_1', 'header_2', 'quantity_name', 'variable', 'year', 'value', 'entity_type']].head().to_dict('records')`
+[
+    {'header_0': '', 'header_1': '', 'header_2': '', 'quantity_name': 'Revenue', 'variable': 'january 31, 2021 ',
+     'year': 2021, 'value': '$ 16,675', 'entity_type': 'company'},
+    {'header_0': '', 'header_1': '', 'header_2': '', 'quantity_name': 'Cost of revenue',
+     'variable': 'january 31, 2021 ', 'year': 2021, 'value': '6,279', 'entity_type': 'company'},
+    {'header_0': '', 'header_1': '', 'header_2': '', 'quantity_name': 'Gross profit', 'variable': 'january 31, 2021 ',
+     'year': 2021, 'value': '10,396', 'entity_type': 'company'},
+    {'header_0': '', 'header_1': '', 'header_2': '', 'quantity_name': 'Revenue',
+     'variable': 'year ended ; january 26, 2020 ', 'year': 2020, 'value': '$ 10,918', 'entity_type': 'company'},
+    {'header_0': '', 'header_1': '', 'header_2': '', 'quantity_name': 'Cost of revenue',
+     'variable': 'year ended ; january 26, 2020 ', 'year': 2020, 'value': '4,150', 'entity_type': 'company'}
+]
+"""
 
 # ## Map structured metrics to a financial taxonomy
 """
 <p>
-Now that we have all reported metrics extracted from a few pages, we can map them onto a financial taxonomy, 
+Now that we have all reported metrics extracted from a page, we can map them onto a financial taxonomy, 
 to store this data in a more standardised manner, which will make it considerably easier to perform any downstream 
 analytics, or even to query relevant data. 
 </p>
@@ -198,10 +280,19 @@ analytics, or even to query relevant data.
 taxonomise_data_payload = bg.create_api_payload(
     func='taxonomise_data',
     args={
-        'doc_name': doc_name,
+        'files': structured_metrics_files[:1],
+        'taxonomy_name': 'sample-financial-taxonomy',
+        'output_format': 'wide',
+        'wide_colnames': ['statement', 'symbol'],
     },
     task_mode='sync',
 )
 taxonomise_data_resp = bg.call_api(
     payload=taxonomise_data_payload,
 )
+taxonomise_data_files = taxonomise_data_resp.get_output()
+df_classified_metrics = bg.read_file(
+    file=taxonomise_data_files[0],
+)
+df_classified_metrics = df_classified_metrics.get_output()
+df_classified_metrics = pd.DataFrame(df_classified_metrics)
