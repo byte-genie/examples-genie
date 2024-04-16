@@ -97,7 +97,7 @@ Here is a sample of company filings data, `df_company_filings.head().to_dict('re
 # ## query company facts
 """
 <p>
-When querying company facts, we can also specify any filters to retrieve only filings matching those filters.
+When querying company facts, we can also specify any filters to retrieve only facts matching those filters.
 </p>
 """
 
@@ -106,9 +106,11 @@ company_facts_payload = bg.create_api_payload(
     args={
         'company_id': company_id,
         'source': 'sec',
-        'data_type': 'filings',
+        'data_type': 'facts',
         'filters': {
             "form": ['10-K'],
+            "taxonomy_name": ["EntityCommonStockSharesOutstanding"],
+            "unit": ["shares"],
         },
     },
     task_mode='sync',
@@ -121,31 +123,26 @@ df_company_facts = pd.DataFrame(df_company_facts)
 """
 Company facts data have these columns, `list(df_company_facts.columns)`
 [
-    'acceptance_datetime', 'accession_number', 'act', 'file_number', 'filing_date', 'film_number', 'form',
-    'is_inline_xbrl', 'is_xbrl', 'primary_doc_description', 'primary_document', 'report_date', 'report_year', 'size'
+    'accession_number', 'calendar_date', 'end_date', 'filed', 'fiscal_period', 'fiscal_year', 'form', 'taxonomy_name',
+    'unit', 'value'
 ]
 Here is a sample of company facts data, `df_company_facts.head().to_dict('records')`
 [
-    {'acceptance_datetime': '2012-10-31T17:07:19.000Z', 'accession_number': '0001193125-12-444068', 'act': '34',
-     'file_number': '000-10030', 'filing_date': '2012-10-31', 'film_number': '121171452', 'form': '10-K',
-     'is_inline_xbrl': 0, 'is_xbrl': 1, 'primary_doc_description': 'FORM 10-K', 'primary_document': 'd411355d10k.htm',
-     'report_date': '2012-09-29', 'report_year': 2012.0, 'size': 9859755},
-    {'acceptance_datetime': '2011-10-26T16:35:25.000Z', 'accession_number': '0001193125-11-282113', 'act': '34',
-     'file_number': '000-10030', 'filing_date': '2011-10-26', 'film_number': '111159350', 'form': '10-K',
-     'is_inline_xbrl': 0, 'is_xbrl': 1, 'primary_doc_description': 'FORM 10-K', 'primary_document': 'd220209d10k.htm',
-     'report_date': '2011-09-24', 'report_year': 2011.0, 'size': 9435428},
-    {'acceptance_datetime': '2010-10-27T16:36:21.000Z', 'accession_number': '0001193125-10-238044', 'act': '34',
-     'file_number': '000-10030', 'filing_date': '2010-10-27', 'film_number': '101145250', 'form': '10-K',
-     'is_inline_xbrl': 0, 'is_xbrl': 1, 'primary_doc_description': 'FOR THE FISCAL YEAR ENDED SEPTEMBER 25, 2010',
-     'primary_document': 'd10k.htm', 'report_date': '2010-09-25', 'report_year': 2010.0, 'size': 13856661},
-    {'acceptance_datetime': '2009-10-27T16:18:29.000Z', 'accession_number': '0001193125-09-214859', 'act': '34',
-     'file_number': '000-10030', 'filing_date': '2009-10-27', 'film_number': '091139493', 'form': '10-K',
-     'is_inline_xbrl': 0, 'is_xbrl': 1, 'primary_doc_description': 'FOR THE FISCAL YEAR ENDED SEPTEMBER 26, 2009',
-     'primary_document': 'd10k.htm', 'report_date': '2009-09-26', 'report_year': 2009.0, 'size': 3638340},
-    {'acceptance_datetime': '2008-11-05T06:16:23.000Z', 'accession_number': '0001193125-08-224958', 'act': '34',
-     'file_number': '000-10030', 'filing_date': '2008-11-05', 'film_number': '081162315', 'form': '10-K',
-     'is_inline_xbrl': 0, 'is_xbrl': 0, 'primary_doc_description': 'FORM 10-K', 'primary_document': 'd10k.htm',
-     'report_date': '2008-09-27', 'report_year': 2008.0, 'size': 1188704}
+    {'accession_number': '0001193125-09-214859', 'calendar_date': '', 'end_date': '2009-10-16', 'filed': '2009-10-27',
+     'fiscal_period': 'FY', 'fiscal_year': 2009, 'form': '10-K', 'taxonomy_name': 'EntityCommonStockSharesOutstanding',
+     'unit': 'shares', 'value': 900678473.0},
+    {'accession_number': '0001193125-10-238044', 'calendar_date': 'CY2010Q3I', 'end_date': '2010-10-15',
+     'filed': '2010-10-27', 'fiscal_period': 'FY', 'fiscal_year': 2010, 'form': '10-K',
+     'taxonomy_name': 'EntityCommonStockSharesOutstanding', 'unit': 'shares', 'value': 917307099.0},
+    {'accession_number': '0001193125-11-282113', 'calendar_date': 'CY2011Q3I', 'end_date': '2011-10-14',
+     'filed': '2011-10-26', 'fiscal_period': 'FY', 'fiscal_year': 2011, 'form': '10-K',
+     'taxonomy_name': 'EntityCommonStockSharesOutstanding', 'unit': 'shares', 'value': 929409000.0},
+    {'accession_number': '0001193125-12-444068', 'calendar_date': 'CY2012Q3I', 'end_date': '2012-10-19',
+     'filed': '2012-10-31', 'fiscal_period': 'FY', 'fiscal_year': 2012, 'form': '10-K',
+     'taxonomy_name': 'EntityCommonStockSharesOutstanding', 'unit': 'shares', 'value': 940692000.0},
+    {'accession_number': '0001193125-13-416534', 'calendar_date': 'CY2013Q3I', 'end_date': '2013-10-18',
+     'filed': '2013-10-30', 'fiscal_period': 'FY', 'fiscal_year': 2013, 'form': '10-K',
+     'taxonomy_name': 'EntityCommonStockSharesOutstanding', 'unit': 'shares', 'value': 899738000.0}
 ]
 """
 
