@@ -173,6 +173,27 @@ Sample of page image files, `page_data_files[:5]`
 ]
 """
 
+# ## Turn on financial data agent
+"""
+<p>
+For financial data processing, we will first turn on the financial data agent, 
+which will ensure that the relevant models are deployed. Note that the model deployments 
+may take upto 20-30 minutes.
+</p>
+"""
+launch_financial_data_genie_payload = bg.create_api_payload(
+    func='launch_agent',
+    args={
+        'agent_name': 'FinancialDataGenie',
+        'scale': 1,
+    },
+    task_mode='sync',
+)
+launch_financial_data_genie_resp = bg.call_api(
+    payload=launch_financial_data_genie_payload,
+)
+
+
 # ## Financial data structuring
 """
 <p>
@@ -328,6 +349,24 @@ Here is a sample of the classified data, Here is a sample of this data, `df_clas
 As we can see, the reported revenue and cost of revenue have been correctly mapped to `Sales` and `Cost of Sales` within 
 `profit-and-loss-statement`.
 """
+
+# ## Turn off financial data agent
+"""
+<p>
+Once we are done with financial data processing, we can turn off the financial data agent.
+</p>
+"""
+terminate_financial_data_genie_payload = bg.create_api_payload(
+    func='terminate_agent',
+    args={
+        'agent_name': 'FinancialDataGenie',
+        'scale': 1,
+    },
+    task_mode='sync',
+)
+terminate_financial_data_genie_resp = bg.call_api(
+    payload=terminate_financial_data_genie_payload,
+)
 
 # ## Taxonomy description
 """
