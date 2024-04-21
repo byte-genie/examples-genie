@@ -185,7 +185,7 @@ launch_financial_data_genie_payload = bg.create_api_payload(
     func='launch_agent',
     args={
         'agent_name': 'FinancialDataGenie',
-        'scale': 1,
+        'n_replicas': 1, ## number of agent replicas to launch
     },
     task_mode='sync',
 )
@@ -360,7 +360,7 @@ terminate_financial_data_genie_payload = bg.create_api_payload(
     func='terminate_agent',
     args={
         'agent_name': 'FinancialDataGenie',
-        'scale': 1,
+        'n_replicas': 1, ## number of agent replicas to terminate
     },
     task_mode='sync',
 )
